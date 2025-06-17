@@ -1,0 +1,148 @@
+version: '3.8'
+
+services:
+  # Business Agent System - Restaurant
+  business-agent-restaurant:
+    build: .
+    container_name: bas-restaurant
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./config:/app/src/config:ro
+      - ./logs:/app/src/logs
+      - restaurant_data:/app/src/data
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ENVIRONMENT=production
+    command: ["uv", "run", "python", "main.py", "--config", "config/restaurant_config.yaml"]
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Business Agent System - Retail  
+  business-agent-retail:
+    build: .
+    container_name: bas-retail
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./config:/app/src/config:ro
+      - ./logs:/app/src/logs
+      - retail_data:/app/src/data
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ENVIRONMENT=production
+    command: ["uv", "run", "python", "main.py", "--config", "config/retail_config.yaml"]
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+    profiles:
+      - retail
+
+  # Dashboard
+  dashboard:
+    build: .
+    container_name: bas-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./config:/app/src/config:ro
+      - ./dashboard:/app/src/dashboard:ro
+      - restaurant_data:/app/src/data:ro
+      - retail_data:/app/src/data:ro
+    environment:
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+    command: ["uv", "run", "streamlit", "run", "dashboard/app.py"]
+    depends_on:
+      - business-agent-restaurant
+    restart: unless-stopped
+
+  # Redis for message queuing and caching
+  redis:
+    image: redis:7-alpine
+    container_name: bas-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL for production database
+  postgres:
+    image: postgres:15-alpine
+    container_name: bas-postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    environment:
+      - POSTGRES_DB=business_agent_system
+      - POSTGRES_USER=bas_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-bas_password}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bas_user -d business_agent_system"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring with Prometheus (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: bas-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Grafana for dashboards (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bas-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+volumes:
+  restaurant_data:
+  retail_data:
+  redis_data:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  default:
+    name: business-agent-network

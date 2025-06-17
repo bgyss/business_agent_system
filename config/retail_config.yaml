@@ -1,0 +1,84 @@
+business:
+  name: "Sample Retail Store"
+  type: "retail"
+  description: "General retail store with online and in-store sales"
+
+database:
+  url: "sqlite:///retail_business.db"
+  echo: false
+
+agents:
+  accounting:
+    enabled: true
+    check_interval: 300  # 5 minutes
+    anomaly_threshold: 0.30  # 30% variance triggers alert
+    alert_thresholds:
+      cash_low: 1500  # Alert when cash below $1500
+      receivables_overdue: 45  # Alert for receivables overdue by 45+ days
+      payables_overdue: 10  # Alert for payables overdue by 10+ days
+
+  inventory:
+    enabled: true
+    check_interval: 900  # 15 minutes
+    low_stock_multiplier: 1.5  # Reorder when stock < reorder_point * multiplier
+    reorder_lead_time: 7  # Days
+    consumption_analysis_days: 45
+
+  hr:
+    enabled: true
+    check_interval: 3600  # 1 hour
+    overtime_threshold: 8  # Hours per day before overtime
+    max_labor_cost_percentage: 0.25  # 25% of revenue
+    scheduling_buffer_hours: 1
+
+simulation:
+  enabled: true
+  mode: "real_time"  # "historical" or "real_time" or "off"
+  simulation_interval: 120  # seconds between simulation cycles
+  historical_days: 90  # days of historical data to generate
+  business_profile:
+    avg_daily_revenue: 1900
+    revenue_variance: 0.35
+    avg_transaction_size: 75
+    seasonal_factors:
+      1: 0.7   # January (post-holiday)
+      2: 0.8   # February
+      3: 0.9   # March
+      4: 1.0   # April
+      5: 1.0   # May
+      6: 0.9   # June
+      7: 0.8   # July
+      8: 0.9   # August
+      9: 1.0   # September
+      10: 1.1  # October
+      11: 1.35 # November (Black Friday)
+      12: 1.65 # December (Holiday shopping)
+    customer_patterns:
+      monday: 0.8
+      tuesday: 0.9
+      wednesday: 0.9
+      thursday: 1.0
+      friday: 1.25
+      saturday: 1.45
+      sunday: 0.65
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/retail.log"
+
+api:
+  enabled: true
+  host: "0.0.0.0"
+  port: 8000
+
+dashboard:
+  enabled: true
+  host: "0.0.0.0"
+  port: 8501
+  auto_refresh_seconds: 45
+
+anthropic:
+  model: "claude-3-sonnet-20240229"
+  max_tokens: 1000
+  temperature: 0.1
