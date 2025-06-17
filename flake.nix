@@ -97,7 +97,7 @@
             pkgs.python311Packages.pytest-cov
             
             # Additional development utilities
-            pkgs.nodePackages.pyright
+            pkgs.pyright
             pkgs.ruff
             pkgs.act  # For local GitHub Actions testing
           ];

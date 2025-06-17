@@ -5,7 +5,9 @@
       "Bash(chmod:*)",
       "Bash(git init:*)",
       "Bash(git config:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(nix flake update:*)",
+      "Bash(nix develop:*)"
     ],
     "deny": []
   }
