@@ -1,13 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir:*)",
-      "Bash(chmod:*)",
-      "Bash(git init:*)",
-      "Bash(git config:*)",
-      "Bash(git add:*)",
-      "Bash(nix flake update:*)",
-      "Bash(nix develop:*)"
+      "Bash(sqlite3:*)",
+      "Bash(python3:*)",
+      "Bash(source:*)",
+      "Bash(python test_dashboard_db.py)",
+      "Bash(rm:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(pkill:*)",
+      "Bash(uv run:*)",
+      "Bash(kill:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

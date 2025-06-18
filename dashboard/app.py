@@ -9,8 +9,11 @@ import sys
 import os
 import time
 import yaml
+import pickle
+import glob
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
+from typing import List, Dict, Any, Optional
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -18,6 +21,16 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.financial import Transaction, Account, AccountsReceivable, AccountsPayable, TransactionType
 from models.inventory import Item, StockMovement, StockMovementType
 from models.employee import Employee, TimeRecord, Schedule
+from models.agent_decisions import AgentDecisionModel
+
+# Try to import agent classes for decision history
+try:
+    from agents.base_agent import AgentDecision
+    from agents.accounting_agent import AccountingAgent
+    from agents.inventory_agent import InventoryAgent
+    from agents.hr_agent import HRAgent
+except ImportError:
+    AgentDecision = None
 
 
 class BusinessDashboard:
@@ -222,6 +235,111 @@ class BusinessDashboard:
             return pd.DataFrame(transaction_data)
         finally:
             session.close()
+    
+    def get_recent_stock_movements(self, limit: int = 10):
+        """Get recent stock movements for inventory tracking"""
+        session = self.SessionLocal()
+        try:
+            # Join with Item to get item name
+            recent_movements = session.query(StockMovement, Item).join(
+                Item, StockMovement.item_id == Item.id
+            ).order_by(
+                StockMovement.created_at.desc()
+            ).limit(limit).all()
+            
+            movement_data = []
+            for movement, item in recent_movements:
+                movement_data.append({
+                    'Date': movement.movement_date.strftime('%Y-%m-%d %H:%M'),
+                    'Item': item.name if item else 'Unknown',
+                    'Type': movement.movement_type.replace('_', ' ').title(),
+                    'Quantity': f"{movement.quantity:+}",
+                    'Notes': movement.notes or 'N/A',
+                    'Reference': movement.reference_number or 'N/A'
+                })
+            
+            return pd.DataFrame(movement_data)
+        finally:
+            session.close()
+    
+    def load_agent_decisions(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """
+        Load recent agent decisions from the database
+        """
+        session = self.SessionLocal()
+        try:
+            # Get recent decisions ordered by timestamp
+            db_decisions = session.query(AgentDecisionModel).order_by(
+                AgentDecisionModel.timestamp.desc()
+            ).limit(limit).all()
+            
+            decisions = []
+            for db_decision in db_decisions:
+                decisions.append({
+                    'agent_id': db_decision.agent_id,
+                    'decision_type': db_decision.decision_type,
+                    'timestamp': db_decision.timestamp,
+                    'reasoning': db_decision.reasoning,
+                    'action': db_decision.action,
+                    'confidence': db_decision.confidence,
+                    'context': db_decision.context or {}
+                })
+            
+            # If no decisions in database, show sample data for demo
+            if not decisions:
+                decisions = [
+                    {
+                        'agent_id': 'accounting_agent',
+                        'decision_type': 'cash_flow_alert',
+                        'timestamp': datetime.now() - timedelta(minutes=5),
+                        'reasoning': 'Cash balance is $1,250 which is below the alert threshold of $1,500. The system recommends reviewing upcoming payables and accelerating receivables collection.',
+                        'action': 'Generate cash flow alert and recommend payment prioritization',
+                        'confidence': 0.92,
+                        'context': {'cash_balance': 1250, 'threshold': 1500}
+                    },
+                    {
+                        'agent_id': 'inventory_agent', 
+                        'decision_type': 'reorder_recommendation',
+                        'timestamp': datetime.now() - timedelta(minutes=12),
+                        'reasoning': 'Tomatoes stock level (15 units) has fallen below reorder point (25 units). Historical consumption shows we use 8 units/day on average.',
+                        'action': 'Recommend reordering 50 units of tomatoes from primary supplier',
+                        'confidence': 0.87,
+                        'context': {'item': 'Tomatoes', 'current_stock': 15, 'reorder_point': 25}
+                    }
+                ]
+            
+            return decisions
+            
+        except Exception as e:
+            # Log error and return empty list
+            print(f"Error loading agent decisions: {e}")
+            return []
+        finally:
+            session.close()
+    
+    def get_agent_status(self) -> Dict[str, Any]:
+        """Get status of all configured agents"""
+        agent_status = {}
+        
+        # Check which agents are enabled in config
+        agent_configs = self.config.get("agents", {})
+        
+        for agent_name, config in agent_configs.items():
+            if config.get("enabled", False):
+                agent_status[agent_name] = {
+                    'enabled': True,
+                    'status': 'running',  # This would be dynamic in a real implementation
+                    'last_check': datetime.now() - timedelta(minutes=2),
+                    'check_interval': config.get('check_interval', 300),
+                    'decision_count': len([d for d in self.load_agent_decisions() if d['agent_id'] == f"{agent_name}_agent"])
+                }
+            else:
+                agent_status[agent_name] = {
+                    'enabled': False,
+                    'status': 'disabled'
+                }
+        
+        return agent_status
 
 
 def main():
@@ -235,6 +353,15 @@ def main():
     st.title("🏢 Business Management Dashboard")
     
     # Sidebar for configuration
+    st.sidebar.header("Dashboard Mode")
+    
+    # View selection
+    view_mode = st.sidebar.radio(
+        "Select View",
+        ["🔴 Live Agent Monitoring", "📊 Historical Analytics"],
+        index=0
+    )
+    
     st.sidebar.header("Configuration")
     
     # Config file selection
@@ -264,11 +391,22 @@ def main():
         format_func=lambda x: f"Last {x} days"
     )
     
-    # Auto-refresh
-    auto_refresh = st.sidebar.checkbox("Auto-refresh (30s)", value=False)
-    if auto_refresh:
-        time.sleep(30)
-        st.experimental_rerun()
+    # Refresh controls
+    st.sidebar.subheader("Dashboard Controls")
+    
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        if st.button("🔄 Refresh Now", use_container_width=True):
+            st.rerun()
+    
+    with col2:
+        if st.button("📊 Reset View", use_container_width=True):
+            # Clear any cached data
+            st.cache_data.clear()
+            st.rerun()
+    
+    # Show last update time
+    st.sidebar.info(f"Last updated: {datetime.now().strftime('%H:%M:%S')}")
     
     # Initialize dashboard
     try:
@@ -281,6 +419,148 @@ def main():
     except Exception as e:
         st.error(f"Error connecting to database: {str(e)}")
         return
+    
+    # Route to different views based on selection
+    if view_mode == "🔴 Live Agent Monitoring":
+        show_live_monitoring_view(dashboard)
+    else:
+        show_historical_analytics_view(dashboard, time_period)
+
+
+def show_live_monitoring_view(dashboard):
+    """Display live agent monitoring with real-time updates"""
+    st.header("🔴 Live Agent Monitoring")
+    
+    # Auto-refresh configuration
+    auto_refresh = st.sidebar.checkbox("🔄 Auto-refresh (5s)", value=True)
+    
+    # Auto-refresh implementation
+    if auto_refresh:
+        # Use a timer to auto-refresh
+        time.sleep(5)
+        st.rerun()
+    
+    # Live indicator
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.success("🟢 LIVE - Agent Activity Monitor")
+    
+    # Current time
+    st.metric("Current Time", datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    
+    # Agent Status Section
+    st.subheader("🤖 Agent Status")
+    agent_status = dashboard.get_agent_status()
+    
+    if agent_status:
+        cols = st.columns(len(agent_status))
+        
+        for idx, (agent_name, status) in enumerate(agent_status.items()):
+            with cols[idx]:
+                agent_display_name = agent_name.replace('_', ' ').title()
+                
+                if status['enabled']:
+                    if status['status'] == 'running':
+                        st.success(f"✅ {agent_display_name}")
+                        st.write(f"Last check: {status['last_check'].strftime('%H:%M:%S')}")
+                        st.write(f"Decisions: {status['decision_count']}")
+                        st.write(f"Interval: {status['check_interval']}s")
+                    else:
+                        st.warning(f"⚠️ {agent_display_name}")
+                        st.write("Status: Not running")
+                else:
+                    st.error(f"❌ {agent_display_name}")
+                    st.write("Status: Disabled")
+    else:
+        st.info("No agent configuration found.")
+    
+    # Recent Agent Decisions
+    st.subheader("🔥 Recent Agent Activity")
+    agent_decisions = dashboard.load_agent_decisions()
+    
+    if agent_decisions:
+        # Show only the most recent 5 decisions for live monitoring
+        for decision in agent_decisions[:5]:
+            agent_name = decision['agent_id'].replace('_agent', '').title()
+            
+            # Color code by agent type
+            agent_colors = {
+                'accounting_agent': '🔴',
+                'inventory_agent': '🟢', 
+                'hr_agent': '🔵'
+            }
+            
+            color_indicator = agent_colors.get(decision['agent_id'], '⚪')
+            time_ago = datetime.now() - decision['timestamp']
+            
+            if time_ago.days > 0:
+                time_str = f"{time_ago.days} days ago"
+            elif time_ago.seconds > 3600:
+                time_str = f"{time_ago.seconds // 3600} hours ago"
+            else:
+                time_str = f"{time_ago.seconds // 60} minutes ago"
+            
+            # Detailed display matching historical analysis
+            with st.expander(f"{color_indicator} {agent_name} - {decision['decision_type'].replace('_', ' ').title()} ({time_str})", expanded=True):
+                col1, col2 = st.columns([3, 1])
+                
+                with col1:
+                    st.write("**Action Taken:**")
+                    st.write(decision['action'])
+                    
+                    st.write("**Reasoning:**")
+                    reasoning_text = str(decision['reasoning'])
+                    # Use st.text for literal text rendering
+                    st.text(reasoning_text)
+                    
+                    if decision.get('context'):
+                        st.write("**Context:**")
+                        for key, value in decision['context'].items():
+                            st.write(f"- {key.replace('_', ' ').title()}: {value}")
+                
+                with col2:
+                    confidence_pct = int(decision['confidence'] * 100)
+                    st.metric("Confidence", f"{confidence_pct}%")
+                    
+                    if confidence_pct >= 90:
+                        st.success("High confidence")
+                    elif confidence_pct >= 70:
+                        st.warning("Medium confidence") 
+                    else:
+                        st.error("Low confidence")
+    else:
+        st.info("No recent agent activity.")
+    
+    # Live System Metrics
+    st.subheader("📊 Live System Metrics")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Get current cash balance
+        financial_summary = dashboard.get_financial_summary(1)  # Last day
+        st.metric("Current Cash", f"${financial_summary['cash_balance']:,.2f}")
+    
+    with col2:
+        # Get inventory alerts
+        inventory_summary = dashboard.get_inventory_summary()
+        low_stock = inventory_summary['low_stock_items']
+        st.metric("Low Stock Alerts", low_stock, delta=None, delta_color="inverse" if low_stock > 0 else "normal")
+    
+    with col3:
+        # Get recent transaction count
+        st.metric("Today's Transactions", financial_summary['transaction_count'])
+    
+    # Auto-refresh using Streamlit's built-in refresh
+    if st.button("🔄 Refresh Live Data", use_container_width=True):
+        st.rerun()
+    
+    # Note: For true auto-refresh, you can use browser refresh or streamlit run with --server.runOnSave true
+
+
+def show_historical_analytics_view(dashboard, time_period):
+    """Display historical analytics and reports"""
+    st.header("📊 Historical Analytics")
     
     # Main dashboard content
     col1, col2, col3, col4 = st.columns(4)
@@ -364,6 +644,14 @@ def main():
     inventory_chart = dashboard.get_inventory_levels_chart()
     st.plotly_chart(inventory_chart, use_container_width=True)
     
+    # Recent stock movements
+    st.subheader("📦 Recent Stock Movements")
+    recent_movements = dashboard.get_recent_stock_movements(15)
+    if not recent_movements.empty:
+        st.dataframe(recent_movements, use_container_width=True, height=300)
+    else:
+        st.info("No recent stock movements found.")
+    
     # HR section
     st.header("👥 Human Resources")
     
@@ -389,22 +677,108 @@ def main():
     else:
         st.info("No recent transactions found.")
     
+    # Agent Decisions Section - Historical View
+    st.header("🤖 Agent Decisions & Recommendations")
+    
+    agent_decisions = dashboard.load_agent_decisions()
+    
+    if agent_decisions:
+        # Display decisions in expandable cards
+        for decision in agent_decisions[:10]:  # Show last 10 decisions
+            agent_name = decision['agent_id'].replace('_agent', '').title()
+            
+            # Color code by agent type
+            agent_colors = {
+                'accounting_agent': '🔴',
+                'inventory_agent': '🟢', 
+                'hr_agent': '🔵'
+            }
+            
+            color_indicator = agent_colors.get(decision['agent_id'], '⚪')
+            time_ago = datetime.now() - decision['timestamp']
+            
+            if time_ago.days > 0:
+                time_str = f"{time_ago.days} days ago"
+            elif time_ago.seconds > 3600:
+                time_str = f"{time_ago.seconds // 3600} hours ago"
+            else:
+                time_str = f"{time_ago.seconds // 60} minutes ago"
+            
+            with st.expander(f"{color_indicator} {agent_name} - {decision['decision_type'].replace('_', ' ').title()} ({time_str})"):
+                col1, col2 = st.columns([3, 1])
+                
+                with col1:
+                    st.write("**Action Taken:**")
+                    st.write(decision['action'])
+                    
+                    st.write("**Reasoning:**")
+                    reasoning_text = str(decision['reasoning'])
+                    # Use st.text for literal text rendering
+                    st.text(reasoning_text)
+                    
+                    if decision.get('context'):
+                        st.write("**Context:**")
+                        for key, value in decision['context'].items():
+                            st.write(f"- {key.replace('_', ' ').title()}: {value}")
+                
+                with col2:
+                    confidence_pct = int(decision['confidence'] * 100)
+                    st.metric("Confidence", f"{confidence_pct}%")
+                    
+                    if confidence_pct >= 90:
+                        st.success("High confidence")
+                    elif confidence_pct >= 70:
+                        st.warning("Medium confidence") 
+                    else:
+                        st.error("Low confidence")
+    else:
+        st.info("No agent decisions available. Agents may not be running or no decisions have been made yet.")
+    
     # System status
     st.header("⚙️ System Status")
     
     col1, col2 = st.columns(2)
     
     with col1:
+        business_name = dashboard.config["business"]["name"]
+        business_type = dashboard.config["business"]["type"].title()
         st.info(f"Business: {business_name}")
         st.info(f"Type: {business_type}")
         st.info(f"Database: {dashboard.db_url}")
+        st.info(f"Analysis Period: {time_period} days")
     
     with col2:
-        st.info(f"Analysis Period: {time_period} days")
         st.info(f"Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         if st.button("Refresh Data"):
-            st.experimental_rerun()
+            st.rerun()
+    
+    # Agent Status
+    st.subheader("🤖 Agent Status")
+    
+    agent_status = dashboard.get_agent_status()
+    
+    if agent_status:
+        cols = st.columns(len(agent_status))
+        
+        for idx, (agent_name, status) in enumerate(agent_status.items()):
+            with cols[idx]:
+                agent_display_name = agent_name.replace('_', ' ').title()
+                
+                if status['enabled']:
+                    if status['status'] == 'running':
+                        st.success(f"✅ {agent_display_name}")
+                        st.write(f"Last check: {status['last_check'].strftime('%H:%M:%S')}")
+                        st.write(f"Decisions: {status['decision_count']}")
+                        st.write(f"Interval: {status['check_interval']}s")
+                    else:
+                        st.warning(f"⚠️ {agent_display_name}")
+                        st.write("Status: Not running")
+                else:
+                    st.error(f"❌ {agent_display_name}")
+                    st.write("Status: Disabled")
+    else:
+        st.info("No agent configuration found.")
 
 
 if __name__ == "__main__":

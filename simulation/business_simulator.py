@@ -1,14 +1,17 @@
 import asyncio
 import json
+import random
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from simulation.financial_generator import FinancialDataGenerator, get_restaurant_profile, get_retail_profile
+from simulation.inventory_simulator import InventorySimulator, get_restaurant_inventory_profile, get_retail_inventory_profile
 from models.financial import Account, Transaction, AccountsReceivable, AccountsPayable, Base as FinancialBase
-from models.inventory import Item, StockMovement, Supplier, Base as InventoryBase
+from models.inventory import Item, StockMovement, Supplier, PurchaseOrder, PurchaseOrderItem, Base as InventoryBase
 from models.employee import Employee, TimeRecord, Schedule, Base as EmployeeBase
+from models.agent_decisions import AgentDecisionModel
 
 
 class BusinessSimulator:
@@ -22,8 +25,10 @@ class BusinessSimulator:
         FinancialBase.metadata.create_all(bind=self.engine)
         InventoryBase.metadata.create_all(bind=self.engine)
         EmployeeBase.metadata.create_all(bind=self.engine)
+        # AgentDecisionModel uses FinancialBase, so it's already created above
         
         self.financial_generator = None
+        self.inventory_simulator = None
         self.is_running = False
         
     def initialize_business(self, business_type: str = "restaurant"):
@@ -31,11 +36,14 @@ class BusinessSimulator:
         try:
             # Set up financial generator
             if business_type == "restaurant":
-                profile = get_restaurant_profile()
+                financial_profile = get_restaurant_profile()
+                inventory_profile = get_restaurant_inventory_profile()
             else:
-                profile = get_retail_profile()
+                financial_profile = get_retail_profile()
+                inventory_profile = get_retail_inventory_profile()
             
-            self.financial_generator = FinancialDataGenerator(profile)
+            self.financial_generator = FinancialDataGenerator(financial_profile)
+            self.inventory_simulator = InventorySimulator(inventory_profile)
             
             # Create initial accounts if they don't exist
             existing_accounts = session.query(Account).count()
@@ -145,7 +153,7 @@ class BusinessSimulator:
             session.close()
     
     def simulate_historical_data(self, days_back: int = 90):
-        if not self.financial_generator:
+        if not self.financial_generator or not self.inventory_simulator:
             raise ValueError("Business must be initialized first")
             
         end_date = datetime.now().date()
@@ -166,8 +174,52 @@ class BusinessSimulator:
         )
         financial_data["transactions"].extend(anomalous_transactions)
         
+        # Shuffle transactions to mix normal and anomalous ones
+        random.shuffle(financial_data["transactions"])
+        
+        # Generate inventory data
+        inventory_items = self.inventory_simulator.generate_initial_inventory()
+        
+        # Simulate inventory movements over the historical period
+        all_stock_movements = []
+        current_date = start_date
+        
+        while current_date <= end_date:
+            # Daily consumption
+            daily_consumption = self.inventory_simulator.simulate_daily_consumption(
+                inventory_items, datetime.combine(current_date, datetime.min.time())
+            )
+            all_stock_movements.extend(daily_consumption)
+            
+            # Deliveries
+            deliveries = self.inventory_simulator.simulate_deliveries(
+                inventory_items, datetime.combine(current_date, datetime.min.time())
+            )
+            all_stock_movements.extend(deliveries)
+            
+            # Stock adjustments
+            adjustments = self.inventory_simulator.simulate_stock_adjustments(
+                inventory_items, datetime.combine(current_date, datetime.min.time())
+            )
+            all_stock_movements.extend(adjustments)
+            
+            current_date += timedelta(days=1)
+        
         session = self.SessionLocal()
         try:
+            # Insert inventory items first, checking for duplicates
+            item_id_map = {}
+            for item_data in inventory_items:
+                # Check if item with this SKU already exists
+                existing_item = session.query(Item).filter_by(sku=item_data["sku"]).first()
+                if existing_item:
+                    item_id_map[item_data["sku"]] = existing_item.id
+                else:
+                    item = Item(**item_data)
+                    session.add(item)
+                    session.flush()  # Get the ID
+                    item_id_map[item_data["sku"]] = item.id
+            
             # Insert transactions
             for tx_data in financial_data["transactions"]:
                 transaction = Transaction(**tx_data)
@@ -183,22 +235,55 @@ class BusinessSimulator:
                 payable = AccountsPayable(**ap_data)
                 session.add(payable)
             
+            # Insert stock movements
+            for movement_data in all_stock_movements:
+                # Update item_id based on sku
+                if movement_data.get("item_sku") in item_id_map:
+                    movement_data["item_id"] = item_id_map[movement_data["item_sku"]]
+                
+                # Remove sku from movement data since it's not a field in StockMovement
+                movement_data.pop("item_sku", None)
+                
+                movement = StockMovement(**movement_data)
+                session.add(movement)
+            
             session.commit()
             
             print(f"Generated:")
             print(f"  - {len(financial_data['transactions'])} transactions")
             print(f"  - {len(financial_data['accounts_receivable'])} receivables")
             print(f"  - {len(financial_data['accounts_payable'])} payables")
+            print(f"  - {len(inventory_items)} inventory items")
+            print(f"  - {len(all_stock_movements)} stock movements")
             
         finally:
             session.close()
     
     async def start_real_time_simulation(self, message_queue: asyncio.Queue):
         self.is_running = True
-        print("Starting real-time business simulation...")
+        start_time = datetime.now()
+        duration_minutes = self.config.get("duration_minutes", 0)
+        speed_multiplier = self.config.get("speed_multiplier", 1.0)
+        
+        if duration_minutes > 0:
+            print(f"Starting time-limited business simulation (duration: {duration_minutes} minutes, speed: {speed_multiplier}x)...")
+        else:
+            print(f"Starting business simulation (speed: {speed_multiplier}x)...")
+        
+        cycle_count = 0
         
         while self.is_running:
             try:
+                # Check if we've exceeded the duration limit
+                if duration_minutes > 0:
+                    elapsed_minutes = (datetime.now() - start_time).total_seconds() / 60
+                    if elapsed_minutes >= duration_minutes:
+                        print(f"Simulation completed after {elapsed_minutes:.1f} minutes")
+                        self.is_running = False
+                        break
+                
+                cycle_count += 1
+                
                 # Generate today's transactions
                 today = datetime.now()
                 daily_transactions = self.financial_generator.generate_daily_transactions(today)
@@ -215,28 +300,38 @@ class BusinessSimulator:
                     if daily_transactions:
                         await message_queue.put({
                             "type": "new_transaction",
-                            "transaction": daily_transactions[-1]  # Send latest transaction
+                            "transaction": daily_transactions[-1],  # Send latest transaction
+                            "cycle": cycle_count
                         })
                 
                 finally:
                     session.close()
                 
-                # Generate other events occasionally
-                if datetime.now().minute == 0:  # Every hour
-                    await message_queue.put({"type": "cash_flow_check"})
+                # Generate other events more frequently for testing
+                current_time = datetime.now()
                 
-                if datetime.now().hour == 9 and datetime.now().minute == 0:  # Daily at 9 AM
-                    await message_queue.put({"type": "daily_analysis"})
+                # Send cash flow check every 2 minutes for testing (adjusted for speed)
+                if cycle_count % max(1, int(120 / (self.config.get("simulation_interval", 10) * speed_multiplier))) == 0:
+                    await message_queue.put({"type": "cash_flow_check", "cycle": cycle_count})
                 
-                if datetime.now().day == 1 and datetime.now().hour == 8:  # Monthly at 8 AM on 1st
-                    await message_queue.put({"type": "aging_analysis"})
+                # Send daily analysis every 5 minutes for testing (adjusted for speed)
+                if cycle_count % max(1, int(300 / (self.config.get("simulation_interval", 10) * speed_multiplier))) == 0:
+                    await message_queue.put({"type": "daily_analysis", "cycle": cycle_count})
+                
+                # Send aging analysis every 10 minutes for testing (adjusted for speed)
+                if cycle_count % max(1, int(600 / (self.config.get("simulation_interval", 10) * speed_multiplier))) == 0:
+                    await message_queue.put({"type": "aging_analysis", "cycle": cycle_count})
+                
+                # Calculate sleep time adjusted for speed multiplier
+                base_interval = self.config.get("simulation_interval", 10)
+                adjusted_interval = base_interval / speed_multiplier
                 
                 # Wait before next cycle
-                await asyncio.sleep(self.config.get("simulation_interval", 60))  # Default 1 minute
+                await asyncio.sleep(adjusted_interval)
                 
             except Exception as e:
                 print(f"Error in simulation loop: {e}")
-                await asyncio.sleep(5)
+                await asyncio.sleep(1)
     
     async def stop_simulation(self):
         self.is_running = False

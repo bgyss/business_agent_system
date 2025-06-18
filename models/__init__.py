@@ -14,6 +14,9 @@ from .employee import (
     HRSummary, StaffingRecommendation, LaborCostAnalysis,
     EmployeeStatus, TimeRecordType, LeaveType
 )
+from .agent_decisions import (
+    AgentDecision, AgentDecisionModel, AgentDecisionSummary
+)
 
 __all__ = [
     # Financial models
@@ -30,5 +33,8 @@ __all__ = [
     "Employee", "TimeRecord", "Schedule", "LeaveRequest", "PayrollRecord",
     "EmployeeModel", "TimeRecordModel", "ScheduleModel", "LeaveRequestModel", "PayrollRecordModel",
     "HRSummary", "StaffingRecommendation", "LaborCostAnalysis",
-    "EmployeeStatus", "TimeRecordType", "LeaveType"
+    "EmployeeStatus", "TimeRecordType", "LeaveType",
+    
+    # Agent decision models
+    "AgentDecision", "AgentDecisionModel", "AgentDecisionSummary"
 ]

@@ -33,7 +33,7 @@ classifiers = [
     "Topic :: Office/Business :: Financial :: Accounting",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.8.1"
 dependencies = [
     "anthropic>=0.25.0",
     "sqlalchemy>=2.0.0",

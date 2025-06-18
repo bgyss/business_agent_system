@@ -157,13 +157,25 @@ class BusinessAgentSystem:
                     timeout=1.0
                 )
                 
-                # Route message to appropriate agents
+                # Process messages from simulation
                 if isinstance(message, dict):
-                    # Broadcast to all agents
-                    for agent_name, agent in self.agents.items():
-                        await agent.message_queue.put(message)
+                    # Create AgentMessage format for agents to process
+                    from agents.base_agent import AgentMessage
+                    agent_message = AgentMessage(
+                        sender="simulator",
+                        recipient="all", 
+                        message_type="data_update",
+                        content=message
+                    )
                     
-                    self.logger.debug(f"Routed message: {message.get('type', 'unknown')}")
+                    # Process message directly with each agent
+                    for agent_name, agent in self.agents.items():
+                        try:
+                            await agent.handle_message(agent_message)
+                        except Exception as e:
+                            self.logger.error(f"Error processing message in {agent_name}: {e}")
+                    
+                    self.logger.info(f"Processed message: {message.get('type', 'unknown')}")
                 
             except asyncio.TimeoutError:
                 continue
@@ -208,6 +220,8 @@ class BusinessAgentSystem:
     
     async def monitor_system(self):
         """Monitor system health and performance"""
+        monitor_interval = 30  # Check every 30 seconds
+        
         while self.is_running:
             try:
                 # Log system status periodically
@@ -224,12 +238,20 @@ class BusinessAgentSystem:
                     if not agent.is_running:
                         self.logger.warning(f"Agent {agent_name} is not running")
                 
-                # Wait 5 minutes before next check
-                await asyncio.sleep(300)
+                # Check if simulation is still running
+                if self.simulator and not self.simulator.is_running:
+                    sim_config = self.config.get("simulation", {})
+                    if sim_config.get("duration_minutes", 0) > 0:
+                        self.logger.info("Simulation completed, shutting down system")
+                        self.is_running = False
+                        break
+                
+                # Wait before next check
+                await asyncio.sleep(monitor_interval)
                 
             except Exception as e:
                 self.logger.error(f"Error in system monitor: {e}")
-                await asyncio.sleep(60)
+                await asyncio.sleep(10)
     
     async def shutdown(self):
         """Graceful shutdown"""

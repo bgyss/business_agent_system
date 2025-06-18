@@ -6,6 +6,14 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel
 import logging
 from anthropic import Anthropic
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import create_engine
+
+# Import models from the parent directory
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from models.agent_decisions import AgentDecision, AgentDecisionModel
 
 
 class AgentMessage(BaseModel):
@@ -16,31 +24,25 @@ class AgentMessage(BaseModel):
     timestamp: datetime = datetime.now()
 
 
-class AgentDecision(BaseModel):
-    agent_id: str
-    decision_type: str
-    context: Dict[str, Any]
-    reasoning: str
-    action: str
-    confidence: float
-    timestamp: datetime = datetime.now()
-
-
 class BaseAgent(ABC):
     def __init__(
         self,
         agent_id: str,
         api_key: str,
         config: Dict[str, Any],
+        db_url: str,
         message_queue: Optional[asyncio.Queue] = None
     ):
         self.agent_id = agent_id
         self.client = Anthropic(api_key=api_key)
         self.config = config
+        self.db_url = db_url
+        self.engine = create_engine(db_url)
+        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         self.message_queue = message_queue or asyncio.Queue()
         self.is_running = False
         self.logger = logging.getLogger(f"agent.{agent_id}")
-        self.decisions_log: List[AgentDecision] = []
+        self.decisions_log = []
         
     @property
     @abstractmethod
@@ -65,7 +67,7 @@ class BaseAgent(ABC):
         
         try:
             response = self.client.messages.create(
-                model="claude-3-sonnet-20240229",
+                model="claude-3-5-sonnet-20241022",
                 max_tokens=max_tokens,
                 messages=[
                     {"role": "user", "content": full_prompt}
@@ -98,24 +100,43 @@ class BaseAgent(ABC):
         return messages
     
     def log_decision(self, decision: AgentDecision):
+        # Keep in memory for immediate access
         self.decisions_log.append(decision)
-        self.logger.info(f"Decision logged: {decision.decision_type} - {decision.action}")
+        
+        # Persist to database
+        session = self.SessionLocal()
+        try:
+            db_decision = decision.to_db_model()
+            session.add(db_decision)
+            session.commit()
+            self.logger.info(f"Decision logged: {decision.decision_type} - {decision.action}")
+        except Exception as e:
+            session.rollback()
+            self.logger.error(f"Failed to persist decision to database: {e}")
+        finally:
+            session.close()
     
     async def start(self):
         self.is_running = True
         self.logger.info(f"Agent {self.agent_id} started")
         
+        # Agent now runs in the background, processing messages via the router
+        # and performing periodic checks
         while self.is_running:
             try:
-                messages = await self.receive_messages()
-                for message in messages:
-                    await self.handle_message(message)
+                # Perform periodic analysis based on check_interval
+                await self.periodic_check()
                 
-                await asyncio.sleep(self.config.get("check_interval", 5))
+                await asyncio.sleep(self.config.get("check_interval", 300))
                 
             except Exception as e:
                 self.logger.error(f"Error in agent loop: {e}")
-                await asyncio.sleep(1)
+                await asyncio.sleep(60)
+    
+    async def periodic_check(self):
+        """Perform periodic analysis independent of messages"""
+        # This method can be overridden by specific agents for scheduled analysis
+        pass
     
     async def stop(self):
         self.is_running = False

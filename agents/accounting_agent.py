@@ -16,9 +16,8 @@ from models.financial import (
 
 class AccountingAgent(BaseAgent):
     def __init__(self, agent_id: str, api_key: str, config: Dict[str, Any], db_url: str):
-        super().__init__(agent_id, api_key, config)
-        self.engine = create_engine(db_url)
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        super().__init__(agent_id, api_key, config, db_url)
+        # Remove duplicate engine and session creation since BaseAgent now handles this
         self.anomaly_threshold = config.get("anomaly_threshold", 0.2)  # 20% variance
         self.alert_thresholds = config.get("alert_thresholds", {
             "cash_low": 1000,
@@ -353,3 +352,26 @@ class AccountingAgent(BaseAgent):
             })
         
         return alerts
+    
+    async def periodic_check(self):
+        """Perform periodic accounting analysis"""
+        session = self.SessionLocal()
+        try:
+            # Perform cash flow check
+            decision = await self._check_cash_flow(session)
+            if decision:
+                self.log_decision(decision)
+            
+            # Perform aging analysis once per day
+            current_hour = datetime.now().hour
+            if current_hour == 9:  # 9 AM daily aging analysis
+                aging_decision = await self._analyze_aging(session)
+                if aging_decision:
+                    self.log_decision(aging_decision)
+            
+            self.logger.debug("Periodic accounting check completed")
+            
+        except Exception as e:
+            self.logger.error(f"Error in periodic check: {e}")
+        finally:
+            session.close()

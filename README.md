@@ -357,7 +357,52 @@ Check logs in the `logs/` directory for detailed error information and agent dec
 
 ## License
 
-[Add your license information here]
+PROPRIETARY SOFTWARE LICENSE
+
+Copyright (c) 2025 Brian Gyss. All rights reserved.
+
+NOTICE: This software and associated documentation files (the "Software") are 
+proprietary and confidential. The Software is protected by copyright laws and 
+international copyright treaties, as well as other intellectual property laws 
+and treaties.
+
+RESTRICTIONS:
+1. The Software is licensed, not sold. You may not copy, modify, distribute, 
+   sell, or lease any part of the Software without explicit written permission 
+   from the copyright holder.
+
+2. You may not reverse engineer, decompile, disassemble, or attempt to derive 
+   the source code of the Software.
+
+3. You may not use the Software for any commercial purposes without a valid 
+   commercial license agreement.
+
+4. You may not remove or alter any proprietary notices or labels on the Software.
+
+5. This license does not grant you any rights to use the copyright holder's 
+   trademarks or service marks.
+
+PERMITTED USE:
+- Authorized users may use the Software solely for internal evaluation, 
+  development, and testing purposes.
+- Any use beyond evaluation requires a separate commercial license agreement.
+
+TERMINATION:
+This license is effective until terminated. Your rights under this license 
+will terminate automatically without notice if you fail to comply with any 
+term of this license.
+
+DISCLAIMER:
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+SOFTWARE.
+
+For commercial licensing inquiries, please contact: 
+bgyss@hey.com
 
 ## Support
 

@@ -16,9 +16,7 @@ from models.employee import (
 
 class HRAgent(BaseAgent):
     def __init__(self, agent_id: str, api_key: str, config: Dict[str, Any], db_url: str):
-        super().__init__(agent_id, api_key, config)
-        self.engine = create_engine(db_url)
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        super().__init__(agent_id, api_key, config, db_url)
         self.overtime_threshold = config.get("overtime_threshold", 40)  # hours per week
         self.max_labor_cost_percentage = config.get("max_labor_cost_percentage", 0.30)  # 30% of revenue
         self.scheduling_buffer_hours = config.get("scheduling_buffer_hours", 2)

@@ -16,9 +16,7 @@ from models.inventory import (
 
 class InventoryAgent(BaseAgent):
     def __init__(self, agent_id: str, api_key: str, config: Dict[str, Any], db_url: str):
-        super().__init__(agent_id, api_key, config)
-        self.engine = create_engine(db_url)
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        super().__init__(agent_id, api_key, config, db_url)
         self.low_stock_multiplier = config.get("low_stock_multiplier", 1.2)
         self.reorder_lead_time = config.get("reorder_lead_time", 7)
         self.consumption_analysis_days = config.get("consumption_analysis_days", 30)

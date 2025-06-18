@@ -21,6 +21,7 @@ help:
 	@echo "Build & Run:"
 	@echo "  build        - Build the package with Nix"
 	@echo "  run-restaurant - Run with restaurant configuration"
+	@echo "  run-restaurant-fast - Run 5-minute restaurant simulation at 3x speed"
 	@echo "  run-retail   - Run with retail configuration"
 	@echo "  dashboard    - Launch the Streamlit dashboard"
 	@echo ""
@@ -104,6 +105,10 @@ build:
 run-restaurant:
 	@echo "🍽️ Starting restaurant business system..."
 	uv run python main.py --config config/restaurant_config.yaml
+
+run-restaurant-fast:
+	@echo "🍽️ Starting restaurant business system (5 min, 3x speed)..."
+	uv run python main.py --config config/restaurant_fast_test.yaml
 
 run-retail:
 	@echo "🛍️ Starting retail business system..."
