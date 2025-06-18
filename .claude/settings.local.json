@@ -1,18 +1,23 @@
 {
   "permissions": {
     "allow": [
-      "Bash(sqlite3:*)",
-      "Bash(python3:*)",
-      "Bash(source:*)",
-      "Bash(python test_dashboard_db.py)",
-      "Bash(rm:*)",
-      "Bash(find:*)",
-      "Bash(grep:*)",
-      "Bash(pkill:*)",
-      "Bash(uv run:*)",
-      "Bash(kill:*)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(git init:*)",
+      "Bash(git config:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(nix flake update:*)",
+      "Bash(nix develop:*)",
+      "Bash(rm:*)",
+      "Bash(uv sync:*)",
+      "Bash(make run-restaurant:*)",
+      "Bash(make:*)",
+      "Bash(uv run streamlit run:*)",
+      "Bash(ls:*)",
+      "Bash(python:*)",
+      "Bash(sqlite3:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }
