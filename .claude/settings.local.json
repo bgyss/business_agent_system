@@ -11,7 +11,8 @@
       "Bash(pkill:*)",
       "Bash(uv run:*)",
       "Bash(kill:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
