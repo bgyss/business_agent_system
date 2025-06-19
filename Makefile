@@ -1,6 +1,6 @@
 # Business Agent System - Development Makefile
 
-.PHONY: help dev-setup install clean test lint format type-check build run-restaurant run-retail dashboard
+.PHONY: help dev-setup install clean test test-web test-smoke lint format type-check build run-restaurant run-retail dashboard
 
 # Default target
 help:
@@ -14,6 +14,8 @@ help:
 	@echo ""
 	@echo "Development:"
 	@echo "  test         - Run all tests"
+	@echo "  test-web     - Run web/UI tests for dashboard"
+	@echo "  test-smoke   - Run quick smoke tests"
 	@echo "  lint         - Run linting checks"
 	@echo "  format       - Format code with black and isort"
 	@echo "  type-check   - Run mypy type checking"
@@ -77,6 +79,28 @@ test:
 test-cov:
 	@echo "🧪 Running tests with coverage..."
 	uv run pytest --cov --cov-report=html --cov-report=term
+
+# Web testing
+test-web:
+	@echo "🌐 Running web tests for dashboard..."
+	@echo "📋 Ensuring required directories exist..."
+	@mkdir -p test_screenshots test_artifacts
+	uv run pytest tests/test_dashboard_web.py -v --html=test_artifacts/web_test_report.html --self-contained-html
+
+test-smoke:
+	@echo "💨 Running smoke tests..."
+	@mkdir -p test_screenshots test_artifacts
+	uv run pytest tests/test_dashboard_smoke.py -v --html=test_artifacts/smoke_test_report.html --self-contained-html
+
+test-web-headless:
+	@echo "🌐 Running web tests in headless mode..."
+	@mkdir -p test_screenshots test_artifacts
+	uv run pytest tests/test_dashboard_web.py -v --html=test_artifacts/web_test_report.html --self-contained-html -m "not slow"
+
+test-web-full:
+	@echo "🌐 Running full web test suite..."
+	@mkdir -p test_screenshots test_artifacts
+	uv run pytest tests/test_dashboard_web.py tests/test_dashboard_smoke.py -v --html=test_artifacts/full_web_test_report.html --self-contained-html
 
 # Linting
 lint:
