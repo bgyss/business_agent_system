@@ -364,10 +364,322 @@ docker-compose -f docker-compose.yml up -d
 ## Integration Points
 
 ### External Systems
-- **Accounting Software**: QuickBooks-compatible data formats
-- **POS Systems**: Transaction import capabilities
+- **Accounting Software**: Integration with major SMB accounting platforms via REST/GraphQL APIs
+- **POS Systems**: Transaction import capabilities via REST APIs
 - **Payroll Systems**: Employee data synchronization
 - **Inventory Systems**: Stock level monitoring
+
+### Restaurant POS Integrations
+
+The system supports integration with major restaurant POS platforms through their REST APIs. Each integration provides real-time transaction data, menu management, and operational metrics to enhance agent decision-making.
+
+#### Supported POS Platforms
+
+**Toast**
+- **Developer Portal**: [https://doc.toasttab.com/doc/devguide/index.html](https://doc.toasttab.com/doc/devguide/index.html)
+- **API Reference**: [https://toastintegrations.redoc.ly/](https://toastintegrations.redoc.ly/)
+- **Integration Capabilities**: Sales data, menu items, employee time tracking, inventory levels
+- **Authentication**: OAuth 2.0 with restaurant-specific tokens
+
+**Square for Restaurants**
+- **Developer Portal**: [https://developer.squareup.com/us/en](https://developer.squareup.com/us/en)
+- **API Reference**: [https://developer.squareup.com/reference/square](https://developer.squareup.com/reference/square)
+- **Integration Capabilities**: Payment processing, order management, customer data, inventory
+- **Authentication**: Bearer tokens with application-level permissions
+
+**Clover**
+- **Developer Portal**: [https://docs.clover.com/dev/reference/api-reference-overview](https://docs.clover.com/dev/reference/api-reference-overview)
+- **Integration Capabilities**: Order management, payment processing, employee management, inventory
+- **Authentication**: OAuth 2.0 with merchant-specific access tokens
+
+**Lightspeed Restaurant**
+- **K-Series API**: [https://api-docs.lsk.lightspeed.app/](https://api-docs.lsk.lightspeed.app/)
+- **O-Series API**: [https://o-series-support.lightspeedhq.com/hc/en-us/articles/31329318935067-API-Documentation](https://o-series-support.lightspeedhq.com/hc/en-us/articles/31329318935067-API-Documentation)
+- **Integration Capabilities**: Sales reporting, menu management, employee scheduling, inventory tracking
+- **Authentication**: API keys with location-specific access
+
+**SpotOn**
+- **Developer Portal**: [https://developers.spoton.com/restaurant/docs/api-access](https://developers.spoton.com/restaurant/docs/api-access)
+- **Integration Capabilities**: Export API for sales data, customer information, menu items
+- **Authentication**: API keys with rate limiting
+
+**TouchBistro** *(Partner-only)*
+- **Integrations Page**: [https://www.touchbistro.com/features/integrations/](https://www.touchbistro.com/features/integrations/)
+- **API Catalog**: [https://apitracker.io/a/touchbistro](https://apitracker.io/a/touchbistro)
+- **Integration Capabilities**: Requires certified partner status for API access
+- **Authentication**: Partner-specific credentials with signed agreements
+
+**Revel Systems**
+- **Developer Portal**: [https://developer.revelsystems.com/revelsystems/](https://developer.revelsystems.com/revelsystems/)
+- **API Reference**: [https://developer.revelsystems.com/revelsystems/docs/rest-api](https://developer.revelsystems.com/revelsystems/docs/rest-api)
+- **Integration Capabilities**: Sales data, inventory management, employee data, reporting
+- **Authentication**: API keys with establishment-level permissions
+
+#### POS Integration Implementation Guidelines
+
+**Data Synchronization Strategy**:
+1. **Real-time Webhooks**: Configure POS webhooks for immediate transaction processing
+2. **Scheduled Polling**: Hourly sync for menu updates and inventory changes
+3. **Daily Batch**: End-of-day reports and comprehensive reconciliation
+4. **Error Handling**: Retry logic with exponential backoff for API failures
+
+**Agent Enhancement with POS Data**:
+- **Accounting Agent**: Real-time transaction processing, sales categorization, payment reconciliation
+- **Inventory Agent**: Automatic stock deduction, popular item tracking, waste reduction analysis
+- **HR Agent**: Employee performance metrics, labor cost optimization, schedule effectiveness
+
+**Security Considerations**:
+- Store API credentials in environment variables or secure key management
+- Implement rate limiting to respect POS platform constraints
+- Use sandbox environments for development and testing
+- Encrypt sensitive transaction data in transit and at rest
+
+**Monitoring and Observability**:
+- Track API response times and success rates for each POS integration
+- Monitor data sync lag and alert on significant delays
+- Log integration errors with sufficient context for debugging
+- Maintain audit trails for all POS data modifications
+
+### Restaurant Management & Purchasing Platform Integrations
+
+The system supports integration with restaurant management platforms that handle purchasing, inventory management, and supplier relationships. These integrations enable comprehensive food cost tracking, automated purchase order management, and supply chain optimization for restaurant operations.
+
+#### Dedicated Purchasing & Inventory Platforms
+
+**MarketMan**
+- **API Documentation**: JSON REST API v3 with Swagger specification
+- **Integration Capabilities**: Item management, vendor relationships, purchase orders, invoices, stock counts
+- **Authentication**: Bearer token authentication
+- **Rate Limits**: 120 requests/minute
+- **Sandbox**: Available upon request
+- **Key Features**: Multi-vendor PO transmission, delivery tracking, order guides
+
+**MarginEdge**
+- **Developer Portal**: Public REST API with comprehensive documentation
+- **Integration Capabilities**: OCR invoice processing, theoretical vs actual food cost analysis, re-ordering workflows
+- **Authentication**: OAuth 2.0
+- **Rate Limits**: 300 requests/minute
+- **API Access**: Read-only for invoices/products; write endpoints (vendors, PO) in beta
+- **Key Features**: Automated cost variance analysis, one-click reordering
+
+**BlueCart**
+- **API Reference**: REST API with OpenAPI specification
+- **Integration Capabilities**: Mobile/web marketplace connecting restaurants to distributors
+- **Authentication**: API key header authentication
+- **Rate Limits**: 240 requests/minute
+- **Pagination**: Limited to 25 orders per API call
+- **Key Features**: Direct PO transmission to distributors, marketplace functionality
+
+**Choco**
+- **API Status**: No public API; proprietary integration workflows only
+- **Integration Capabilities**: Chat-style ordering between chefs and distributors
+- **Access**: Partner-only integrations
+- **Key Features**: Conversational ordering interface, distributor relationship management
+- **Note**: Limited integration options for automated data extraction
+
+#### Comprehensive Restaurant Management Suites
+
+**Restaurant365**
+- **API Style**: OData + REST connectors with vendor integration hub
+- **Integration Capabilities**: Full CRUD operations on vendors, items, purchase orders; automated PO to AP matching
+- **Authentication**: OAuth 2.0
+- **Rate Limits**: 600 requests/minute (highest in category)
+- **Sandbox**: Available for development
+- **Key Features**: Comprehensive back-office suite with integrated accounting
+
+**Toast + xtraCHEF**
+- **API Access**: Partner REST endpoints within xtraCHEF platform
+- **Integration Capabilities**: Bid-sheet comparison, order guides, invoice digitization
+- **Authentication**: OAuth 2.0 (requires Toast partner program membership)
+- **Rate Limits**: 300 requests/minute
+- **Sandbox**: Partner sandbox environment
+- **Key Features**: Integrated POS and purchasing with automated invoice processing
+
+**Oracle MICROS Simphony Cloud**
+- **API Documentation**: Configuration & Content REST API (CCAPI) with OpenAPI specification
+- **Integration Capabilities**: Procurement management, recipe costing, stock management, multi-site operations
+- **Authentication**: Token-based with granular role scoping
+- **Rate Limits**: 400 requests/minute
+- **Sandbox**: Available for development
+- **Key Features**: Enterprise-grade multi-location management
+
+**Revel Systems**
+- **Developer Portal**: REST API with comprehensive purchasing documentation
+- **Integration Capabilities**: iPad POS integration, inventory management, PO creation and receiving
+- **Authentication**: OAuth 2.0
+- **Rate Limits**: 300 requests/minute (default)
+- **Sandbox**: Dedicated sandbox organization per partner
+- **Key Features**: Mobile-first POS with integrated purchasing workflows
+
+**Lightspeed Restaurant (U-Series/Upserve)**
+- **API Access**: OLO API for ordering, POS Core API, inventory data via partner endpoints
+- **Integration Capabilities**: Upserve Inventory with costed recipes, auto-replenishment, electronic POs
+- **Authentication**: OAuth 2.0 (write access requires Lightspeed partner approval)
+- **Rate Limits**: 300 requests/minute
+- **Sandbox**: Partner sandbox environment
+- **Key Features**: Automated replenishment based on sales velocity
+
+**Compeat (R365 Division)**
+- **API Documentation**: Legacy REST Web API documentation
+- **Integration Capabilities**: Back-office operations, inventory management, recipe costing, purchasing workflows
+- **Authentication**: Basic token authentication
+- **Rate Limits**: 150 requests/minute
+- **Access**: Keys issued by account representatives to existing customers only
+- **Key Features**: Integrated with Restaurant365 ecosystem
+
+#### Restaurant Management Integration Implementation Guidelines
+
+**Integration Architecture Strategy**:
+1. **Bolt-on vs All-in-one**: Choose between dedicated purchasing platforms (MarketMan, MarginEdge) or comprehensive suites (Restaurant365, Simphony)
+2. **API-First Approach**: Prioritize platforms with published OpenAPI specifications and sandbox environments
+3. **Webhook Utilization**: Leverage real-time event notifications (invoice.created, stockcount.completed) to minimize polling
+4. **Data Normalization**: Standardize unit codes (CS, EA, LB) before integration with business agents
+
+**Data Synchronization Patterns**:
+- **Real-time Events**: Webhook-driven updates for purchase orders, invoices, and inventory changes
+- **Batch Processing**: Scheduled bulk imports for vendor catalogs and historical data
+- **Incremental Sync**: Delta updates for inventory levels and pricing changes
+- **Throttled Operations**: Batch PO syncs in 100-record chunks respecting rate limits
+
+**Agent Enhancement with Restaurant Management Data**:
+- **Inventory Agent**: Real-time stock level updates, automated reorder point calculation, supplier performance tracking
+- **Accounting Agent**: Purchase order to invoice matching, food cost variance analysis, vendor payment optimization
+- **HR Agent**: Labor cost correlation with food cost for comprehensive P&L optimization
+
+**Platform-Specific Integration Considerations**:
+
+**MarketMan**: Ideal for multi-vendor environments requiring vendor-neutral purchasing hub with strong API support.
+
+**MarginEdge**: Best for operations focused on cost control and variance analysis with OCR-driven invoice processing.
+
+**Restaurant365**: Comprehensive solution for multi-unit operators requiring integrated accounting and purchasing.
+
+**Toast + xtraCHEF**: Optimal for Toast POS users seeking seamless integration between front-of-house and purchasing.
+
+**Oracle Simphony**: Enterprise-grade solution for large restaurant groups with complex procurement needs.
+
+**Error Handling and Resilience**:
+- **Rate Limit Management**: Implement exponential backoff and respect Retry-After headers
+- **API Version Management**: Handle deprecation cycles and maintain compatibility across platform updates
+- **Data Validation**: Validate unit codes, vendor IDs, and item mappings before processing
+- **Audit Trails**: Maintain complete transaction history for food cost analysis and compliance
+
+**Security and Compliance**:
+- **OAuth 2.0 Implementation**: Secure token management for partner-level integrations
+- **Data Encryption**: Protect sensitive vendor and pricing information
+- **Access Control**: Role-based permissions for purchasing and inventory data
+- **Audit Logging**: Complete audit trails for purchase orders and inventory transactions
+
+### SMB Accounting & Bookkeeping Integrations
+
+The system supports comprehensive integration with major small and mid-sized business accounting platforms. These integrations enable automatic financial data synchronization, reducing manual data entry and improving accuracy of financial agent decisions.
+
+#### Supported Accounting Platforms
+
+**QuickBooks Online (Intuit)**
+- **Developer Portal**: [https://developer.intuit.com/app/developer/qbo/docs/develop](https://developer.intuit.com/app/developer/qbo/docs/develop)
+- **API Reference**: [https://developer.intuit.com/app/developer/qbo/docs/api/accounting](https://developer.intuit.com/app/developer/qbo/docs/api/accounting)
+- **Integration Capabilities**: Transactions, accounts, invoices, payments, customer data, vendor management
+- **Authentication**: OAuth 2.0 with sandbox environment
+- **Rate Limits**: 500 requests/minute per realm
+- **Official SDKs**: Java, .NET, PHP, Node.js
+
+**Xero**
+- **Developer Portal**: [https://developer.xero.com/](https://developer.xero.com/)
+- **API Reference**: [https://developer.xero.com/documentation/api/accounting/overview](https://developer.xero.com/documentation/api/accounting/overview)
+- **Integration Capabilities**: Accounting, payroll, assets, files APIs with shared OAuth token
+- **Authentication**: OAuth 2.0 with webhook support
+- **Rate Limits**: 60 requests/minute, 5,000/day (default tier)
+- **Official SDKs**: Node.js, Java, .NET, PHP, Ruby
+
+**FreshBooks**
+- **Developer Portal**: [https://www.freshbooks.com/developers](https://www.freshbooks.com/developers)
+- **API Reference**: [https://www.freshbooks.com/api/start](https://www.freshbooks.com/api/start)
+- **Integration Capabilities**: Invoices, expenses, time tracking, client management, project management
+- **Authentication**: OAuth 2.0
+- **Test Environment**: 30-day trial accounts for development
+- **Official SDKs**: Node.js
+
+**Wave Accounting**
+- **API Documentation**: [https://developer.waveapps.com/hc/en-us/articles/360018570992-Building-on-GraphQL](https://developer.waveapps.com/hc/en-us/articles/360018570992-Building-on-GraphQL)
+- **Integration Capabilities**: Customers, invoices, payments, bank transactions via GraphQL
+- **Authentication**: OAuth 2.0 to JWT flow
+- **API Style**: GraphQL (single endpoint)
+- **Community SDKs**: PHP, JavaScript
+
+**Zoho Books**
+- **API Documentation**: [https://www.zoho.com/books/api/v3/introduction/](https://www.zoho.com/books/api/v3/introduction/)
+- **Integration Capabilities**: Complete accounting features with granular scope control
+- **Authentication**: OAuth 2.0 with per-organization limits
+- **Rate Limits**: 1,000 calls/day (free tier)
+- **Official SDKs**: Java, .NET, PHP, Python
+
+**Sage Business Cloud Accounting**
+- **Developer Portal**: [https://developer.sage.com/accounting/reference/](https://developer.sage.com/accounting/reference/)
+- **API Reference**: [https://developer.sage.com/accounting/guides/concepts/overview/](https://developer.sage.com/accounting/guides/concepts/overview/)
+- **Integration Capabilities**: Full REST API with OpenAPI/Swagger specification
+- **Authentication**: OAuth 2.0
+- **Rate Limits**: 60 calls/minute
+- **Community SDKs**: Node.js, .NET
+
+**NetSuite (SuiteTalk)**
+- **API Documentation**: [https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/book_1559132836.html](https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/book_1559132836.html)
+- **Integration Capabilities**: Enterprise-grade ERP with REST and SOAP endpoints
+- **Authentication**: Token-based or OAuth 2.0
+- **Target Market**: Growing SMBs transitioning to enterprise
+- **Community SDKs**: Ruby, Python
+
+**Odoo (Open Source)**
+- **API Documentation**: [https://www.odoo.com/documentation/18.0/developer/reference/external_api.html](https://www.odoo.com/documentation/18.0/developer/reference/external_api.html)
+- **Integration Capabilities**: XML-RPC and JSON-RPC endpoints with no formal rate limits
+- **Deployment**: Self-hosted or cloud-based
+- **Development**: Local instance testing capability
+- **Community SDKs**: Python (OdooRPC)
+
+#### Accounting Integration Implementation Guidelines
+
+**API Integration Strategy**:
+1. **OAuth 2.0 First**: All platforms require OAuth 2.0 authentication (except Odoo XML-RPC)
+2. **Rate Limit Compliance**: Respect platform-specific throttling (QuickBooks: 500 rpm, Xero: 60 rpm)
+3. **SDK Utilization**: Use official SDKs when available for better error handling and retries
+4. **Sandbox Testing**: Leverage staging environments to avoid production data contamination
+
+**Data Synchronization Patterns**:
+- **Real-time Sync**: Webhook-based updates for critical transactions
+- **Batch Processing**: Daily/hourly bulk imports for historical data
+- **Incremental Updates**: Change detection and delta synchronization
+- **Conflict Resolution**: Last-write-wins with audit trails
+
+**Agent Enhancement with Accounting Data**:
+- **Accounting Agent**: Direct API integration for real-time anomaly detection and cash flow monitoring
+- **Inventory Agent**: Cost of goods sold analysis and purchase order automation
+- **HR Agent**: Payroll integration and labor cost analysis against revenue
+
+**Error Handling and Resilience**:
+- **Retry Logic**: Exponential backoff for transient API failures
+- **Circuit Breakers**: Prevent cascade failures during extended outages
+- **Data Validation**: Schema validation before API submission
+- **Audit Logging**: Complete transaction history for compliance and debugging
+
+**Security and Compliance**:
+- **Credential Management**: Secure storage of OAuth tokens and API keys
+- **Data Encryption**: TLS in transit, AES-256 at rest for sensitive financial data
+- **Access Control**: Role-based permissions for financial data access
+- **Compliance**: SOC 2, PCI DSS considerations for financial data handling
+
+#### Platform-Specific Integration Notes
+
+**QuickBooks Online**: Most comprehensive ecosystem with robust sandbox environment. Best for businesses requiring detailed financial reporting and tax compliance.
+
+**Xero**: Strong international presence with excellent webhook support. Ideal for businesses with complex multi-currency requirements.
+
+**Wave**: Free platform with GraphQL API makes it excellent for startups and small businesses. Limited advanced features but cost-effective.
+
+**FreshBooks**: Strong focus on service businesses with excellent time tracking and project management integration.
+
+**NetSuite**: Enterprise-grade solution for growing businesses that need advanced ERP capabilities alongside accounting.
+
+**Odoo**: Open-source flexibility allows for complete customization. Best for businesses with specific workflow requirements.
 
 ### API Endpoints
 ```python
