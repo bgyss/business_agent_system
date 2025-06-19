@@ -3,9 +3,9 @@ from decimal import Decimal
 from enum import Enum
 from typing import Optional, List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy import Column, String, Numeric, DateTime, Integer, Text, Boolean, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
 import uuid
 
@@ -107,6 +107,8 @@ class PurchaseOrderItem(Base):
 
 
 class ItemModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     sku: str
     name: str
@@ -124,12 +126,11 @@ class ItemModel(BaseModel):
     expiry_days: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 
 class StockMovementModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     item_id: str
     movement_type: StockMovementType
@@ -139,12 +140,11 @@ class StockMovementModel(BaseModel):
     notes: Optional[str] = None
     movement_date: datetime
     created_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 
 class SupplierModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     name: str
     contact_person: Optional[str] = None
@@ -158,12 +158,11 @@ class SupplierModel(BaseModel):
     is_active: bool = True
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 
 class PurchaseOrderModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     po_number: str
     supplier_id: str
@@ -174,12 +173,11 @@ class PurchaseOrderModel(BaseModel):
     notes: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 
 class PurchaseOrderItemModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     purchase_order_id: str
     item_id: str
@@ -187,9 +185,6 @@ class PurchaseOrderItemModel(BaseModel):
     quantity_received: int = 0
     unit_cost: Decimal
     total_cost: Decimal
-    
-    class Config:
-        from_attributes = True
 
 
 class InventorySummary(BaseModel):

@@ -124,3 +124,6 @@ retail_business.db
 # Generated reports
 reports/
 exports/
+
+# Claude Code settings.local.json
+.claude/settings.local.json

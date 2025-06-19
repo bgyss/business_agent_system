@@ -1,0 +1,68 @@
+name: Web Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  web-tests:
+    name: Dashboard Web Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Chrome
+      run: |
+        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+        sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+        sudo apt-get update
+        sudo apt-get install google-chrome-stable
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v2
+      with:
+        version: "latest"
+    
+    - name: Set up Python
+      run: uv python install 3.11
+    
+    - name: Install dependencies
+      run: uv sync --all-extras
+    
+    - name: Create test directories
+      run: |
+        mkdir -p test_screenshots
+        mkdir -p test_artifacts
+    
+    - name: Run smoke tests
+      run: |
+        uv run pytest tests/test_dashboard_smoke.py -v \
+          --html=test_artifacts/smoke-report.html --self-contained-html \
+          --junit-xml=test-results-smoke.xml
+    
+    - name: Run web tests (non-slow)
+      run: |
+        uv run pytest tests/test_dashboard_web.py -v \
+          --html=test_artifacts/web-report.html --self-contained-html \
+          --junit-xml=test-results-web.xml \
+          -m "not slow"
+    
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: web-test-artifacts
+        path: |
+          test_artifacts/
+          test_screenshots/
+          test-results-*.xml
+    
+    - name: Upload screenshots on failure
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: failure-screenshots
+        path: test_screenshots/

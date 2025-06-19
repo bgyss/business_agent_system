@@ -10,7 +10,6 @@
       "Bash(nix develop:*)",
       "Bash(rm:*)",
       "Bash(uv sync:*)",
-      "Bash(make run-restaurant:*)",
       "Bash(make:*)",
       "Bash(uv run streamlit run:*)",
       "Bash(ls:*)",
@@ -18,7 +17,10 @@
       "Bash(sqlite3:*)",
       "Bash(grep:*)",
       "Bash(find:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(source:*)",
+      "Bash(uv run:*)",
+      "Bash(touch:*)"
     ],
     "deny": []
   }

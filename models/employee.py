@@ -3,9 +3,9 @@ from decimal import Decimal
 from enum import Enum
 from typing import Optional, List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy import Column, String, Numeric, DateTime, Integer, Text, Boolean, Date, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 import uuid
 
 Base = declarative_base()
@@ -120,6 +120,8 @@ class PayrollRecord(Base):
 
 
 class EmployeeModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     employee_id: str
     first_name: str
@@ -138,12 +140,11 @@ class EmployeeModel(BaseModel):
     emergency_contact_phone: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 
 class TimeRecordModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     employee_id: str
     record_type: TimeRecordType
@@ -153,12 +154,11 @@ class TimeRecordModel(BaseModel):
     approved_by: Optional[str] = None
     is_approved: bool = False
     created_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 
 class ScheduleModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     employee_id: str
     work_date: date
@@ -169,12 +169,11 @@ class ScheduleModel(BaseModel):
     is_published: bool = False
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 
 class LeaveRequestModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     employee_id: str
     leave_type: LeaveType
@@ -186,12 +185,11 @@ class LeaveRequestModel(BaseModel):
     approved_by: Optional[str] = None
     approved_date: Optional[datetime] = None
     notes: Optional[str] = None
-    
-    class Config:
-        from_attributes = True
 
 
 class PayrollRecordModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     employee_id: str
     pay_period_start: date
@@ -206,9 +204,6 @@ class PayrollRecordModel(BaseModel):
     net_pay: Decimal
     pay_date: Optional[date] = None
     created_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 
 class HRSummary(BaseModel):

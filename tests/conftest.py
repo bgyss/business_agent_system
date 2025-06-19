@@ -8,13 +8,23 @@ import os
 import signal
 import socket
 from typing import Generator
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+
+# Optional selenium imports for web testing
+try:
+    from selenium import webdriver
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.chrome.service import Service
+    from webdriver_manager.chrome import ChromeDriverManager
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    SELENIUM_AVAILABLE = True
+except ImportError:
+    SELENIUM_AVAILABLE = False
+    # Create dummy classes/modules for when selenium is not available
+    class webdriver:
+        class Chrome:
+            pass
 
 
 def is_port_in_use(port: int) -> bool:
@@ -24,6 +34,7 @@ def is_port_in_use(port: int) -> bool:
 
 
 @pytest.fixture(scope="session")
+@pytest.mark.skipif(not SELENIUM_AVAILABLE, reason="Selenium not available")
 def streamlit_server() -> Generator[str, None, None]:
     """
     Start a Streamlit server for testing and return the URL.
@@ -80,6 +91,7 @@ def streamlit_server() -> Generator[str, None, None]:
 
 
 @pytest.fixture(scope="function")
+@pytest.mark.skipif(not SELENIUM_AVAILABLE, reason="Selenium not available")
 def browser() -> Generator[webdriver.Chrome, None, None]:
     """
     Create a Chrome browser instance for testing.
@@ -110,6 +122,7 @@ def browser() -> Generator[webdriver.Chrome, None, None]:
 
 
 @pytest.fixture(scope="function")
+@pytest.mark.skipif(not SELENIUM_AVAILABLE, reason="Selenium not available")
 def dashboard_page(browser: webdriver.Chrome, streamlit_server: str):
     """
     Navigate to the dashboard page and wait for it to load.
@@ -135,88 +148,95 @@ def sample_config_path() -> str:
     return "config/restaurant_config.yaml"
 
 
-class StreamlitTestHelper:
-    """Helper class for interacting with Streamlit elements"""
-    
-    def __init__(self, browser: webdriver.Chrome):
-        self.browser = browser
-        self.wait = WebDriverWait(browser, 20)
-    
-    def wait_for_element(self, by: By, value: str, timeout: int = 20):
-        """Wait for an element to be present"""
-        wait = WebDriverWait(self.browser, timeout)
-        return wait.until(EC.presence_of_element_located((by, value)))
-    
-    def wait_for_text(self, text: str, timeout: int = 20):
-        """Wait for specific text to appear on the page"""
-        wait = WebDriverWait(self.browser, timeout)
-        wait.until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), text))
-    
-    def click_sidebar_button(self, button_text: str):
-        """Click a button in the Streamlit sidebar"""
-        button = self.wait_for_element(
-            By.XPATH, 
-            f"//button[contains(text(), '{button_text}')]"
-        )
-        button.click()
-        time.sleep(1)  # Wait for UI to update
-    
-    def select_sidebar_radio(self, option_text: str):
-        """Select a radio button option in the sidebar"""
-        radio_option = self.wait_for_element(
-            By.XPATH,
-            f"//label[contains(text(), '{option_text}')]"
-        )
-        radio_option.click()
-        time.sleep(2)  # Wait for view to change
-    
-    def select_dropdown(self, dropdown_value: str):
-        """Select an option from a dropdown"""
-        dropdown = self.wait_for_element(By.CSS_SELECTOR, "select")
-        dropdown.click()
+if SELENIUM_AVAILABLE:
+    class StreamlitTestHelper:
+        """Helper class for interacting with Streamlit elements"""
         
-        option = self.wait_for_element(
-            By.XPATH,
-            f"//option[contains(text(), '{dropdown_value}')]"
-        )
-        option.click()
-        time.sleep(2)  # Wait for data to load
-    
-    def get_metric_value(self, metric_label: str) -> str:
-        """Get the value of a Streamlit metric"""
-        metric_element = self.wait_for_element(
-            By.XPATH,
-            f"//div[contains(@data-testid, 'metric')]//div[contains(text(), '{metric_label}')]/following-sibling::div"
-        )
-        return metric_element.text
-    
-    def check_chart_exists(self, chart_title: str) -> bool:
-        """Check if a chart with the given title exists"""
-        try:
-            self.wait_for_element(
-                By.XPATH,
-                f"//div[contains(text(), '{chart_title}')]",
-                timeout=10
+        def __init__(self, browser: webdriver.Chrome):
+            self.browser = browser
+            self.wait = WebDriverWait(browser, 20)
+        
+        def wait_for_element(self, by: By, value: str, timeout: int = 20):
+            """Wait for an element to be present"""
+            wait = WebDriverWait(self.browser, timeout)
+            return wait.until(EC.presence_of_element_located((by, value)))
+        
+        def wait_for_text(self, text: str, timeout: int = 20):
+            """Wait for specific text to appear on the page"""
+            wait = WebDriverWait(self.browser, timeout)
+            wait.until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), text))
+        
+        def click_sidebar_button(self, button_text: str):
+            """Click a button in the Streamlit sidebar"""
+            button = self.wait_for_element(
+                By.XPATH, 
+                f"//button[contains(text(), '{button_text}')]"
             )
-            return True
-        except:
-            return False
-    
-    def get_table_data(self, table_selector: str = "[data-testid='stDataFrame']"):
-        """Get data from a Streamlit dataframe/table"""
-        table = self.wait_for_element(By.CSS_SELECTOR, table_selector)
-        rows = table.find_elements(By.TAG_NAME, "tr")
+            button.click()
+            time.sleep(1)  # Wait for UI to update
         
-        data = []
-        for row in rows:
-            cells = row.find_elements(By.TAG_NAME, "td")
-            if cells:  # Skip header row
-                data.append([cell.text for cell in cells])
+        def select_sidebar_radio(self, option_text: str):
+            """Select a radio button option in the sidebar"""
+            radio_option = self.wait_for_element(
+                By.XPATH,
+                f"//label[contains(text(), '{option_text}')]"
+            )
+            radio_option.click()
+            time.sleep(2)  # Wait for view to change
         
-        return data
+        def select_dropdown(self, dropdown_value: str):
+            """Select an option from a dropdown"""
+            dropdown = self.wait_for_element(By.CSS_SELECTOR, "select")
+            dropdown.click()
+            
+            option = self.wait_for_element(
+                By.XPATH,
+                f"//option[contains(text(), '{dropdown_value}')]"
+            )
+            option.click()
+            time.sleep(2)  # Wait for data to load
+        
+        def get_metric_value(self, metric_label: str) -> str:
+            """Get the value of a Streamlit metric"""
+            metric_element = self.wait_for_element(
+                By.XPATH,
+                f"//div[contains(@data-testid, 'metric')]//div[contains(text(), '{metric_label}')]/following-sibling::div"
+            )
+            return metric_element.text
+        
+        def check_chart_exists(self, chart_title: str) -> bool:
+            """Check if a chart with the given title exists"""
+            try:
+                self.wait_for_element(
+                    By.XPATH,
+                    f"//div[contains(text(), '{chart_title}')]",
+                    timeout=10
+                )
+                return True
+            except:
+                return False
+        
+        def get_table_data(self, table_selector: str = "[data-testid='stDataFrame']"):
+            """Get data from a Streamlit dataframe/table"""
+            table = self.wait_for_element(By.CSS_SELECTOR, table_selector)
+            rows = table.find_elements(By.TAG_NAME, "tr")
+            
+            data = []
+            for row in rows:
+                cells = row.find_elements(By.TAG_NAME, "td")
+                if cells:  # Skip header row
+                    data.append([cell.text for cell in cells])
+            
+            return data
+else:
+    # Provide dummy class when selenium is not available
+    class StreamlitTestHelper:
+        def __init__(self, browser=None):
+            pass
 
 
 @pytest.fixture
+@pytest.mark.skipif(not SELENIUM_AVAILABLE, reason="Selenium not available")
 def streamlit_helper(browser: webdriver.Chrome) -> StreamlitTestHelper:
     """Create a StreamlitTestHelper instance"""
     return StreamlitTestHelper(browser)

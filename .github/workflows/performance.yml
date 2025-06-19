@@ -1,0 +1,113 @@
+name: Performance Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  performance-tests:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for baseline comparison
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v2
+      with:
+        version: "latest"
+    
+    - name: Set up Python
+      run: uv python install 3.11
+    
+    - name: Install dependencies
+      run: uv sync --extra performance
+    
+    - name: Create performance directories
+      run: |
+        mkdir -p performance_results
+        mkdir -p performance_artifacts
+    
+    - name: Run quick performance tests
+      run: |
+        uv run pytest tests/performance/ -v \
+          --benchmark-json=performance_results/quick_benchmarks.json \
+          --benchmark-compare-fail=mean:10% \
+          --benchmark-histogram=performance_artifacts/histograms \
+          -m "not stress"
+    
+    - name: Run stress tests
+      if: github.event_name == 'schedule'
+      run: |
+        uv run pytest tests/performance/test_stress.py -v \
+          --benchmark-json=performance_results/stress_benchmarks.json \
+          --benchmark-histogram=performance_artifacts/stress_histograms
+    
+    - name: Generate performance report
+      run: |
+        uv run python tests/performance/performance_runner.py \
+          --baseline-dir performance_baseline \
+          --output-dir performance_artifacts
+    
+    - name: Upload performance artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: performance-results
+        path: |
+          performance_results/
+          performance_artifacts/
+    
+    - name: Store baseline for main branch
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        mkdir -p performance_baseline
+        cp performance_results/*.json performance_baseline/
+    
+    - name: Commit baseline updates
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add performance_baseline/
+        git diff --staged --quiet || git commit -m "Update performance baselines [skip ci]"
+        git push
+    
+    - name: Comment PR with performance results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          try {
+            const results = JSON.parse(fs.readFileSync('performance_results/quick_benchmarks.json', 'utf8'));
+            
+            let comment = '## Performance Test Results\n\n';
+            comment += '| Test | Current | Baseline | Change |\n';
+            comment += '|------|---------|----------|--------|\n';
+            
+            for (const test of results.benchmarks) {
+              const name = test.name.split('::').pop();
+              const current = (test.stats.mean * 1000).toFixed(2);
+              comment += `| ${name} | ${current}ms | - | - |\n`;
+            }
+            
+            comment += '\n*Performance tests completed successfully*';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } catch (error) {
+            console.log('Could not create performance comment:', error);
+          }

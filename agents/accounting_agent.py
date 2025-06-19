@@ -60,8 +60,14 @@ class AccountingAgent(BaseAgent):
                 return await self._check_cash_flow(session)
             elif data.get("type") == "aging_analysis":
                 return await self._analyze_aging(session)
+        except Exception as e:
+            self.logger.error(f"Error in process_data: {e}")
+            return None
         finally:
-            session.close()
+            try:
+                session.close()
+            except Exception as e:
+                self.logger.warning(f"Error closing session: {e}")
         
         return None
     
@@ -85,7 +91,7 @@ class AccountingAgent(BaseAgent):
         variance = abs(float(transaction.amount) - float(avg_amount)) / float(avg_amount)
         
         context = {
-            "transaction": transaction.dict(),
+            "transaction": transaction.model_dump(),
             "similar_count": len(similar_transactions),
             "average_amount": float(avg_amount),
             "variance": variance,
@@ -310,8 +316,8 @@ class AccountingAgent(BaseAgent):
             )
             
             return {
-                "summary": summary.dict(),
-                "recent_decisions": [d.dict() for d in self.get_decision_history(10)],
+                "summary": summary.model_dump(),
+                "recent_decisions": [d.to_dict() for d in self.get_decision_history(10)],
                 "alerts": await self._get_current_alerts(session)
             }
         finally:

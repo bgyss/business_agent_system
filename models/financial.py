@@ -3,9 +3,9 @@ from decimal import Decimal
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy import Column, String, Numeric, DateTime, Integer, Text, Boolean
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
@@ -21,6 +21,7 @@ class TransactionType(str, Enum):
 class AccountType(str, Enum):
     CHECKING = "checking"
     SAVINGS = "savings"
+    CREDIT = "credit"
     REVENUE = "revenue"
     EXPENSE = "expense"
     ASSET = "asset"
@@ -59,6 +60,8 @@ class Transaction(Base):
 
 
 class AccountModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     name: str
     account_type: AccountType
@@ -67,12 +70,11 @@ class AccountModel(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     is_active: bool = True
-    
-    class Config:
-        from_attributes = True
 
 
 class TransactionModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     description: str
     amount: Decimal
@@ -85,9 +87,6 @@ class TransactionModel(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     is_reconciled: bool = False
-    
-    class Config:
-        from_attributes = True
 
 
 class FinancialSummary(BaseModel):
@@ -142,6 +141,8 @@ class AccountsPayable(Base):
 
 
 class AccountsReceivableModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     customer_name: str
     invoice_number: str
@@ -151,12 +152,11 @@ class AccountsReceivableModel(BaseModel):
     status: str = "unpaid"
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 
 class AccountsPayableModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: Optional[str] = None
     vendor_name: str
     invoice_number: str
@@ -166,6 +166,3 @@ class AccountsPayableModel(BaseModel):
     status: str = "unpaid"
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True

@@ -1,6 +1,8 @@
 # Business Agent System - Development Makefile
 
-.PHONY: help dev-setup install clean test test-web test-smoke lint format type-check build run-restaurant run-retail dashboard
+.PHONY: help dev-setup install clean test test-unit test-integration test-integration-smoke test-integration-file
+.PHONY: test-web test-smoke test-performance perf-test perf-test-quick perf-report lint format type-check 
+.PHONY: build run-restaurant run-retail dashboard ci-check status
 
 # Default target
 help:
@@ -14,8 +16,13 @@ help:
 	@echo ""
 	@echo "Development:"
 	@echo "  test         - Run all tests"
+	@echo "  test-integration - Run integration tests"
+	@echo "  test-integration-smoke - Run quick integration smoke tests"
 	@echo "  test-web     - Run web/UI tests for dashboard"
 	@echo "  test-smoke   - Run quick smoke tests"
+	@echo "  perf-test    - Run comprehensive performance tests"
+	@echo "  perf-test-quick - Run quick performance tests"
+	@echo "  perf-report  - Generate performance reports"
 	@echo "  lint         - Run linting checks"
 	@echo "  format       - Format code with black and isort"
 	@echo "  type-check   - Run mypy type checking"
@@ -73,8 +80,12 @@ clean:
 
 # Run tests
 test:
-	@echo "🧪 Running tests..."
+	@echo "🧪 Running all tests..."
 	uv run pytest -v
+
+test-unit:
+	@echo "🧪 Running unit tests..."
+	uv run pytest tests/unit/ -v
 
 test-cov:
 	@echo "🧪 Running tests with coverage..."
@@ -156,6 +167,14 @@ generate-data-retail:
 check: lint type-check test
 	@echo "✅ All checks passed!"
 
+# CI checks (comprehensive for CI/CD)
+ci-check: clean install lint type-check test-unit test-integration test-smoke
+	@echo "🚀 CI checks completed successfully!"
+
+# Test performance alias
+test-performance: perf-test-quick
+	@echo "📊 Performance tests completed!"
+
 # CI pipeline (comprehensive checks)
 ci: clean install check test-cov
 	@echo "🚀 CI pipeline completed successfully!"
@@ -197,6 +216,42 @@ update:
 	uv sync --upgrade
 	nix flake update
 
+# Performance testing
+perf-test:
+	@echo "🚀 Running comprehensive performance tests..."
+	@mkdir -p tests/performance/results
+	uv run python tests/performance/performance_runner.py
+
+perf-test-quick:
+	@echo "⚡ Running quick performance tests..."
+	@mkdir -p tests/performance/results
+	uv run python tests/performance/performance_runner.py --categories agent database --no-baseline
+
+perf-test-agent:
+	@echo "🤖 Running agent performance tests..."
+	uv run pytest tests/performance/test_agent_performance.py -v --benchmark-json=tests/performance/results/agent_benchmarks.json
+
+perf-test-database:
+	@echo "🗄️ Running database performance tests..."
+	uv run pytest tests/performance/test_database_performance.py -v --benchmark-json=tests/performance/results/database_benchmarks.json
+
+perf-test-simulation:
+	@echo "🎮 Running simulation performance tests..."
+	uv run pytest tests/performance/test_simulation_performance.py -v --benchmark-json=tests/performance/results/simulation_benchmarks.json
+
+perf-test-dashboard:
+	@echo "📊 Running dashboard performance tests..."
+	uv run pytest tests/performance/test_dashboard_performance.py -v --benchmark-json=tests/performance/results/dashboard_benchmarks.json
+
+perf-test-stress:
+	@echo "💪 Running stress tests..."
+	uv run pytest tests/performance/test_stress.py -v --benchmark-json=tests/performance/results/stress_benchmarks.json
+
+perf-report:
+	@echo "📈 Generating performance reports..."
+	@mkdir -p tests/performance/results
+	uv run python -c "from tests.performance.benchmark_utils import PerformanceTracker, PerformanceReporter; tracker = PerformanceTracker(); reporter = PerformanceReporter(tracker); reporter.generate_summary_report('tests/performance/results/performance_summary.html'); print('Performance report generated: tests/performance/results/performance_summary.html')"
+
 # Show system status
 status:
 	@echo "📊 System Status:"
@@ -207,3 +262,20 @@ status:
 	@echo "Virtual env: $$(if [ -n "$$VIRTUAL_ENV" ]; then echo "$$VIRTUAL_ENV"; else echo "Not activated"; fi)"
 	@echo "Environment: $$(if [ -f .env ]; then echo "✅ .env exists"; else echo "❌ .env missing"; fi)"
 	@echo "Dependencies: $$(if [ -d .venv ]; then echo "✅ Installed"; else echo "❌ Run 'make install'"; fi)"
+
+# Integration testing
+test-integration:
+	@echo "🔗 Running integration tests..."
+	cd tests/integration && uv run python test_runner.py
+
+test-integration-smoke:
+	@echo "💨 Running integration smoke tests..."
+	cd tests/integration && uv run python test_runner.py --smoke
+
+test-integration-file:
+	@echo "🔗 Running specific integration test file: $(FILE)"
+	@if [ -z "$(FILE)" ]; then \
+		echo "❌ Please specify FILE=test_filename.py"; \
+		exit 1; \
+	fi
+	cd tests/integration && uv run python test_runner.py --file $(FILE)

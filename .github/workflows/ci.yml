@@ -59,8 +59,27 @@ jobs:
     - name: Run type checking
       run: uv run mypy agents/ models/ simulation/
     
-    - name: Run tests
-      run: uv run pytest --cov --cov-report=xml
+    - name: Run unit tests
+      run: |
+        uv run pytest tests/unit/ -v \
+          --cov=agents --cov=models --cov=simulation --cov=utils \
+          --cov-report=xml --cov-report=term-missing \
+          --junit-xml=test-results-unit.xml
+    
+    - name: Run integration tests
+      if: matrix.python-version == '3.11'
+      run: |
+        uv run pytest tests/integration/ -v \
+          --junit-xml=test-results-integration.xml
+    
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          test-results-*.xml
+          coverage.xml
     
     - name: Upload coverage
       uses: codecov/codecov-action@v3
