@@ -1,12 +1,12 @@
-from datetime import datetime, date
+import uuid
+from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, List
+from typing import Optional
 
-from pydantic import BaseModel, Field, ConfigDict
-from sqlalchemy import Column, String, Numeric, DateTime, Integer, Text, Boolean, Date, ForeignKey
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import declarative_base
-import uuid
 
 Base = declarative_base()
 
@@ -34,7 +34,7 @@ class LeaveType(str, Enum):
 
 class Employee(Base):
     __tablename__ = "employees"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     employee_id = Column(String(50), unique=True, nullable=False)
     first_name = Column(String(100), nullable=False)
@@ -57,7 +57,7 @@ class Employee(Base):
 
 class TimeRecord(Base):
     __tablename__ = "time_records"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     employee_id = Column(String, ForeignKey("employees.id"), nullable=False)
     record_type = Column(String(50), nullable=False)
@@ -71,7 +71,7 @@ class TimeRecord(Base):
 
 class Schedule(Base):
     __tablename__ = "schedules"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     employee_id = Column(String, ForeignKey("employees.id"), nullable=False)
     work_date = Column(Date, nullable=False)
@@ -86,7 +86,7 @@ class Schedule(Base):
 
 class LeaveRequest(Base):
     __tablename__ = "leave_requests"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     employee_id = Column(String, ForeignKey("employees.id"), nullable=False)
     leave_type = Column(String(50), nullable=False)
@@ -102,7 +102,7 @@ class LeaveRequest(Base):
 
 class PayrollRecord(Base):
     __tablename__ = "payroll_records"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     employee_id = Column(String, ForeignKey("employees.id"), nullable=False)
     pay_period_start = Column(Date, nullable=False)
@@ -121,7 +121,7 @@ class PayrollRecord(Base):
 
 class EmployeeModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     employee_id: str
     first_name: str
@@ -144,7 +144,7 @@ class EmployeeModel(BaseModel):
 
 class TimeRecordModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     employee_id: str
     record_type: TimeRecordType
@@ -158,7 +158,7 @@ class TimeRecordModel(BaseModel):
 
 class ScheduleModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     employee_id: str
     work_date: date
@@ -173,7 +173,7 @@ class ScheduleModel(BaseModel):
 
 class LeaveRequestModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     employee_id: str
     leave_type: LeaveType
@@ -189,7 +189,7 @@ class LeaveRequestModel(BaseModel):
 
 class PayrollRecordModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     employee_id: str
     pay_period_start: date
@@ -228,8 +228,8 @@ class StaffingRecommendation(BaseModel):
     estimated_revenue: Decimal
     labor_cost_percentage: Decimal
     recommendation_reason: str
-    
-    
+
+
 class LaborCostAnalysis(BaseModel):
     period_start: date
     period_end: date

@@ -2,15 +2,16 @@
 """
 Convenience script to run the Streamlit dashboard
 """
+import os
 import subprocess
 import sys
-import os
+
 
 def main():
     # Change to the project directory
     project_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(project_dir)
-    
+
     # Run streamlit
     try:
         cmd = [sys.executable, "-m", "streamlit", "run", "dashboard/app.py"]

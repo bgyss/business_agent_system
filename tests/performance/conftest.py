@@ -8,27 +8,29 @@ Provides shared fixtures and utilities for performance testing including:
 - Memory profiling utilities
 """
 
-import asyncio
 import os
-import tempfile
-import pytest
-import yaml
-from datetime import datetime, timedelta
-from typing import Dict, Any, Generator
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 # Add parent directories to path for imports
 import sys
+import tempfile
+from datetime import datetime, timedelta
+from typing import Any, Dict, Generator
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from models.financial import Base as FinancialBase, Transaction, Account, TransactionType
-from models.inventory import Base as InventoryBase, Item, StockMovement
-from models.employee import Base as EmployeeBase, Employee
-from models.agent_decisions import AgentDecisionModel
 from agents.accounting_agent import AccountingAgent
-from agents.inventory_agent import InventoryAgent
 from agents.hr_agent import HRAgent
+from agents.inventory_agent import InventoryAgent
+from models.employee import Base as EmployeeBase
+from models.employee import Employee
+from models.financial import Account, Transaction, TransactionType
+from models.financial import Base as FinancialBase
+from models.inventory import Base as InventoryBase
+from models.inventory import Item
 from simulation.business_simulator import BusinessSimulator
 
 
@@ -37,9 +39,9 @@ def temp_db_path() -> Generator[str, None, None]:
     """Create a temporary database file for testing."""
     with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp_file:
         db_path = tmp_file.name
-    
+
     yield db_path
-    
+
     # Cleanup
     try:
         os.unlink(db_path)
@@ -87,12 +89,12 @@ def test_db_engine(temp_db_path):
     """Create a test database engine."""
     db_url = f"sqlite:///{temp_db_path}"
     engine = create_engine(db_url)
-    
+
     # Create all tables
     FinancialBase.metadata.create_all(bind=engine)
     InventoryBase.metadata.create_all(bind=engine)
     EmployeeBase.metadata.create_all(bind=engine)
-    
+
     return engine
 
 
@@ -101,9 +103,9 @@ def test_db_session(test_db_engine):
     """Create a test database session."""
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_db_engine)
     session = SessionLocal()
-    
+
     yield session
-    
+
     session.close()
 
 
@@ -116,10 +118,10 @@ def small_dataset(test_db_session):
         Account(id="test_revenue", name="Test Revenue", account_type="revenue", balance=0.0),
         Account(id="test_expense", name="Test Expenses", account_type="expense", balance=0.0)
     ]
-    
+
     for account in accounts:
         test_db_session.add(account)
-    
+
     # Create test transactions
     base_date = datetime.now() - timedelta(days=30)
     for i in range(100):
@@ -133,7 +135,7 @@ def small_dataset(test_db_session):
             category="test_category"
         )
         test_db_session.add(transaction)
-    
+
     # Create test items
     for i in range(20):
         item = Item(
@@ -147,7 +149,7 @@ def small_dataset(test_db_session):
             reorder_quantity=50
         )
         test_db_session.add(item)
-    
+
     # Create test employees
     for i in range(5):
         employee = Employee(
@@ -162,7 +164,7 @@ def small_dataset(test_db_session):
             is_full_time=i % 2 == 0
         )
         test_db_session.add(employee)
-    
+
     test_db_session.commit()
     return test_db_session
 
@@ -176,14 +178,14 @@ def medium_dataset(test_db_session):
         Account(id="med_revenue", name="Medium Revenue", account_type="revenue", balance=0.0),
         Account(id="med_expense", name="Medium Expenses", account_type="expense", balance=0.0)
     ]
-    
+
     for account in accounts:
         test_db_session.add(account)
-    
+
     # Create test transactions in batches for performance
     base_date = datetime.now() - timedelta(days=365)
     batch_size = 1000
-    
+
     for batch in range(0, 10000, batch_size):
         transactions = []
         for i in range(batch, min(batch + batch_size, 10000)):
@@ -197,10 +199,10 @@ def medium_dataset(test_db_session):
                 category=f"category_{i % 10}"
             )
             transactions.append(transaction)
-        
+
         test_db_session.add_all(transactions)
         test_db_session.commit()
-    
+
     # Create test items
     items = []
     for i in range(200):
@@ -215,9 +217,9 @@ def medium_dataset(test_db_session):
             reorder_quantity=100
         )
         items.append(item)
-    
+
     test_db_session.add_all(items)
-    
+
     # Create test employees
     employees = []
     for i in range(50):
@@ -233,7 +235,7 @@ def medium_dataset(test_db_session):
             is_full_time=i % 3 == 0
         )
         employees.append(employee)
-    
+
     test_db_session.add_all(employees)
     test_db_session.commit()
     return test_db_session
@@ -248,15 +250,15 @@ def large_dataset(test_db_session):
         Account(id="large_revenue", name="Large Revenue", account_type="revenue", balance=0.0),
         Account(id="large_expense", name="Large Expenses", account_type="expense", balance=0.0)
     ]
-    
+
     for account in accounts:
         test_db_session.add(account)
-    
+
     # Create test transactions in large batches
     base_date = datetime.now() - timedelta(days=1095)  # 3 years
     batch_size = 5000
     total_transactions = 100000
-    
+
     for batch in range(0, total_transactions, batch_size):
         transactions = []
         for i in range(batch, min(batch + batch_size, total_transactions)):
@@ -270,10 +272,10 @@ def large_dataset(test_db_session):
                 category=f"large_category_{i % 20}"
             )
             transactions.append(transaction)
-        
+
         test_db_session.add_all(transactions)
         test_db_session.commit()
-    
+
     # Create test items
     items = []
     for i in range(1000):
@@ -288,9 +290,9 @@ def large_dataset(test_db_session):
             reorder_quantity=500
         )
         items.append(item)
-    
+
     test_db_session.add_all(items)
-    
+
     # Create test employees
     employees = []
     for i in range(500):
@@ -306,7 +308,7 @@ def large_dataset(test_db_session):
             is_full_time=i % 4 == 0
         )
         employees.append(employee)
-    
+
     test_db_session.add_all(employees)
     test_db_session.commit()
     return test_db_session

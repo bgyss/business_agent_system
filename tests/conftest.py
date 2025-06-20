@@ -1,23 +1,24 @@
 """
 Pytest configuration and fixtures for web testing
 """
-import pytest
-import subprocess
-import time
 import os
 import signal
 import socket
+import subprocess
+import time
 from typing import Generator
+
+import pytest
 
 # Optional selenium imports for web testing
 try:
     from selenium import webdriver
     from selenium.webdriver.chrome.options import Options
     from selenium.webdriver.chrome.service import Service
-    from webdriver_manager.chrome import ChromeDriverManager
     from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
+    from selenium.webdriver.support.ui import WebDriverWait
+    from webdriver_manager.chrome import ChromeDriverManager
     SELENIUM_AVAILABLE = True
 except ImportError:
     SELENIUM_AVAILABLE = False
@@ -41,21 +42,21 @@ def streamlit_server() -> Generator[str, None, None]:
     This fixture runs once per test session.
     """
     port = 8502  # Use different port from default to avoid conflicts
-    
+
     # Check if port is already in use
     if is_port_in_use(port):
         pytest.skip(f"Port {port} is already in use. Please stop any running Streamlit instances.")
-    
+
     # Start Streamlit server in background
     cmd = [
-        "streamlit", "run", 
+        "streamlit", "run",
         "dashboard/app.py",
         "--server.port", str(port),
         "--server.headless", "true",
         "--browser.gatherUsageStats", "false",
         "--server.enableXsrfProtection", "false"
     ]
-    
+
     try:
         process = subprocess.Popen(
             cmd,
@@ -63,7 +64,7 @@ def streamlit_server() -> Generator[str, None, None]:
             stderr=subprocess.PIPE,
             preexec_fn=os.setsid  # Create new process group
         )
-        
+
         # Wait for server to start
         url = f"http://localhost:{port}"
         max_attempts = 30  # 30 seconds timeout
@@ -75,9 +76,9 @@ def streamlit_server() -> Generator[str, None, None]:
             time.sleep(1)
         else:
             pytest.fail(f"Streamlit server failed to start on port {port}")
-        
+
         yield url
-        
+
     finally:
         # Clean up: terminate the process group
         try:
@@ -107,16 +108,16 @@ def browser() -> Generator[webdriver.Chrome, None, None]:
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-plugins")
     options.add_argument("--disable-images")  # Speed up page loads
-    
+
     # Install and setup ChromeDriver
     service = Service(ChromeDriverManager().install())
-    
+
     # Create browser instance
     driver = webdriver.Chrome(service=service, options=options)
     driver.implicitly_wait(10)  # Wait up to 10 seconds for elements
-    
+
     yield driver
-    
+
     # Cleanup
     driver.quit()
 
@@ -129,16 +130,16 @@ def dashboard_page(browser: webdriver.Chrome, streamlit_server: str):
     Returns the browser instance positioned on the dashboard.
     """
     browser.get(streamlit_server)
-    
+
     # Wait for Streamlit to load (look for the main title)
     wait = WebDriverWait(browser, 30)
     wait.until(
         EC.presence_of_element_located((By.TAG_NAME, "h1"))
     )
-    
+
     # Additional wait for dynamic content to load
     time.sleep(3)
-    
+
     return browser
 
 
@@ -151,30 +152,30 @@ def sample_config_path() -> str:
 if SELENIUM_AVAILABLE:
     class StreamlitTestHelper:
         """Helper class for interacting with Streamlit elements"""
-        
+
         def __init__(self, browser: webdriver.Chrome):
             self.browser = browser
             self.wait = WebDriverWait(browser, 20)
-        
+
         def wait_for_element(self, by: By, value: str, timeout: int = 20):
             """Wait for an element to be present"""
             wait = WebDriverWait(self.browser, timeout)
             return wait.until(EC.presence_of_element_located((by, value)))
-        
+
         def wait_for_text(self, text: str, timeout: int = 20):
             """Wait for specific text to appear on the page"""
             wait = WebDriverWait(self.browser, timeout)
             wait.until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), text))
-        
+
         def click_sidebar_button(self, button_text: str):
             """Click a button in the Streamlit sidebar"""
             button = self.wait_for_element(
-                By.XPATH, 
+                By.XPATH,
                 f"//button[contains(text(), '{button_text}')]"
             )
             button.click()
             time.sleep(1)  # Wait for UI to update
-        
+
         def select_sidebar_radio(self, option_text: str):
             """Select a radio button option in the sidebar"""
             radio_option = self.wait_for_element(
@@ -183,19 +184,19 @@ if SELENIUM_AVAILABLE:
             )
             radio_option.click()
             time.sleep(2)  # Wait for view to change
-        
+
         def select_dropdown(self, dropdown_value: str):
             """Select an option from a dropdown"""
             dropdown = self.wait_for_element(By.CSS_SELECTOR, "select")
             dropdown.click()
-            
+
             option = self.wait_for_element(
                 By.XPATH,
                 f"//option[contains(text(), '{dropdown_value}')]"
             )
             option.click()
             time.sleep(2)  # Wait for data to load
-        
+
         def get_metric_value(self, metric_label: str) -> str:
             """Get the value of a Streamlit metric"""
             metric_element = self.wait_for_element(
@@ -203,7 +204,7 @@ if SELENIUM_AVAILABLE:
                 f"//div[contains(@data-testid, 'metric')]//div[contains(text(), '{metric_label}')]/following-sibling::div"
             )
             return metric_element.text
-        
+
         def check_chart_exists(self, chart_title: str) -> bool:
             """Check if a chart with the given title exists"""
             try:
@@ -215,18 +216,18 @@ if SELENIUM_AVAILABLE:
                 return True
             except:
                 return False
-        
+
         def get_table_data(self, table_selector: str = "[data-testid='stDataFrame']"):
             """Get data from a Streamlit dataframe/table"""
             table = self.wait_for_element(By.CSS_SELECTOR, table_selector)
             rows = table.find_elements(By.TAG_NAME, "tr")
-            
+
             data = []
             for row in rows:
                 cells = row.find_elements(By.TAG_NAME, "td")
                 if cells:  # Skip header row
                     data.append([cell.text for cell in cells])
-            
+
             return data
 else:
     # Provide dummy class when selenium is not available

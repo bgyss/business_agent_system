@@ -3,35 +3,30 @@ Error handling utilities and recovery mechanisms
 """
 import asyncio
 import functools
-import logging
-from typing import Callable, Optional, Dict, Any, Type, Union
-from contextlib import contextmanager, asynccontextmanager
-import traceback
+from contextlib import asynccontextmanager, contextmanager
+from typing import Any, Callable, Dict, Optional, Type
 
 from .exceptions import (
-    BusinessAgentError,
-    DatabaseError,
-    DatabaseConnectionError,
     ConfigurationError,
-    AgentDecisionError,
-    ExternalServiceError
+    DatabaseConnectionError,
+    ExternalServiceError,
 )
 from .logging_config import get_logger
 
 
 class ErrorHandler:
     """Central error handler with recovery strategies"""
-    
+
     def __init__(self, logger_name: str = "error_handler"):
         self.logger = get_logger(logger_name)
         self.recovery_strategies: Dict[Type[Exception], Callable] = {}
         self.error_counts: Dict[str, int] = {}
-    
+
     def register_recovery_strategy(self, exception_type: Type[Exception], strategy: Callable):
         """Register a recovery strategy for a specific exception type"""
         self.recovery_strategies[exception_type] = strategy
         self.logger.info(f"Registered recovery strategy for {exception_type.__name__}")
-    
+
     def handle_error(self, error: Exception, context: Optional[Dict[str, Any]] = None) -> bool:
         """
         Handle an error using registered recovery strategies
@@ -45,32 +40,32 @@ class ErrorHandler:
         """
         error_type = type(error)
         error_key = f"{error_type.__name__}:{str(error)}"
-        
+
         # Track error frequency
         self.error_counts[error_key] = self.error_counts.get(error_key, 0) + 1
-        
+
         # Log the error
         self.logger.log_error(error, f"Handling error (occurrence #{self.error_counts[error_key]})", extra={"context": context})
-        
+
         # Try recovery strategies
         for exc_type, strategy in self.recovery_strategies.items():
             if isinstance(error, exc_type):
                 try:
                     self.logger.info(f"Attempting recovery strategy for {exc_type.__name__}")
                     recovery_result = strategy(error, context)
-                    
+
                     if recovery_result:
                         self.logger.info(f"Successfully recovered from {exc_type.__name__}")
                         return True
                     else:
                         self.logger.warning(f"Recovery strategy failed for {exc_type.__name__}")
-                
+
                 except Exception as recovery_error:
                     self.logger.error(f"Recovery strategy failed with exception: {recovery_error}")
-        
+
         self.logger.error(f"No recovery strategy available for {error_type.__name__}")
         return False
-    
+
     def get_error_statistics(self) -> Dict[str, Any]:
         """Get error statistics"""
         return {
@@ -127,7 +122,7 @@ def graceful_degradation(fallback_value=None, log_error: bool = True):
                     logger = get_logger(f"graceful_degradation.{func.__name__}")
                     logger.log_error(e, f"Graceful degradation in {func.__name__}, returning fallback value")
                 return fallback_value
-        
+
         @functools.wraps(func)
         async def async_wrapper(*args, **kwargs):
             try:
@@ -137,12 +132,12 @@ def graceful_degradation(fallback_value=None, log_error: bool = True):
                     logger = get_logger(f"graceful_degradation.{func.__name__}")
                     logger.log_error(e, f"Graceful degradation in {func.__name__}, returning fallback value")
                 return fallback_value
-        
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper
-    
+
     return decorator
 
 
@@ -180,7 +175,7 @@ async def async_safe_execute(func: Callable, *args, **kwargs) -> tuple:
 def recover_database_connection(error: DatabaseConnectionError, context: Optional[Dict[str, Any]] = None) -> bool:
     """Recovery strategy for database connection errors"""
     logger = get_logger("recovery.database")
-    
+
     try:
         # Attempt to reconnect
         if context and "session_factory" in context:
@@ -192,7 +187,7 @@ def recover_database_connection(error: DatabaseConnectionError, context: Optiona
             return True
     except Exception as e:
         logger.error(f"Database connection recovery failed: {e}")
-    
+
     return False
 
 
@@ -200,7 +195,7 @@ def recover_database_connection(error: DatabaseConnectionError, context: Optiona
 def recover_configuration_error(error: ConfigurationError, context: Optional[Dict[str, Any]] = None) -> bool:
     """Recovery strategy for configuration errors"""
     logger = get_logger("recovery.configuration")
-    
+
     try:
         # Try to load default configuration
         if context and "default_config_path" in context:
@@ -210,7 +205,7 @@ def recover_configuration_error(error: ConfigurationError, context: Optional[Dic
             return True
     except Exception as e:
         logger.error(f"Configuration recovery failed: {e}")
-    
+
     return False
 
 
@@ -218,34 +213,34 @@ def recover_configuration_error(error: ConfigurationError, context: Optional[Dic
 def recover_external_service_error(error: ExternalServiceError, context: Optional[Dict[str, Any]] = None) -> bool:
     """Recovery strategy for external service errors"""
     logger = get_logger("recovery.external_service")
-    
+
     # For external service errors, we typically don't recover immediately
     # but we can log for monitoring and potentially switch to fallback services
     logger.warning("External service error detected, consider fallback mechanisms")
-    
+
     return False
 
 
 class ErrorContext:
     """Context manager for tracking error context"""
-    
+
     def __init__(self, operation: str, **context):
         self.operation = operation
         self.context = context
         self.logger = get_logger(f"error_context.{operation}")
-    
+
     def __enter__(self):
         self.logger.debug(f"Starting operation: {self.operation}", extra={"context": self.context})
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type:
             self.context["operation"] = self.operation
             self.context["exception_type"] = exc_type.__name__
-            
+
             # Handle the error
             handled = _global_error_handler.handle_error(exc_val, self.context)
-            
+
             if handled:
                 self.logger.info(f"Error recovered in operation: {self.operation}")
                 return True  # Suppress the exception
@@ -258,24 +253,24 @@ class ErrorContext:
 
 class AsyncErrorContext:
     """Async context manager for tracking error context"""
-    
+
     def __init__(self, operation: str, **context):
         self.operation = operation
         self.context = context
         self.logger = get_logger(f"error_context.{operation}")
-    
+
     async def __aenter__(self):
         self.logger.debug(f"Starting async operation: {self.operation}", extra={"context": self.context})
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if exc_type:
             self.context["operation"] = self.operation
             self.context["exception_type"] = exc_type.__name__
-            
+
             # Handle the error
             handled = _global_error_handler.handle_error(exc_val, self.context)
-            
+
             if handled:
                 self.logger.info(f"Error recovered in async operation: {self.operation}")
                 return True  # Suppress the exception

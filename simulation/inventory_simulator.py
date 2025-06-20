@@ -1,10 +1,9 @@
 import random
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from models.inventory import StockMovementType, ItemStatus
+from models.inventory import ItemStatus, StockMovementType
 
 
 @dataclass
@@ -21,7 +20,7 @@ class InventorySimulator:
     def __init__(self, profile: InventoryProfile):
         self.profile = profile
         self.suppliers = self._generate_suppliers()
-        
+
     def _generate_suppliers(self) -> List[Dict[str, Any]]:
         if self.profile.business_type == "restaurant":
             return [
@@ -71,10 +70,10 @@ class InventorySimulator:
                     "cost_multiplier": 0.7
                 }
             ]
-    
+
     def generate_initial_inventory(self) -> List[Dict[str, Any]]:
         items = []
-        
+
         for item_template in self.profile.items:
             # Generate variations of base items
             for i in range(item_template.get("variations", 1)):
@@ -85,11 +84,11 @@ class InventorySimulator:
                 else:
                     name = base_name
                     sku = item_template["sku"]
-                
+
                 # Add some variance to costs and quantities
                 cost_variance = random.uniform(0.8, 1.2)
                 quantity_variance = random.uniform(0.7, 1.3)
-                
+
                 item = {
                     "sku": sku,
                     "name": name,
@@ -107,31 +106,31 @@ class InventorySimulator:
                     "expiry_days": item_template.get("expiry_days")
                 }
                 items.append(item)
-        
+
         return items
-    
+
     def simulate_daily_consumption(self, items: List[Dict[str, Any]], date: datetime) -> List[Dict[str, Any]]:
         movements = []
-        
+
         # Apply day-of-week and seasonal factors
         day_factor = self.profile.consumption_patterns.get(date.strftime('%A').lower(), 1.0)
         month_factor = self.profile.seasonal_factors.get(date.month, 1.0)
         combined_factor = day_factor * month_factor
-        
+
         for item in items:
             if item["current_stock"] <= 0:
                 continue
-            
+
             # Calculate base consumption for this item
             category = item["category"]
             base_consumption = self._get_base_consumption(category, item["current_stock"])
-            
+
             # Apply factors and randomness
             daily_consumption = max(0, int(base_consumption * combined_factor * random.uniform(0.5, 1.5)))
-            
+
             # Don't consume more than available stock
             actual_consumption = min(daily_consumption, item["current_stock"])
-            
+
             if actual_consumption > 0:
                 movements.append({
                     "item_id": item.get("id"),  # Would be set after item creation
@@ -146,16 +145,16 @@ class InventorySimulator:
                         minutes=random.randint(0, 59)
                     )
                 })
-                
+
                 # Update item stock for next calculations
                 item["current_stock"] -= actual_consumption
-        
+
         # Simulate waste (spoilage, breakage, etc.)
         waste_movements = self._simulate_waste(items, date)
         movements.extend(waste_movements)
-        
+
         return movements
-    
+
     def _get_base_consumption(self, category: str, current_stock: int) -> float:
         """Calculate base daily consumption based on category and stock levels"""
         consumption_rates = {
@@ -169,7 +168,7 @@ class InventorySimulator:
             "dry_goods": 0.03,
             "spices": 0.02,
             "cleaning_supplies": 0.05,
-            
+
             # Retail categories
             "electronics": 0.02,
             "clothing": 0.04,
@@ -179,17 +178,17 @@ class InventorySimulator:
             "toys": 0.05,
             "specialty_items": 0.01
         }
-        
+
         rate = consumption_rates.get(category, 0.05)  # Default 5% per day
         return current_stock * rate
-    
+
     def _simulate_waste(self, items: List[Dict[str, Any]], date: datetime) -> List[Dict[str, Any]]:
         waste_movements = []
-        
+
         for item in items:
             if item["current_stock"] <= 0:
                 continue
-            
+
             # Higher waste rates for perishable items
             if item.get("expiry_days") and item["expiry_days"] <= 7:
                 waste_chance = 0.02  # 2% chance per day for very perishable items
@@ -197,11 +196,11 @@ class InventorySimulator:
                 waste_chance = 0.005  # 0.5% chance for moderately perishable
             else:
                 waste_chance = 0.001  # 0.1% chance for non-perishable items
-            
+
             if random.random() < waste_chance:
                 waste_quantity = max(1, int(item["current_stock"] * random.uniform(0.01, 0.05)))
                 waste_quantity = min(waste_quantity, item["current_stock"])
-                
+
                 waste_movements.append({
                     "item_id": item.get("id"),
                     "item_sku": item["sku"],
@@ -215,14 +214,14 @@ class InventorySimulator:
                         minutes=random.randint(0, 59)
                     )
                 })
-                
+
                 item["current_stock"] -= waste_quantity
-        
+
         return waste_movements
-    
+
     def simulate_deliveries(self, items: List[Dict[str, Any]], date: datetime) -> List[Dict[str, Any]]:
         deliveries = []
-        
+
         for item in items:
             # Check if item needs reordering
             if item["current_stock"] <= item["reorder_point"]:
@@ -230,21 +229,21 @@ class InventorySimulator:
                 supplier = self._find_supplier_for_item(item)
                 if not supplier:
                     continue
-                
+
                 # Check if delivery should arrive today (based on order lead time)
                 # In a real system, you'd track actual orders and their expected delivery dates
                 if random.random() < 0.3:  # 30% chance of delivery on any given day for low stock items
                     # Check if supplier is reliable
                     if random.random() < supplier["reliability"]:
                         delivery_quantity = item["reorder_quantity"]
-                        
+
                         # Add some variance to delivery quantity
                         variance = random.uniform(0.9, 1.1)
                         actual_quantity = int(delivery_quantity * variance)
-                        
+
                         # Calculate cost with supplier multiplier
                         cost_per_unit = item["unit_cost"] * supplier["cost_multiplier"]
-                        
+
                         deliveries.append({
                             "item_id": item.get("id"),
                             "item_sku": item["sku"],
@@ -258,68 +257,68 @@ class InventorySimulator:
                                 minutes=random.randint(0, 59)
                             )
                         })
-                        
+
                         # Update item stock
                         item["current_stock"] += actual_quantity
-        
+
         return deliveries
-    
+
     def _find_supplier_for_item(self, item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Find the best supplier for a given item"""
         category = item["category"]
-        
+
         suitable_suppliers = [
             supplier for supplier in self.suppliers
             if category in supplier["items"] or "all" in supplier["items"]
         ]
-        
+
         if not suitable_suppliers:
             return None
-        
+
         # Choose supplier based on reliability and cost
         return max(suitable_suppliers, key=lambda s: s["reliability"] * (2 - s["cost_multiplier"]))
-    
+
     def generate_purchase_orders(self, items: List[Dict[str, Any]], date: datetime) -> List[Dict[str, Any]]:
         purchase_orders = []
-        
+
         # Check for items that need reordering
         items_to_order = [item for item in items if item["current_stock"] <= item["reorder_point"]]
-        
+
         if not items_to_order:
             return purchase_orders
-        
+
         # Group items by supplier
         supplier_orders = {}
-        
+
         for item in items_to_order:
             supplier = self._find_supplier_for_item(item)
             if not supplier:
                 continue
-            
+
             supplier_name = supplier["name"]
             if supplier_name not in supplier_orders:
                 supplier_orders[supplier_name] = {
                     "supplier": supplier,
                     "items": []
                 }
-            
+
             supplier_orders[supplier_name]["items"].append(item)
-        
+
         # Create purchase orders
         for supplier_name, order_data in supplier_orders.items():
             supplier = order_data["supplier"]
             items_list = order_data["items"]
-            
+
             # Calculate total amount
             total_amount = 0
             po_items = []
-            
+
             for item in items_list:
                 quantity = item["reorder_quantity"]
                 unit_cost = item["unit_cost"] * supplier["cost_multiplier"]
                 line_total = quantity * unit_cost
                 total_amount += line_total
-                
+
                 po_items.append({
                     "item_id": item.get("id"),
                     "item_sku": item["sku"],
@@ -327,11 +326,11 @@ class InventorySimulator:
                     "unit_cost": round(unit_cost, 2),
                     "total_cost": round(line_total, 2)
                 })
-            
+
             # Create the purchase order
             po_number = f"PO-{date.strftime('%Y%m%d')}-{supplier_name[:3].upper()}-{random.randint(1000, 9999)}"
             expected_delivery = date + timedelta(days=supplier["lead_time"])
-            
+
             purchase_order = {
                 "po_number": po_number,
                 "supplier_name": supplier_name,
@@ -342,20 +341,20 @@ class InventorySimulator:
                 "notes": f"Auto-generated reorder for {len(items_list)} items",
                 "items": po_items
             }
-            
+
             purchase_orders.append(purchase_order)
-        
+
         return purchase_orders
-    
+
     def simulate_stock_adjustments(self, items: List[Dict[str, Any]], date: datetime) -> List[Dict[str, Any]]:
         adjustments = []
-        
+
         # Occasionally perform stock adjustments (cycle counts, corrections, etc.)
         if random.random() < 0.05:  # 5% chance per day
             # Select random items for adjustment
             num_adjustments = random.randint(1, min(5, len(items)))
             selected_items = random.sample(items, num_adjustments)
-            
+
             for item in selected_items:
                 # Simulate finding discrepancies
                 if random.random() < 0.3:  # 30% chance of finding a discrepancy
@@ -369,15 +368,15 @@ class InventorySimulator:
                             "quantity": adjustment,
                             "unit_cost": item["unit_cost"],
                             "reference_number": f"ADJ-{date.strftime('%Y%m%d')}-{item['sku']}",
-                            "notes": f"Inventory adjustment - cycle count correction",
+                            "notes": "Inventory adjustment - cycle count correction",
                             "movement_date": date + timedelta(
                                 hours=random.randint(9, 17),
                                 minutes=random.randint(0, 59)
                             )
                         })
-                        
+
                         item["current_stock"] += adjustment
-        
+
         return adjustments
 
 

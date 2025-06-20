@@ -1,19 +1,21 @@
 import asyncio
 import json
-from abc import ABC, abstractmethod
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
-from pydantic import BaseModel
 import logging
-from anthropic import Anthropic
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy import create_engine
+import os
 
 # Import models from the parent directory
 import sys
-import os
+from abc import ABC, abstractmethod
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from anthropic import Anthropic
+from pydantic import BaseModel
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from models.agent_decisions import AgentDecision, AgentDecisionModel
+from models.agent_decisions import AgentDecision
 
 
 class AgentMessage(BaseModel):
@@ -43,20 +45,20 @@ class BaseAgent(ABC):
         self.is_running = False
         self.logger = logging.getLogger(f"agent.{agent_id}")
         self.decisions_log = []
-        
+
     @property
     @abstractmethod
     def system_prompt(self) -> str:
         pass
-    
+
     @abstractmethod
     async def process_data(self, data: Dict[str, Any]) -> Optional[AgentDecision]:
         pass
-    
+
     @abstractmethod
     async def generate_report(self) -> Dict[str, Any]:
         pass
-    
+
     async def analyze_with_claude(
         self,
         prompt: str,
@@ -64,7 +66,7 @@ class BaseAgent(ABC):
         max_tokens: int = 1000
     ) -> str:
         full_prompt = f"{self.system_prompt}\n\nContext: {json.dumps(context, default=str)}\n\nQuery: {prompt}"
-        
+
         try:
             response = self.client.messages.create(
                 model="claude-3-5-sonnet-20241022",
@@ -77,7 +79,7 @@ class BaseAgent(ABC):
         except Exception as e:
             self.logger.error(f"Error calling Claude API: {e}")
             return f"Error: {str(e)}"
-    
+
     async def send_message(self, recipient: str, message_type: str, content: Dict[str, Any]):
         message = AgentMessage(
             sender=self.agent_id,
@@ -87,7 +89,7 @@ class BaseAgent(ABC):
         )
         await self.message_queue.put(message)
         self.logger.info(f"Sent message to {recipient}: {message_type}")
-    
+
     async def receive_messages(self):
         messages = []
         while not self.message_queue.empty():
@@ -97,12 +99,15 @@ class BaseAgent(ABC):
                     messages.append(message)
             except asyncio.QueueEmpty:
                 break
+            except Exception as e:
+                self.logger.error(f"Error receiving message: {e}")
+                break
         return messages
-    
+
     def log_decision(self, decision: AgentDecision):
         # Keep in memory for immediate access
         self.decisions_log.append(decision)
-        
+
         # Persist to database
         session = self.SessionLocal()
         try:
@@ -115,36 +120,36 @@ class BaseAgent(ABC):
             self.logger.error(f"Failed to persist decision to database: {e}")
         finally:
             session.close()
-    
+
     async def start(self):
         self.is_running = True
         self.logger.info(f"Agent {self.agent_id} started")
-        
+
         # Agent now runs in the background, processing messages via the router
         # and performing periodic checks
         while self.is_running:
             try:
                 # Perform periodic analysis based on check_interval
                 await self.periodic_check()
-                
+
                 await asyncio.sleep(self.config.get("check_interval", 300))
-                
+
             except Exception as e:
                 self.logger.error(f"Error in agent loop: {e}")
                 await asyncio.sleep(60)
-    
+
     async def periodic_check(self):
         """Perform periodic analysis independent of messages"""
         # This method can be overridden by specific agents for scheduled analysis
         pass
-    
+
     async def stop(self):
         self.is_running = False
         self.logger.info(f"Agent {self.agent_id} stopped")
-    
+
     async def handle_message(self, message: AgentMessage):
         self.logger.info(f"Received message from {message.sender}: {message.message_type}")
-        
+
         if message.message_type == "data_update":
             decision = await self.process_data(message.content)
             if decision:
@@ -152,16 +157,16 @@ class BaseAgent(ABC):
         elif message.message_type == "report_request":
             report = await self.generate_report()
             await self.send_message(
-                message.sender, 
-                "report_response", 
+                message.sender,
+                "report_response",
                 {"report": report}
             )
-    
+
     def get_decision_history(self, limit: Optional[int] = None) -> List[AgentDecision]:
         if limit:
             return self.decisions_log[-limit:]
         return self.decisions_log
-    
+
     async def health_check(self) -> Dict[str, Any]:
         return {
             "agent_id": self.agent_id,

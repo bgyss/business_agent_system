@@ -2,9 +2,9 @@
 """
 Test runner script for unit tests
 """
+import os
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 # Add the project root to the Python path
@@ -16,10 +16,10 @@ def run_tests():
     """Run all unit tests with coverage"""
     test_dir = Path(__file__).parent
     project_root = test_dir.parent.parent
-    
+
     # Change to project root directory
     os.chdir(project_root)
-    
+
     # Run pytest with coverage
     cmd = [
         sys.executable, "-m", "pytest",
@@ -30,7 +30,7 @@ def run_tests():
         "--disable-warnings",  # Disable warnings for cleaner output
         "--asyncio-mode=auto",  # Auto handle asyncio tests
     ]
-    
+
     # Add coverage if available
     try:
         import coverage
@@ -43,10 +43,10 @@ def run_tests():
         print("Running tests with coverage...")
     except ImportError:
         print("Coverage not available, running tests without coverage...")
-    
+
     print(f"Command: {' '.join(cmd)}")
     print(f"Working directory: {os.getcwd()}")
-    
+
     # Run the tests
     result = subprocess.run(cmd)
     return result.returncode
@@ -56,9 +56,9 @@ def run_specific_test(test_name):
     """Run a specific test file or test method"""
     test_dir = Path(__file__).parent
     project_root = test_dir.parent.parent
-    
+
     os.chdir(project_root)
-    
+
     cmd = [
         sys.executable, "-m", "pytest",
         f"{test_dir}/{test_name}",
@@ -66,7 +66,7 @@ def run_specific_test(test_name):
         "--tb=short",
         "--asyncio-mode=auto"
     ]
-    
+
     print(f"Running specific test: {test_name}")
     result = subprocess.run(cmd)
     return result.returncode

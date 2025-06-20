@@ -1,13 +1,12 @@
+import uuid
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, List
+from typing import List, Optional
 
-from pydantic import BaseModel, Field, ConfigDict
-from sqlalchemy import Column, String, Numeric, DateTime, Integer, Text, Boolean, ForeignKey
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import relationship
-import uuid
 
 Base = declarative_base()
 
@@ -27,7 +26,7 @@ class ItemStatus(str, Enum):
 
 class Item(Base):
     __tablename__ = "items"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     sku = Column(String(100), unique=True, nullable=False)
     name = Column(String(255), nullable=False)
@@ -49,7 +48,7 @@ class Item(Base):
 
 class StockMovement(Base):
     __tablename__ = "stock_movements"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     item_id = Column(String, ForeignKey("items.id"), nullable=False)
     movement_type = Column(String(50), nullable=False)
@@ -63,7 +62,7 @@ class StockMovement(Base):
 
 class Supplier(Base):
     __tablename__ = "suppliers"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(255), nullable=False)
     contact_person = Column(String(255))
@@ -81,7 +80,7 @@ class Supplier(Base):
 
 class PurchaseOrder(Base):
     __tablename__ = "purchase_orders"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     po_number = Column(String(100), unique=True, nullable=False)
     supplier_id = Column(String, ForeignKey("suppliers.id"), nullable=False)
@@ -96,7 +95,7 @@ class PurchaseOrder(Base):
 
 class PurchaseOrderItem(Base):
     __tablename__ = "purchase_order_items"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     purchase_order_id = Column(String, ForeignKey("purchase_orders.id"), nullable=False)
     item_id = Column(String, ForeignKey("items.id"), nullable=False)
@@ -108,7 +107,7 @@ class PurchaseOrderItem(Base):
 
 class ItemModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     sku: str
     name: str
@@ -130,7 +129,7 @@ class ItemModel(BaseModel):
 
 class StockMovementModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     item_id: str
     movement_type: StockMovementType
@@ -144,7 +143,7 @@ class StockMovementModel(BaseModel):
 
 class SupplierModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     name: str
     contact_person: Optional[str] = None
@@ -162,7 +161,7 @@ class SupplierModel(BaseModel):
 
 class PurchaseOrderModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     po_number: str
     supplier_id: str
@@ -177,7 +176,7 @@ class PurchaseOrderModel(BaseModel):
 
 class PurchaseOrderItemModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     purchase_order_id: str
     item_id: str

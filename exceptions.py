@@ -5,20 +5,20 @@ This module defines specific exceptions for different types of errors that can o
 throughout the system, providing better error categorization and handling.
 """
 
-from typing import Any, Dict, Optional
 from datetime import datetime
+from typing import Any, Dict
 
 
 class BusinessAgentException(Exception):
     """Base exception class for all Business Agent System errors."""
-    
+
     def __init__(self, message: str, error_code: str = None, context: Dict[str, Any] = None):
         super().__init__(message)
         self.message = message
         self.error_code = error_code or self.__class__.__name__
         self.context = context or {}
         self.timestamp = datetime.now()
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert exception to dict for logging and serialization."""
         return {
@@ -53,7 +53,7 @@ class AgentCommunicationError(AgentError):
 
 class ClaudeAPIError(AgentError):
     """Raised when Claude API calls fail."""
-    
+
     def __init__(self, message: str, api_response: Dict[str, Any] = None, retry_count: int = 0):
         super().__init__(message, "CLAUDE_API_ERROR")
         self.api_response = api_response
@@ -76,7 +76,7 @@ class DatabaseConnectionError(DatabaseError):
 
 class DatabaseTransactionError(DatabaseError):
     """Raised when database transactions fail."""
-    
+
     def __init__(self, message: str, operation: str = None, table: str = None):
         super().__init__(message, "DB_TRANSACTION_ERROR")
         self.operation = operation
@@ -94,7 +94,7 @@ class DatabaseIntegrityError(DatabaseError):
 
 class DataValidationError(DatabaseError):
     """Raised when data validation fails before database operations."""
-    
+
     def __init__(self, message: str, field: str = None, value: Any = None):
         super().__init__(message, "DATA_VALIDATION_ERROR")
         self.field = field
@@ -118,7 +118,7 @@ class ConfigFileNotFoundError(ConfigurationError):
 
 class ConfigValidationError(ConfigurationError):
     """Raised when configuration validation fails."""
-    
+
     def __init__(self, message: str, config_section: str = None, missing_keys: list = None):
         super().__init__(message, "CONFIG_VALIDATION_ERROR")
         self.config_section = config_section
@@ -131,7 +131,7 @@ class ConfigValidationError(ConfigurationError):
 
 class EnvironmentVariableError(ConfigurationError):
     """Raised when required environment variables are missing."""
-    
+
     def __init__(self, message: str, variable_name: str = None):
         super().__init__(message, "ENV_VAR_ERROR")
         self.variable_name = variable_name
@@ -152,7 +152,7 @@ class SimulationInitializationError(SimulationError):
 
 class DataGenerationError(SimulationError):
     """Raised when data generation fails during simulation."""
-    
+
     def __init__(self, message: str, data_type: str = None, period: str = None):
         super().__init__(message, "DATA_GENERATION_ERROR")
         self.data_type = data_type
@@ -176,7 +176,7 @@ class ExternalServiceError(BusinessAgentException):
 
 class APIRateLimitError(ExternalServiceError):
     """Raised when API rate limits are exceeded."""
-    
+
     def __init__(self, message: str, service: str = None, retry_after: int = None):
         super().__init__(message, "API_RATE_LIMIT_ERROR")
         self.service = service
@@ -189,7 +189,7 @@ class APIRateLimitError(ExternalServiceError):
 
 class ServiceUnavailableError(ExternalServiceError):
     """Raised when external services are unavailable."""
-    
+
     def __init__(self, message: str, service: str = None, status_code: int = None):
         super().__init__(message, "SERVICE_UNAVAILABLE_ERROR")
         self.service = service
@@ -208,7 +208,7 @@ class BusinessLogicError(BusinessAgentException):
 
 class InsufficientDataError(BusinessLogicError):
     """Raised when there's insufficient data to make a decision."""
-    
+
     def __init__(self, message: str, data_type: str = None, required_count: int = None, actual_count: int = None):
         super().__init__(message, "INSUFFICIENT_DATA_ERROR")
         self.data_type = data_type
@@ -224,7 +224,7 @@ class InsufficientDataError(BusinessLogicError):
 
 class BusinessRuleViolationError(BusinessLogicError):
     """Raised when business rules are violated."""
-    
+
     def __init__(self, message: str, rule_name: str = None, rule_value: Any = None):
         super().__init__(message, "BUSINESS_RULE_VIOLATION")
         self.rule_name = rule_name
@@ -237,7 +237,7 @@ class BusinessRuleViolationError(BusinessLogicError):
 
 class InventoryError(BusinessLogicError):
     """Raised for inventory-related business logic errors."""
-    
+
     def __init__(self, message: str, item_sku: str = None, current_stock: int = None):
         super().__init__(message, "INVENTORY_ERROR")
         self.item_sku = item_sku
@@ -256,7 +256,7 @@ class FinancialError(BusinessLogicError):
 
 class InsufficientFundsError(FinancialError):
     """Raised when there are insufficient funds for an operation."""
-    
+
     def __init__(self, message: str, available_amount: float = None, required_amount: float = None):
         super().__init__(message, "INSUFFICIENT_FUNDS_ERROR")
         self.available_amount = available_amount
@@ -274,7 +274,7 @@ class CashFlowError(FinancialError):
 
 class AccountingAnomalyError(FinancialError):
     """Raised when accounting anomalies are detected."""
-    
+
     def __init__(self, message: str, transaction_id: str = None, anomaly_score: float = None):
         super().__init__(message, "ACCOUNTING_ANOMALY_ERROR")
         self.transaction_id = transaction_id
@@ -293,7 +293,7 @@ class DashboardError(BusinessAgentException):
 
 class DataVisualizationError(DashboardError):
     """Raised when data visualization fails."""
-    
+
     def __init__(self, message: str, chart_type: str = None, data_count: int = None):
         super().__init__(message, "DATA_VISUALIZATION_ERROR")
         self.chart_type = chart_type
@@ -317,7 +317,7 @@ class SystemError(BusinessAgentException):
 
 class ResourceExhaustionError(SystemError):
     """Raised when system resources are exhausted."""
-    
+
     def __init__(self, message: str, resource_type: str = None, current_usage: float = None, limit: float = None):
         super().__init__(message, "RESOURCE_EXHAUSTION_ERROR")
         self.resource_type = resource_type
@@ -333,7 +333,7 @@ class ResourceExhaustionError(SystemError):
 
 class TimeoutError(SystemError):
     """Raised when operations timeout."""
-    
+
     def __init__(self, message: str, operation: str = None, timeout_seconds: int = None):
         super().__init__(message, "TIMEOUT_ERROR")
         self.operation = operation
@@ -347,7 +347,7 @@ class TimeoutError(SystemError):
 # Recovery and retry helpers
 class RecoverableError(BusinessAgentException):
     """Base class for errors that can be recovered from with retry logic."""
-    
+
     def __init__(self, message: str, max_retries: int = 3, backoff_seconds: int = 1):
         super().__init__(message)
         self.max_retries = max_retries

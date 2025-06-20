@@ -7,7 +7,7 @@ name = "business-agent-system"
 version = "1.0.0"
 description = "AI-powered autonomous business management system with intelligent agents for accounting, inventory, and HR"
 readme = "README.md"
-license = {text = "Proprietary"}
+license = {text = "MIT"}
 authors = [
     {name = "Brian Gyss", email = "bgyss@hey.com"},
 ]
@@ -22,7 +22,7 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: End Users/Desktop",
-    "License :: Other/Proprietary License",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -94,10 +94,10 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-org/business-agent-system"
-Documentation = "https://business-agent-system.readthedocs.io/"
-Repository = "https://github.com/your-org/business-agent-system.git"
-"Bug Tracker" = "https://github.com/your-org/business-agent-system/issues"
+Homepage = "https://github.com/briangyss/business-agent-system"
+Documentation = "https://github.com/briangyss/business-agent-system#readme"
+Repository = "https://github.com/briangyss/business-agent-system.git"
+"Bug Tracker" = "https://github.com/briangyss/business-agent-system/issues"
 
 [project.scripts]
 business-agent-system = "main:main"
@@ -162,6 +162,8 @@ known_first_party = ["agents", "models", "simulation", "dashboard"]
 [tool.ruff]
 line-length = 100
 target-version = "py38"
+
+[tool.ruff.lint]
 select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
@@ -177,7 +179,7 @@ ignore = [
     "C901",  # too complex
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "tests/**/*" = ["B011"]
 
@@ -220,10 +222,13 @@ addopts = [
     "--cov-report=xml",
 ]
 testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [
     "error",
     "ignore::UserWarning",
     "ignore:function ham\\(\\) is deprecated:DeprecationWarning",
+    "ignore::pytest.PytestDeprecationWarning",
 ]
 
 [tool.coverage.run]

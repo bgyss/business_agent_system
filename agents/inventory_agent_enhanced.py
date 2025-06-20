@@ -1,23 +1,23 @@
 import asyncio
-import json
-import math
-import statistics
 import logging
-from datetime import datetime, timedelta, date
-from decimal import Decimal
-from typing import Dict, Any, List, Optional, Tuple, NamedTuple
-from dataclasses import dataclass
 from collections import defaultdict
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-from sqlalchemy import create_engine, and_, func, desc
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
-from agents.base_agent import BaseAgent, AgentDecision
+from agents.base_agent import AgentDecision, BaseAgent
 from models.inventory import (
-    Item, StockMovement, Supplier, PurchaseOrder, PurchaseOrderItem,
-    ItemModel, InventorySummary, ReorderSuggestion,
-    StockMovementType, ItemStatus
+    Item,
+    ItemStatus,
+    PurchaseOrder,
+    StockMovement,
+    StockMovementType,
+    Supplier,
 )
 
 logger = logging.getLogger(__name__)
@@ -94,7 +94,7 @@ class SupplierPerformance:
 
 class EnhancedInventoryAgent(BaseAgent):
     """Enhanced Inventory Management Agent with advanced analytics and optimization"""
-    
+
     def __init__(
         self,
         agent_id: str,
@@ -104,7 +104,7 @@ class EnhancedInventoryAgent(BaseAgent):
         message_queue: Optional[asyncio.Queue] = None
     ):
         super().__init__(agent_id, api_key, config, db_url, message_queue)
-        
+
         # Enhanced configuration
         self.low_stock_multiplier = config.get("low_stock_multiplier", 1.2)
         self.reorder_lead_time = config.get("reorder_lead_time", 7)
@@ -113,12 +113,12 @@ class EnhancedInventoryAgent(BaseAgent):
         self.holding_cost_rate = config.get("holding_cost_rate", 0.25)  # 25% annual
         self.ordering_cost = config.get("ordering_cost", 50.0)  # $50 per order
         self.stockout_cost_multiplier = config.get("stockout_cost_multiplier", 3.0)
-        
+
         # Forecasting parameters
         self.forecast_horizon_days = config.get("forecast_horizon_days", 30)
         self.seasonal_analysis_periods = config.get("seasonal_analysis_periods", 4)
         self.trend_analysis_days = config.get("trend_analysis_days", 90)
-        
+
         # Bulk purchase parameters
         self.bulk_discount_tiers = config.get("bulk_discount_tiers", {
             "100": 0.02,   # 2% discount for 100+ units
@@ -126,7 +126,7 @@ class EnhancedInventoryAgent(BaseAgent):
             "500": 0.08,   # 8% discount for 500+ units
             "1000": 0.12   # 12% discount for 1000+ units
         })
-        
+
         logger.info(f"Enhanced InventoryAgent {agent_id} initialized with advanced analytics")
 
     @property
@@ -172,9 +172,9 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         session = None
         try:
             session = self.SessionLocal()
-            
+
             data_type = data.get("type")
-            
+
             if data_type == "stock_movement":
                 return await self._analyze_stock_movement_enhanced(session, data.get("movement", {}))
             elif data_type == "demand_forecast_request":
@@ -192,7 +192,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             else:
                 # Fall back to enhanced reorder analysis
                 return await self._analyze_reorder_needs_enhanced(session)
-                
+
         except Exception as e:
             logger.error(f"Error processing inventory data: {e}")
             return None
@@ -205,7 +205,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         try:
             item_id = data.get("item_id")
             forecast_days = data.get("forecast_days", self.forecast_horizon_days)
-            
+
             if item_id:
                 # Forecast for specific item
                 forecast = await self._forecast_item_demand(session, item_id, forecast_days)
@@ -213,15 +213,15 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             else:
                 # Forecast for all active items
                 forecasts = await self._forecast_all_items_demand(session, forecast_days)
-            
+
             if not forecasts:
                 return None
-            
+
             # Analyze forecasts and generate recommendations
             high_demand_items = [f for f in forecasts if f.predicted_demand > f.historical_patterns.get("avg_daily", 0) * 1.5]
             declining_items = [f for f in forecasts if f.trend_factor < -0.1]
             low_accuracy_items = [f for f in forecasts if f.forecast_accuracy < 0.7]
-            
+
             context = {
                 "total_items_analyzed": len(forecasts),
                 "high_demand_items": len(high_demand_items),
@@ -230,7 +230,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 "average_accuracy": sum(f.forecast_accuracy for f in forecasts) / len(forecasts),
                 "forecasts": [f.__dict__ for f in forecasts[:10]]  # Top 10 for context
             }
-            
+
             # Generate Claude analysis
             analysis_prompt = f"""
             Demand forecasting analysis for {len(forecasts)} inventory items over {forecast_days} days:
@@ -243,12 +243,12 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             
             Recommend inventory adjustments and purchasing strategies.
             """
-            
-            reasoning = await self._analyze_with_claude(analysis_prompt, context)
-            
+
+            reasoning = await self.analyze_with_claude(analysis_prompt, context)
+
             # Determine confidence based on forecast accuracy and data quality
             confidence = min(0.9, max(0.3, context['average_accuracy'] * 0.8 + 0.2))
-            
+
             action_items = []
             if high_demand_items:
                 action_items.append(f"Increase stock levels for {len(high_demand_items)} high-demand items")
@@ -256,7 +256,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 action_items.append(f"Review {len(declining_items)} items with declining demand")
             if low_accuracy_items:
                 action_items.append(f"Improve data collection for {len(low_accuracy_items)} items with low forecast accuracy")
-            
+
             return AgentDecision(
                 agent_id=self.agent_id,
                 decision_type="demand_forecast_analysis",
@@ -265,7 +265,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 action="; ".join(action_items) if action_items else "Monitor current inventory levels",
                 confidence=confidence
             )
-            
+
         except Exception as e:
             logger.error(f"Error in demand forecasting: {e}")
             return None
@@ -276,45 +276,45 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             # Get historical consumption data
             end_date = datetime.now().date()
             start_date = end_date - timedelta(days=self.trend_analysis_days)
-            
+
             movements = session.query(StockMovement).filter(
                 StockMovement.item_id == item_id,
                 StockMovement.movement_type == StockMovementType.OUT,
                 StockMovement.movement_date >= start_date
             ).order_by(StockMovement.movement_date).all()
-            
+
             if len(movements) < 7:  # Need at least a week of data
                 return None
-            
+
             # Prepare daily consumption data
             daily_consumption = defaultdict(float)
             for movement in movements:
                 day = movement.movement_date.date()
                 daily_consumption[day] += float(movement.quantity)
-            
+
             # Fill missing days with 0
             current_date = start_date
             consumption_series = []
             while current_date <= end_date:
                 consumption_series.append(daily_consumption.get(current_date, 0.0))
                 current_date += timedelta(days=1)
-            
+
             if len(consumption_series) < 14:  # Need at least 2 weeks
                 return None
-            
+
             # Method 1: Simple moving average
             window_size = min(14, len(consumption_series) // 2)
             sma_forecast = np.mean(consumption_series[-window_size:]) * forecast_days
-            
+
             # Method 2: Weighted moving average (more weight to recent data)
             weights = np.exp(np.linspace(-1, 0, window_size))
             weights = weights / weights.sum()
             wma_forecast = np.average(consumption_series[-window_size:], weights=weights) * forecast_days
-            
+
             # Method 3: Trend-based forecast
             x = np.arange(len(consumption_series))
             y = np.array(consumption_series)
-            
+
             if len(x) > 1 and np.std(y) > 0:
                 trend_coef = np.polyfit(x, y, 1)
                 trend_forecast = (trend_coef[0] * (len(x) + forecast_days/2) + trend_coef[1]) * forecast_days
@@ -322,35 +322,35 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             else:
                 trend_forecast = sma_forecast
                 trend_factor = 0.0
-            
+
             # Method 4: Seasonal adjustment
             if len(consumption_series) >= 28:  # Need at least 4 weeks for weekly seasonality
                 weekly_pattern = self._calculate_weekly_seasonality(consumption_series)
                 seasonal_factor = weekly_pattern.get(end_date.weekday(), 1.0)
             else:
                 seasonal_factor = 1.0
-            
+
             # Ensemble forecast (weighted average of methods)
             forecasts = [sma_forecast, wma_forecast, trend_forecast]
             weights = [0.3, 0.4, 0.3]  # Favor weighted moving average
             ensemble_forecast = np.average(forecasts, weights=weights)
-            
+
             # Apply seasonal adjustment
             adjusted_forecast = ensemble_forecast * seasonal_factor
-            
+
             # Calculate confidence interval (±1 standard deviation)
             std_dev = np.std(consumption_series[-window_size:]) * np.sqrt(forecast_days)
             confidence_interval = (
                 max(0, adjusted_forecast - std_dev),
                 adjusted_forecast + std_dev
             )
-            
+
             # Calculate forecast accuracy based on recent predictions vs actuals
             forecast_accuracy = self._calculate_forecast_accuracy(consumption_series)
-            
+
             # Calculate revenue correlation if revenue data available
             revenue_correlation = await self._calculate_revenue_correlation(session, item_id, movements)
-            
+
             # Historical patterns
             historical_patterns = {
                 "avg_daily": np.mean(consumption_series),
@@ -359,7 +359,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 "max_daily": np.max(consumption_series),
                 "trend_slope": trend_factor
             }
-            
+
             return DemandForecast(
                 item_id=item_id,
                 predicted_demand=adjusted_forecast,
@@ -372,7 +372,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 revenue_correlation=revenue_correlation,
                 method_used="ensemble_with_seasonality"
             )
-            
+
         except Exception as e:
             logger.error(f"Error forecasting demand for item {item_id}: {e}")
             return None
@@ -382,21 +382,21 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         try:
             # Get all active items with recent movement
             recent_date = datetime.now().date() - timedelta(days=30)
-            
+
             active_items = session.query(Item.id).filter(
                 Item.status == ItemStatus.ACTIVE
             ).join(StockMovement, Item.id == StockMovement.item_id).filter(
                 StockMovement.movement_date >= recent_date
             ).distinct().all()
-            
+
             forecasts = []
             for (item_id,) in active_items:
                 forecast = await self._forecast_item_demand(session, item_id, forecast_days)
                 if forecast:
                     forecasts.append(forecast)
-            
+
             return forecasts
-            
+
         except Exception as e:
             logger.error(f"Error forecasting demand for all items: {e}")
             return []
@@ -406,55 +406,55 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         try:
             # Group by day of week
             daily_totals = defaultdict(list)
-            
+
             for i, consumption in enumerate(consumption_series):
                 day_of_week = i % 7  # Assuming data starts on Monday
                 daily_totals[day_of_week].append(consumption)
-            
+
             # Calculate average for each day
             weekly_averages = {}
             overall_average = np.mean(consumption_series)
-            
+
             for day, values in daily_totals.items():
                 if values and overall_average > 0:
                     weekly_averages[day] = np.mean(values) / overall_average
                 else:
                     weekly_averages[day] = 1.0
-            
+
             return weekly_averages
-            
+
         except Exception as e:
             logger.error(f"Error calculating weekly seasonality: {e}")
-            return {i: 1.0 for i in range(7)}
+            return dict.fromkeys(range(7), 1.0)
 
     def _calculate_forecast_accuracy(self, consumption_series: List[float]) -> float:
         """Calculate forecast accuracy based on recent prediction performance"""
         try:
             if len(consumption_series) < 21:  # Need at least 3 weeks
                 return 0.7  # Default moderate accuracy
-            
+
             # Use last week as test data
             train_data = consumption_series[:-7]
             test_data = consumption_series[-7:]
-            
+
             # Simple forecast using training data
             predicted = np.mean(train_data[-14:])  # Average of last 2 weeks
-            
+
             # Calculate MAPE (Mean Absolute Percentage Error)
             errors = []
             for actual in test_data:
                 if actual > 0:
                     error = abs(actual - predicted) / actual
                     errors.append(error)
-            
+
             if errors:
                 mape = np.mean(errors)
                 accuracy = max(0.1, 1.0 - mape)  # Convert MAPE to accuracy
             else:
                 accuracy = 0.7  # Default
-            
+
             return min(0.95, accuracy)
-            
+
         except Exception as e:
             logger.error(f"Error calculating forecast accuracy: {e}")
             return 0.7
@@ -464,18 +464,18 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         try:
             # This is a simplified calculation - in a real system, you'd have revenue data
             # For now, assume correlation based on movement frequency and volume
-            
+
             if len(movements) < 14:
                 return 0.5  # Default moderate correlation
-            
+
             # Calculate consumption volatility as proxy for revenue correlation
             daily_consumption = [float(m.quantity) for m in movements]
             cv = np.std(daily_consumption) / (np.mean(daily_consumption) + 1e-6)
-            
+
             # Higher coefficient of variation suggests lower correlation with steady revenue
             correlation = max(0.1, 1.0 - cv)
             return min(0.9, correlation)
-            
+
         except Exception as e:
             logger.error(f"Error calculating revenue correlation: {e}")
             return 0.5
@@ -488,33 +488,33 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 Item.status == ItemStatus.ACTIVE,
                 Item.reorder_point.isnot(None)
             ).all()
-            
+
             if not items:
                 return None
-            
+
             optimizations = []
             total_cost_savings = 0.0
-            
+
             for item in items:
                 optimization = await self._calculate_optimal_reorder_point(session, item)
                 if optimization:
                     optimizations.append(optimization)
-                    
+
                     # Calculate potential cost savings
                     current_total_cost = self._calculate_current_inventory_cost(item)
                     savings = current_total_cost - optimization.total_cost
                     total_cost_savings += max(0, savings)
-            
+
             if not optimizations:
                 return None
-            
+
             # Analyze optimization results
-            significant_changes = [opt for opt in optimizations 
+            significant_changes = [opt for opt in optimizations
                                  if abs(opt.optimal_reorder_point - item.reorder_point) > item.reorder_point * 0.1]
-            
+
             high_service_level = [opt for opt in optimizations if opt.service_level > 0.98]
             cost_effective = [opt for opt in optimizations if opt.total_cost < self._calculate_current_inventory_cost_by_id(session, opt.item_id)]
-            
+
             context = {
                 "total_items_analyzed": len(optimizations),
                 "significant_changes_needed": len(significant_changes),
@@ -523,7 +523,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 "total_potential_savings": total_cost_savings,
                 "optimization_details": [opt.__dict__ for opt in optimizations[:10]]
             }
-            
+
             analysis_prompt = f"""
             Reorder point optimization analysis for {len(optimizations)} inventory items:
             
@@ -535,11 +535,11 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             
             Recommend implementation priorities and change management approach.
             """
-            
-            reasoning = await self._analyze_with_claude(analysis_prompt, context)
-            
+
+            reasoning = await self.analyze_with_claude(analysis_prompt, context)
+
             confidence = 0.85 if len(optimizations) > 10 else 0.75
-            
+
             return AgentDecision(
                 agent_id=self.agent_id,
                 decision_type="reorder_point_optimization",
@@ -548,7 +548,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 action=f"Optimize reorder points for {len(significant_changes)} items with potential savings of ${total_cost_savings:,.2f}",
                 confidence=confidence
             )
-            
+
         except Exception as e:
             logger.error(f"Error optimizing reorder points: {e}")
             return None
@@ -560,42 +560,42 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             forecast = await self._forecast_item_demand(session, item.id, self.reorder_lead_time)
             if not forecast:
                 return None
-            
+
             # Extract demand parameters
             daily_demand = forecast.predicted_demand / self.reorder_lead_time
             demand_std = forecast.historical_patterns["std_daily"]
             lead_time_demand = daily_demand * self.reorder_lead_time
-            
+
             # Calculate demand variability during lead time
             lead_time_std = demand_std * np.sqrt(self.reorder_lead_time)
-            
+
             # Calculate safety stock for target service level
             z_score = self._get_z_score_for_service_level(self.service_level_target)
             safety_stock = z_score * lead_time_std
-            
+
             # Optimal reorder point
             optimal_reorder_point = int(lead_time_demand + safety_stock)
-            
+
             # EOQ calculation
             annual_demand = daily_demand * 365
             holding_cost_per_unit = float(item.unit_cost) * self.holding_cost_rate
-            
+
             if holding_cost_per_unit > 0:
                 eoq = np.sqrt((2 * annual_demand * self.ordering_cost) / holding_cost_per_unit)
                 optimal_reorder_quantity = max(item.minimum_stock or 1, int(eoq))
             else:
                 optimal_reorder_quantity = item.reorder_quantity
-            
+
             # Calculate total costs
             holding_cost = (optimal_reorder_quantity / 2 + safety_stock) * holding_cost_per_unit
             ordering_cost = (annual_demand / optimal_reorder_quantity) * self.ordering_cost
-            
+
             # Estimate stockout cost
             stockout_probability = 1 - self.service_level_target
             stockout_cost = stockout_probability * annual_demand * float(item.unit_cost) * self.stockout_cost_multiplier
-            
+
             total_cost = holding_cost + ordering_cost + stockout_cost
-            
+
             return OptimalReorderPoint(
                 item_id=item.id,
                 optimal_reorder_point=optimal_reorder_point,
@@ -609,7 +609,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 ordering_cost=ordering_cost,
                 stockout_cost=stockout_cost
             )
-            
+
         except Exception as e:
             logger.error(f"Error calculating optimal reorder point for item {item.id}: {e}")
             return None
@@ -624,7 +624,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             0.99: 2.33,
             0.995: 2.58
         }
-        
+
         # Find closest service level
         closest_level = min(service_level_map.keys(), key=lambda x: abs(x - service_level))
         return service_level_map[closest_level]
@@ -634,12 +634,12 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         try:
             annual_demand = 365 * 10  # Estimate based on reorder quantity
             holding_cost_per_unit = float(item.unit_cost) * self.holding_cost_rate
-            
+
             current_holding_cost = (item.reorder_quantity / 2) * holding_cost_per_unit
             current_ordering_cost = (annual_demand / item.reorder_quantity) * self.ordering_cost
-            
+
             return current_holding_cost + current_ordering_cost
-            
+
         except Exception as e:
             logger.error(f"Error calculating current inventory cost: {e}")
             return 0.0
@@ -663,28 +663,28 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 Item.status == ItemStatus.ACTIVE,
                 Item.current_stock <= Item.reorder_point * 1.5
             ).all()
-            
+
             if not items:
                 return None
-            
+
             bulk_opportunities = []
             total_savings = 0.0
-            
+
             for item in items:
                 optimization = await self._calculate_bulk_purchase_optimization(session, item)
                 if optimization and optimization.total_cost_savings > 0:
                     bulk_opportunities.append(optimization)
                     total_savings += float(optimization.total_cost_savings)
-            
+
             if not bulk_opportunities:
                 return None
-            
+
             # Sort by savings potential
             bulk_opportunities.sort(key=lambda x: x.total_cost_savings, reverse=True)
-            
+
             high_value_opportunities = [opt for opt in bulk_opportunities if opt.total_cost_savings > 100]
             quick_roi_opportunities = [opt for opt in bulk_opportunities if opt.roi_months < 6]
-            
+
             context = {
                 "total_opportunities": len(bulk_opportunities),
                 "high_value_opportunities": len(high_value_opportunities),
@@ -692,7 +692,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 "total_potential_savings": total_savings,
                 "top_opportunities": [opt.__dict__ for opt in bulk_opportunities[:5]]
             }
-            
+
             analysis_prompt = f"""
             Bulk purchase optimization analysis for {len(bulk_opportunities)} items:
             
@@ -703,11 +703,11 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             
             Recommend bulk purchase strategy and cash flow considerations.
             """
-            
-            reasoning = await self._analyze_with_claude(analysis_prompt, context)
-            
+
+            reasoning = await self.analyze_with_claude(analysis_prompt, context)
+
             confidence = 0.8 if len(bulk_opportunities) > 5 else 0.7
-            
+
             return AgentDecision(
                 agent_id=self.agent_id,
                 decision_type="bulk_purchase_optimization",
@@ -716,7 +716,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 action=f"Implement bulk purchasing for {len(high_value_opportunities)} high-value items with potential savings of ${total_savings:,.2f}",
                 confidence=confidence
             )
-            
+
         except Exception as e:
             logger.error(f"Error analyzing bulk purchase opportunities: {e}")
             return None
@@ -728,36 +728,36 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             forecast = await self._forecast_item_demand(session, item.id, 90)  # 3-month forecast
             if not forecast:
                 return None
-            
+
             quarterly_demand = forecast.predicted_demand
             base_unit_cost = float(item.unit_cost)
-            
+
             best_savings = 0.0
             best_optimization = None
-            
+
             # Analyze each discount tier
             for tier_quantity, discount_rate in self.bulk_discount_tiers.items():
                 tier_qty = int(tier_quantity)
-                
+
                 # Skip if tier quantity is much larger than reasonable demand
                 if tier_qty > quarterly_demand * 2:
                     continue
-                
+
                 discounted_cost = base_unit_cost * (1 - discount_rate)
                 immediate_savings = (base_unit_cost - discounted_cost) * tier_qty
-                
+
                 # Calculate holding cost impact for excess inventory
                 excess_inventory = max(0, tier_qty - quarterly_demand)
                 holding_cost_impact = excess_inventory * discounted_cost * self.holding_cost_rate * 0.25  # 3 months
-                
+
                 net_savings = immediate_savings - holding_cost_impact
-                
+
                 # Calculate ROI in months
                 if net_savings > 0:
                     roi_months = (tier_qty * discounted_cost) / (net_savings * 4)  # Quarterly to monthly
                 else:
                     roi_months = float('inf')
-                
+
                 if net_savings > best_savings:
                     best_savings = net_savings
                     best_optimization = BulkPurchaseOptimization(
@@ -770,9 +770,9 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                         discount_tier=f"{tier_quantity}+ units ({discount_rate:.1%} discount)",
                         roi_months=roi_months
                     )
-            
+
             return best_optimization
-            
+
         except Exception as e:
             logger.error(f"Error calculating bulk purchase optimization for item {item.id}: {e}")
             return None
@@ -784,33 +784,33 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             items_with_expiry = session.query(Item).filter(
                 Item.status == ItemStatus.ACTIVE
             ).all()
-            
+
             # Filter items that have expiry considerations (perishables)
-            perishable_items = [item for item in items_with_expiry 
+            perishable_items = [item for item in items_with_expiry
                               if hasattr(item, 'expiry_days') and getattr(item, 'expiry_days', None)]
-            
+
             if not perishable_items:
                 return None
-            
+
             expiry_analyses = []
             total_waste_risk = 0.0
-            
+
             for item in perishable_items:
                 analysis = await self._analyze_expiry_intelligence(session, item)
                 if analysis:
                     expiry_analyses.append(analysis)
                     total_waste_risk += analysis.predicted_waste_amount
-            
+
             if not expiry_analyses:
                 return None
-            
+
             # Sort by risk score
             expiry_analyses.sort(key=lambda x: x.risk_score, reverse=True)
-            
+
             high_risk_items = [analysis for analysis in expiry_analyses if analysis.risk_score > 0.7]
-            discount_candidates = [analysis for analysis in expiry_analyses 
+            discount_candidates = [analysis for analysis in expiry_analyses
                                  if analysis.recommended_discount_timing <= 3]
-            
+
             context = {
                 "total_perishable_items": len(expiry_analyses),
                 "high_risk_items": len(high_risk_items),
@@ -818,7 +818,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 "total_predicted_waste": total_waste_risk,
                 "expiry_analyses": [analysis.__dict__ for analysis in expiry_analyses[:10]]
             }
-            
+
             analysis_prompt = f"""
             Expiry management analysis for {len(expiry_analyses)} perishable items:
             
@@ -829,17 +829,17 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             
             Recommend pricing strategies and ordering adjustments to minimize waste.
             """
-            
-            reasoning = await self._analyze_with_claude(analysis_prompt, context)
-            
+
+            reasoning = await self.analyze_with_claude(analysis_prompt, context)
+
             confidence = 0.75
-            
+
             action_items = []
             if high_risk_items:
                 action_items.append(f"Implement immediate discount strategy for {len(high_risk_items)} high-risk items")
             if discount_candidates:
                 action_items.append(f"Schedule price reductions for {len(discount_candidates)} items")
-            
+
             return AgentDecision(
                 agent_id=self.agent_id,
                 decision_type="expiry_intelligence_analysis",
@@ -848,7 +848,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 action="; ".join(action_items) if action_items else "Monitor expiry schedules",
                 confidence=confidence
             )
-            
+
         except Exception as e:
             logger.error(f"Error performing expiry intelligence: {e}")
             return None
@@ -857,15 +857,15 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         """Analyze expiry intelligence for a specific item"""
         try:
             expiry_days = getattr(item, 'expiry_days', 30)  # Default 30 days if not specified
-            
+
             # Get demand forecast
             forecast = await self._forecast_item_demand(session, item.id, expiry_days)
             if not forecast:
                 return None
-            
+
             daily_consumption = forecast.predicted_demand / expiry_days
             current_stock = item.current_stock
-            
+
             # Calculate predicted waste
             if daily_consumption > 0:
                 days_to_consume = current_stock / daily_consumption
@@ -875,40 +875,40 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                     predicted_waste = 0.0
             else:
                 predicted_waste = current_stock  # All will expire if no consumption
-            
+
             # Calculate risk score (0-1, where 1 is highest risk)
             risk_factors = []
-            
+
             # Factor 1: Time to expiry vs consumption rate
             if daily_consumption > 0:
                 consumption_risk = min(1.0, days_to_consume / expiry_days)
             else:
                 consumption_risk = 1.0
             risk_factors.append(consumption_risk * 0.4)
-            
+
             # Factor 2: Current stock level relative to normal
             if item.maximum_stock > 0:
                 stock_level_risk = current_stock / item.maximum_stock
             else:
                 stock_level_risk = 0.5
             risk_factors.append(stock_level_risk * 0.3)
-            
+
             # Factor 3: Demand volatility
             demand_volatility = forecast.historical_patterns["std_daily"] / (forecast.historical_patterns["avg_daily"] + 1e-6)
             volatility_risk = min(1.0, demand_volatility)
             risk_factors.append(volatility_risk * 0.3)
-            
+
             risk_score = sum(risk_factors)
-            
+
             # Calculate optimal ordering frequency
             if daily_consumption > 0:
                 optimal_frequency = int(expiry_days * 0.7 / daily_consumption)  # Order for 70% of shelf life
             else:
                 optimal_frequency = expiry_days
-            
+
             # Recommend discount timing (days before expiry)
             discount_timing = max(1, int(expiry_days * 0.3))  # Start discounting at 30% of shelf life
-            
+
             # Shelf life optimization recommendations
             shelf_life_optimization = {
                 "reduce_order_quantity": predicted_waste > current_stock * 0.1,
@@ -916,10 +916,10 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 "implement_fifo": True,
                 "discount_threshold_days": discount_timing
             }
-            
+
             # Calculate rotation efficiency
             rotation_efficiency = min(1.0, daily_consumption * expiry_days / (current_stock + 1e-6))
-            
+
             return ExpiryIntelligence(
                 item_id=item.id,
                 predicted_waste_amount=predicted_waste,
@@ -929,7 +929,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 shelf_life_optimization=shelf_life_optimization,
                 rotation_efficiency=rotation_efficiency
             )
-            
+
         except Exception as e:
             logger.error(f"Error analyzing expiry intelligence for item {item.id}: {e}")
             return None
@@ -939,38 +939,38 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         try:
             # Get all suppliers with recent activity
             recent_date = datetime.now().date() - timedelta(days=90)
-            
+
             suppliers = session.query(Supplier).join(PurchaseOrder).filter(
                 PurchaseOrder.order_date >= recent_date
             ).distinct().all()
-            
+
             if not suppliers:
                 return None
-            
+
             supplier_analyses = []
-            
+
             for supplier in suppliers:
                 analysis = await self._analyze_individual_supplier_performance(session, supplier)
                 if analysis:
                     supplier_analyses.append(analysis)
-            
+
             if not supplier_analyses:
                 return None
-            
+
             # Sort by overall score
             supplier_analyses.sort(key=lambda x: x.overall_score, reverse=True)
-            
+
             excellent_suppliers = [s for s in supplier_analyses if s.overall_score > 0.8]
             poor_performers = [s for s in supplier_analyses if s.overall_score < 0.6]
             cost_leaders = sorted(supplier_analyses, key=lambda x: x.cost_competitiveness, reverse=True)[:3]
-            
+
             context = {
                 "total_suppliers_analyzed": len(supplier_analyses),
                 "excellent_suppliers": len(excellent_suppliers),
                 "poor_performers": len(poor_performers),
                 "supplier_performance_details": [s.__dict__ for s in supplier_analyses]
             }
-            
+
             analysis_prompt = f"""
             Supplier performance analysis for {len(supplier_analyses)} suppliers:
             
@@ -981,17 +981,17 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             
             Recommend supplier relationship management and sourcing strategy adjustments.
             """
-            
-            reasoning = await self._analyze_with_claude(analysis_prompt, context)
-            
+
+            reasoning = await self.analyze_with_claude(analysis_prompt, context)
+
             confidence = 0.85
-            
+
             action_items = []
             if poor_performers:
                 action_items.append(f"Review contracts with {len(poor_performers)} underperforming suppliers")
             if excellent_suppliers:
                 action_items.append(f"Strengthen relationships with {len(excellent_suppliers)} top suppliers")
-            
+
             return AgentDecision(
                 agent_id=self.agent_id,
                 decision_type="supplier_performance_analysis",
@@ -1000,7 +1000,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 action="; ".join(action_items) if action_items else "Continue monitoring supplier performance",
                 confidence=confidence
             )
-            
+
         except Exception as e:
             logger.error(f"Error analyzing supplier performance: {e}")
             return None
@@ -1009,42 +1009,42 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         """Analyze performance metrics for an individual supplier"""
         try:
             recent_date = datetime.now().date() - timedelta(days=90)
-            
+
             # Get recent purchase orders from this supplier
             purchase_orders = session.query(PurchaseOrder).filter(
                 PurchaseOrder.supplier_id == supplier.id,
                 PurchaseOrder.order_date >= recent_date
             ).all()
-            
+
             if not purchase_orders:
                 return None
-            
+
             # Calculate reliability score (on-time delivery)
             on_time_deliveries = 0
             total_deliveries = 0
-            
+
             for po in purchase_orders:
                 if po.expected_delivery_date and po.order_date:
                     total_deliveries += 1
                     # Assume delivered on expected date for now (would need actual delivery data)
                     on_time_deliveries += 1  # Simplified
-            
+
             reliability_score = on_time_deliveries / total_deliveries if total_deliveries > 0 else 0.5
-            
+
             # Calculate cost competitiveness
             total_order_value = sum(float(po.total_amount) for po in purchase_orders)
             avg_order_value = total_order_value / len(purchase_orders) if purchase_orders else 0
-            
+
             # Compare to market average (simplified calculation)
             # In real implementation, you'd compare to other suppliers
             cost_competitiveness = 0.75  # Placeholder score
-            
+
             # Quality score (based on return/complaint data - simplified)
             quality_score = 0.85  # Placeholder score
-            
+
             # Delivery performance score
             delivery_performance = reliability_score
-            
+
             # Calculate overall score (weighted average)
             weights = {
                 'reliability': 0.3,
@@ -1052,14 +1052,14 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 'quality': 0.25,
                 'delivery': 0.2
             }
-            
+
             overall_score = (
                 reliability_score * weights['reliability'] +
                 cost_competitiveness * weights['cost'] +
                 quality_score * weights['quality'] +
                 delivery_performance * weights['delivery']
             )
-            
+
             # Risk assessment
             risk_assessment = {
                 'single_source_risk': 0.3,  # Risk of depending on single supplier
@@ -1067,7 +1067,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 'geographic_risk': 0.1,     # Location-based risks
                 'capacity_risk': 0.15       # Supplier capacity constraints
             }
-            
+
             # Generate recommendation
             if overall_score > 0.8:
                 recommendation = "Preferred supplier - increase business volume"
@@ -1075,7 +1075,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 recommendation = "Satisfactory supplier - maintain current relationship"
             else:
                 recommendation = "Review supplier relationship - consider alternatives"
-            
+
             return SupplierPerformance(
                 supplier_id=supplier.id,
                 overall_score=overall_score,
@@ -1086,7 +1086,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 risk_assessment=risk_assessment,
                 recommendation=recommendation
             )
-            
+
         except Exception as e:
             logger.error(f"Error analyzing performance for supplier {supplier.id}: {e}")
             return None
@@ -1096,34 +1096,34 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         try:
             # Get overall inventory metrics
             total_items = session.query(Item).filter(Item.status == ItemStatus.ACTIVE).count()
-            
+
             # Items below reorder point
             low_stock_items = session.query(Item).filter(
                 Item.status == ItemStatus.ACTIVE,
                 Item.current_stock <= Item.reorder_point
             ).count()
-            
+
             # Overstocked items
             overstocked_items = session.query(Item).filter(
                 Item.status == ItemStatus.ACTIVE,
                 Item.current_stock >= Item.maximum_stock
             ).count()
-            
+
             # Calculate total inventory value
             total_value = session.query(func.sum(Item.current_stock * Item.unit_cost)).filter(
                 Item.status == ItemStatus.ACTIVE
             ).scalar() or 0
-            
+
             # Get recent stock movements for turnover analysis
             recent_date = datetime.now().date() - timedelta(days=30)
             recent_movements = session.query(func.sum(StockMovement.quantity)).filter(
                 StockMovement.movement_type == StockMovementType.OUT,
                 StockMovement.movement_date >= recent_date
             ).scalar() or 0
-            
+
             # Calculate inventory turnover (simplified)
             monthly_turnover = float(recent_movements) / (float(total_value) + 1e-6) if total_value > 0 else 0
-            
+
             # Identify key issues
             issues = []
             if low_stock_items > total_items * 0.15:  # More than 15% low stock
@@ -1132,7 +1132,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 issues.append("Significant overstock situation")
             if monthly_turnover < 0.1:  # Low turnover
                 issues.append("Low inventory turnover rate")
-            
+
             context = {
                 "total_active_items": total_items,
                 "low_stock_items": low_stock_items,
@@ -1143,7 +1143,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 "low_stock_percentage": low_stock_items / total_items * 100 if total_items > 0 else 0,
                 "overstock_percentage": overstocked_items / total_items * 100 if total_items > 0 else 0
             }
-            
+
             analysis_prompt = f"""
             Comprehensive inventory health analysis:
             
@@ -1158,16 +1158,16 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             
             Provide strategic recommendations for inventory optimization.
             """
-            
-            reasoning = await self._analyze_with_claude(analysis_prompt, context)
-            
+
+            reasoning = await self.analyze_with_claude(analysis_prompt, context)
+
             # Determine confidence based on data quality and issue severity
             confidence = 0.8
             if len(issues) > 2:
                 confidence = 0.9  # High confidence when clear issues identified
             elif len(issues) == 0:
                 confidence = 0.7  # Lower confidence when no issues (might be missing something)
-            
+
             action_items = []
             if low_stock_items > 0:
                 action_items.append(f"Reorder {low_stock_items} low-stock items")
@@ -1175,7 +1175,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 action_items.append(f"Implement clearance strategy for {overstocked_items} overstocked items")
             if monthly_turnover < 0.1:
                 action_items.append("Improve inventory turnover through demand forecasting and optimization")
-            
+
             return AgentDecision(
                 agent_id=self.agent_id,
                 decision_type="comprehensive_inventory_analysis",
@@ -1184,7 +1184,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 action="; ".join(action_items) if action_items else "Continue monitoring inventory health",
                 confidence=confidence
             )
-            
+
         except Exception as e:
             logger.error(f"Error in comprehensive inventory analysis: {e}")
             return None
@@ -1195,17 +1195,17 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             item_id = movement_data.get("item_id")
             movement_type = movement_data.get("movement_type")
             quantity = movement_data.get("quantity", 0)
-            
+
             if not item_id:
                 return None
-            
+
             item = session.query(Item).filter(Item.id == item_id).first()
             if not item:
                 return None
-            
+
             # Get demand forecast for context
             forecast = await self._forecast_item_demand(session, item_id, 14)
-            
+
             # Enhanced analysis based on movement type
             if movement_type == StockMovementType.OUT:
                 return await self._analyze_consumption_movement(session, item, quantity, forecast)
@@ -1215,7 +1215,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 return await self._analyze_adjustment_movement(session, item, quantity, forecast)
             else:
                 return None
-                
+
         except Exception as e:
             logger.error(f"Error in enhanced stock movement analysis: {e}")
             return None
@@ -1224,7 +1224,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         """Analyze consumption movement with predictive context"""
         try:
             new_stock_level = item.current_stock - quantity
-            
+
             # Check if this consumption is unusual
             if forecast:
                 expected_daily = forecast.historical_patterns["avg_daily"]
@@ -1238,13 +1238,13 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                         "remaining_stock": new_stock_level,
                         "reorder_point": item.reorder_point
                     }
-                    
-                    reasoning = await self._analyze_with_claude(
+
+                    reasoning = await self.analyze_with_claude(
                         f"Unusual consumption detected for {item.name}: {quantity} units consumed "
                         f"(normal daily: {expected_daily:.1f}). Current stock: {new_stock_level}.",
                         context
                     )
-                    
+
                     return AgentDecision(
                         agent_id=self.agent_id,
                         decision_type="unusual_consumption_alert",
@@ -1253,11 +1253,11 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                         action=f"Investigate unusual consumption pattern for {item.name}",
                         confidence=0.8
                     )
-            
+
             # Check if approaching reorder point
             if new_stock_level <= item.reorder_point:
                 days_remaining = new_stock_level / forecast.historical_patterns["avg_daily"] if forecast and forecast.historical_patterns["avg_daily"] > 0 else 0
-                
+
                 context = {
                     "item_id": item.id,
                     "item_name": item.name,
@@ -1266,15 +1266,15 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                     "estimated_days_remaining": days_remaining,
                     "lead_time": self.reorder_lead_time
                 }
-                
+
                 urgency = "CRITICAL" if days_remaining < self.reorder_lead_time else "HIGH"
-                
-                reasoning = await self._analyze_with_claude(
+
+                reasoning = await self.analyze_with_claude(
                     f"Stock level for {item.name} has reached reorder point. "
                     f"Estimated {days_remaining:.1f} days remaining. Urgency: {urgency}",
                     context
                 )
-                
+
                 return AgentDecision(
                     agent_id=self.agent_id,
                     decision_type="reorder_required",
@@ -1283,9 +1283,9 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                     action=f"Reorder {item.name} - {urgency} priority",
                     confidence=0.9
                 )
-            
+
             return None
-            
+
         except Exception as e:
             logger.error(f"Error analyzing consumption movement: {e}")
             return None
@@ -1294,16 +1294,16 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         """Analyze stock receipt with optimization insights"""
         try:
             new_stock_level = item.current_stock + quantity
-            
+
             # Check for overstock situation
             if new_stock_level > item.maximum_stock:
                 excess_quantity = new_stock_level - item.maximum_stock
-                
+
                 if forecast:
                     days_of_supply = new_stock_level / forecast.historical_patterns["avg_daily"] if forecast.historical_patterns["avg_daily"] > 0 else 0
                 else:
                     days_of_supply = 0
-                
+
                 context = {
                     "item_id": item.id,
                     "item_name": item.name,
@@ -1312,13 +1312,13 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                     "excess_quantity": excess_quantity,
                     "days_of_supply": days_of_supply
                 }
-                
-                reasoning = await self._analyze_with_claude(
+
+                reasoning = await self.analyze_with_claude(
                     f"Overstock situation for {item.name}: {new_stock_level} units "
                     f"(maximum: {item.maximum_stock}). {days_of_supply:.1f} days of supply.",
                     context
                 )
-                
+
                 return AgentDecision(
                     agent_id=self.agent_id,
                     decision_type="overstock_alert",
@@ -1327,9 +1327,9 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                     action=f"Review ordering strategy for {item.name} - excess inventory detected",
                     confidence=0.85
                 )
-            
+
             return None
-            
+
         except Exception as e:
             logger.error(f"Error analyzing receipt movement: {e}")
             return None
@@ -1338,7 +1338,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         """Analyze inventory adjustment with accuracy insights"""
         try:
             adjustment_percentage = abs(quantity) / item.current_stock if item.current_stock > 0 else 0
-            
+
             # Significant adjustments warrant investigation
             if adjustment_percentage > 0.1:  # More than 10% adjustment
                 context = {
@@ -1349,13 +1349,13 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                     "current_stock": item.current_stock,
                     "adjustment_type": "increase" if quantity > 0 else "decrease"
                 }
-                
-                reasoning = await self._analyze_with_claude(
+
+                reasoning = await self.analyze_with_claude(
                     f"Significant inventory adjustment for {item.name}: "
                     f"{quantity:+.0f} units ({adjustment_percentage:.1%} change).",
                     context
                 )
-                
+
                 return AgentDecision(
                     agent_id=self.agent_id,
                     decision_type="inventory_adjustment_alert",
@@ -1364,9 +1364,9 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                     action=f"Investigate inventory accuracy for {item.name}",
                     confidence=0.75
                 )
-            
+
             return None
-            
+
         except Exception as e:
             logger.error(f"Error analyzing adjustment movement: {e}")
             return None
@@ -1379,31 +1379,31 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 Item.status == ItemStatus.ACTIVE,
                 Item.current_stock <= Item.reorder_point * self.low_stock_multiplier
             ).all()
-            
+
             if not items_near_reorder:
                 return None
-            
+
             priority_items = []
             for item in items_near_reorder:
                 forecast = await self._forecast_item_demand(session, item.id, self.reorder_lead_time)
-                
+
                 if forecast:
                     days_remaining = item.current_stock / forecast.historical_patterns["avg_daily"] if forecast.historical_patterns["avg_daily"] > 0 else 0
                     urgency_score = max(0, 1 - days_remaining / self.reorder_lead_time)
                 else:
                     urgency_score = 0.5
-                
+
                 priority_items.append({
                     "item": item,
                     "urgency_score": urgency_score,
                     "forecast": forecast
                 })
-            
+
             # Sort by urgency
             priority_items.sort(key=lambda x: x["urgency_score"], reverse=True)
-            
+
             critical_items = [item for item in priority_items if item["urgency_score"] > 0.8]
-            
+
             context = {
                 "total_items_near_reorder": len(items_near_reorder),
                 "critical_items": len(critical_items),
@@ -1418,13 +1418,13 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                     for item in priority_items[:10]
                 ]
             }
-            
-            reasoning = await self._analyze_with_claude(
+
+            reasoning = await self.analyze_with_claude(
                 f"Reorder analysis for {len(items_near_reorder)} items approaching reorder point. "
                 f"{len(critical_items)} items require immediate attention.",
                 context
             )
-            
+
             return AgentDecision(
                 agent_id=self.agent_id,
                 decision_type="enhanced_reorder_analysis",
@@ -1433,7 +1433,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 action=f"Prioritize reordering for {len(critical_items)} critical items",
                 confidence=0.85
             )
-            
+
         except Exception as e:
             logger.error(f"Error in enhanced reorder analysis: {e}")
             return None
@@ -1443,17 +1443,17 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         session = None
         try:
             session = self.SessionLocal()
-            
+
             # Get current inventory status
             total_items = session.query(Item).filter(Item.status == ItemStatus.ACTIVE).count()
             low_stock_count = session.query(Item).filter(
                 Item.status == ItemStatus.ACTIVE,
                 Item.current_stock <= Item.reorder_point
             ).count()
-            
+
             # Generate sample forecasts for top items
             forecasts = await self._forecast_all_items_demand(session, 14)
-            
+
             return {
                 "agent_id": self.agent_id,
                 "report_type": "enhanced_inventory_intelligence",
@@ -1478,7 +1478,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                     "declining_items": len([f for f in forecasts if f.trend_factor < -0.1])
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Error generating enhanced inventory report: {e}")
             return {"error": str(e)}
@@ -1490,27 +1490,27 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         """Enhanced periodic check with intelligent scheduling"""
         try:
             current_time = datetime.now()
-            
+
             # Run comprehensive analysis every 4 hours
             if current_time.hour % 4 == 0 and current_time.minute < 30:
                 await self._queue_analysis_message("inventory_health_check")
-            
+
             # Run demand forecasting daily at 6 AM
             if current_time.hour == 6 and current_time.minute < 30:
                 await self._queue_analysis_message("demand_forecast_request")
-            
+
             # Run reorder optimization twice per week
             if current_time.weekday() in [1, 4] and current_time.hour == 8:  # Tuesday and Friday
                 await self._queue_analysis_message("reorder_optimization")
-            
+
             # Run supplier performance analysis weekly
             if current_time.weekday() == 0 and current_time.hour == 9:  # Monday morning
                 await self._queue_analysis_message("supplier_performance_review")
-            
+
             # Run expiry management for perishables daily
             if current_time.hour == 10 and current_time.minute < 30:
                 await self._queue_analysis_message("expiry_management")
-            
+
         except Exception as e:
             logger.error(f"Error in enhanced periodic check: {e}")
 

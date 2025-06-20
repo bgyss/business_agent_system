@@ -1,11 +1,9 @@
 import random
-import json
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
 
-from models.financial import TransactionType, AccountType
+from models.financial import TransactionType
 
 
 @dataclass
@@ -26,7 +24,7 @@ class FinancialDataGenerator:
         self.start_date = start_date or datetime.now() - timedelta(days=90)
         self.customers = self._generate_customers()
         self.vendors = self._generate_vendors()
-        
+
     def _generate_customers(self) -> List[str]:
         if self.profile.business_type == "restaurant":
             return [
@@ -42,7 +40,7 @@ class FinancialDataGenerator:
             ]
         else:
             return ["Customer #1", "Customer #2", "Customer #3", "Online Sale", "Repeat Customer"]
-    
+
     def _generate_vendors(self) -> Dict[str, Dict[str, Any]]:
         if self.profile.business_type == "restaurant":
             return {
@@ -66,19 +64,19 @@ class FinancialDataGenerator:
                 "Office Supplies": {"category": "supplies", "payment_terms": 15},
                 "Software Subscription": {"category": "software", "payment_terms": 30}
             }
-    
+
     def generate_daily_transactions(self, date: datetime) -> List[Dict[str, Any]]:
         transactions = []
-        
+
         # Apply seasonal and day-of-week factors
         month_factor = self.profile.seasonal_factors.get(date.month, 1.0)
         day_factor = self.profile.customer_patterns.get(date.strftime('%A').lower(), 1.0)
-        
+
         # Generate revenue transactions
         daily_revenue_target = self.profile.avg_daily_revenue * month_factor * day_factor
-        daily_revenue_actual = random.normalvariate(daily_revenue_target, 
+        daily_revenue_actual = random.normalvariate(daily_revenue_target,
                                                    daily_revenue_target * self.profile.revenue_variance)
-        
+
         # Generate individual sales transactions
         revenue_generated = 0
         while revenue_generated < daily_revenue_actual:
@@ -86,10 +84,10 @@ class FinancialDataGenerator:
                 self.profile.avg_transaction_size,
                 self.profile.avg_transaction_size * 0.3
             ))
-            
+
             if revenue_generated + transaction_amount > daily_revenue_actual * 1.2:
                 transaction_amount = daily_revenue_actual - revenue_generated
-            
+
             if transaction_amount > 0:
                 transactions.append({
                     "description": f"Sale - {random.choice(self.customers)}",
@@ -105,13 +103,13 @@ class FinancialDataGenerator:
                     "reference_number": f"SALE-{date.strftime('%Y%m%d')}-{len(transactions)+1:04d}"
                 })
                 revenue_generated += transaction_amount
-        
+
         # Generate expense transactions
         for category, daily_avg in self.profile.expense_categories.items():
             if random.random() < 0.7:  # 70% chance of expense on any given day
                 variance = 0.3 if category not in ["rent", "insurance"] else 0.05
                 amount = max(1, random.normalvariate(daily_avg, daily_avg * variance))
-                
+
                 transactions.append({
                     "description": f"{category.replace('_', ' ').title()} - {self._get_vendor_for_category(category)}",
                     "amount": round(amount, 2),
@@ -125,7 +123,7 @@ class FinancialDataGenerator:
                     "to_account_id": None,
                     "reference_number": f"EXP-{date.strftime('%Y%m%d')}-{category.upper()}-{random.randint(1000, 9999)}"
                 })
-        
+
         # Occasionally generate larger one-time expenses
         if random.random() < 0.05:  # 5% chance per day
             large_expenses = [
@@ -135,7 +133,7 @@ class FinancialDataGenerator:
                 ("Legal Fees", "professional_services", random.randint(300, 1200)),
                 ("Bulk Supply Purchase", "supplies", random.randint(400, 1800))
             ]
-            
+
             expense = random.choice(large_expenses)
             transactions.append({
                 "description": expense[0],
@@ -150,26 +148,26 @@ class FinancialDataGenerator:
                 "to_account_id": None,
                 "reference_number": f"EXP-{date.strftime('%Y%m%d')}-SPECIAL-{random.randint(1000, 9999)}"
             })
-        
+
         return transactions
-    
+
     def _get_vendor_for_category(self, category: str) -> str:
-        matching_vendors = [name for name, info in self.vendors.items() 
+        matching_vendors = [name for name, info in self.vendors.items()
                           if info["category"] == category]
         if matching_vendors:
             return random.choice(matching_vendors)
         return "General Vendor"
-    
+
     def generate_accounts_receivable(self, date: datetime) -> List[Dict[str, Any]]:
         receivables = []
-        
+
         # Generate B2B invoices occasionally
         if random.random() < 0.1:  # 10% chance per day
             amount = random.randint(500, 5000)
             due_date = date + timedelta(days=random.choice([15, 30, 45]))
-            
+
             receivables.append({
-                "customer_name": random.choice(["Corporate Client A", "Corporate Client B", 
+                "customer_name": random.choice(["Corporate Client A", "Corporate Client B",
                                              "Catering Contract", "Bulk Order Customer"]),
                 "invoice_number": f"INV-{date.strftime('%Y%m%d')}-{random.randint(1000, 9999)}",
                 "amount": amount,
@@ -177,17 +175,17 @@ class FinancialDataGenerator:
                 "invoice_date": date,
                 "status": "unpaid"
             })
-        
+
         return receivables
-    
+
     def generate_accounts_payable(self, date: datetime) -> List[Dict[str, Any]]:
         payables = []
-        
+
         # Generate vendor invoices
         for vendor_name, vendor_info in self.vendors.items():
             if random.random() < 0.05:  # 5% chance per vendor per day
                 category = vendor_info["category"]
-                
+
                 if category in ["rent", "insurance"]:
                     if date.day == 1:  # Monthly bills on 1st of month
                         amount = random.randint(800, 3000)
@@ -195,9 +193,9 @@ class FinancialDataGenerator:
                         continue
                 else:
                     amount = random.randint(100, 2000)
-                
+
                 due_date = date + timedelta(days=vendor_info["payment_terms"])
-                
+
                 payables.append({
                     "vendor_name": vendor_name,
                     "invoice_number": f"VINV-{date.strftime('%Y%m%d')}-{random.randint(1000, 9999)}",
@@ -206,54 +204,58 @@ class FinancialDataGenerator:
                     "invoice_date": date,
                     "status": "unpaid"
                 })
-        
+
         return payables
-    
+
     def generate_period_data(self, start_date: datetime, end_date: datetime) -> Dict[str, List[Dict[str, Any]]]:
         all_transactions = []
         all_receivables = []
         all_payables = []
-        
+
         current_date = start_date
         while current_date <= end_date:
             # Skip Sundays for most business types
             if current_date.weekday() != 6 or self.profile.business_type == "restaurant":
                 daily_transactions = self.generate_daily_transactions(current_date)
                 all_transactions.extend(daily_transactions)
-                
+
                 daily_receivables = self.generate_accounts_receivable(current_date)
                 all_receivables.extend(daily_receivables)
-                
+
                 daily_payables = self.generate_accounts_payable(current_date)
                 all_payables.extend(daily_payables)
-            
+
             current_date += timedelta(days=1)
-        
+
         return {
             "transactions": all_transactions,
             "accounts_receivable": all_receivables,
             "accounts_payable": all_payables
         }
-    
+
     def generate_anomalies(self, transactions: List[Dict[str, Any]], anomaly_rate: float = 0.02) -> List[Dict[str, Any]]:
         anomalous_transactions = []
+        
+        # Handle empty input
+        if not transactions:
+            return anomalous_transactions
+            
         num_anomalies = max(1, int(len(transactions) * anomaly_rate))
-        
         selected_transactions = random.sample(transactions, num_anomalies)
-        
+
         for transaction in selected_transactions:
             anomaly_type = random.choice([
                 "unusual_amount", "unusual_time", "duplicate", "missing_reference"
             ])
-            
+
             anomalous_transaction = transaction.copy()
-            
+
             if anomaly_type == "unusual_amount":
                 # Make amount 3-10x larger than normal
                 multiplier = random.uniform(3, 10)
                 anomalous_transaction["amount"] = round(transaction["amount"] * multiplier, 2)
                 anomalous_transaction["description"] += " [ANOMALY: Unusual Amount]"
-            
+
             elif anomaly_type == "unusual_time":
                 # Transaction at 2-4 AM
                 anomalous_transaction["transaction_date"] = transaction["transaction_date"].replace(
@@ -261,18 +263,18 @@ class FinancialDataGenerator:
                     minute=random.randint(0, 59)
                 )
                 anomalous_transaction["description"] += " [ANOMALY: Unusual Time]"
-            
+
             elif anomaly_type == "duplicate":
                 # Create near-duplicate transaction
                 anomalous_transaction["transaction_date"] = transaction["transaction_date"] + timedelta(minutes=random.randint(1, 30))
                 anomalous_transaction["description"] += " [ANOMALY: Potential Duplicate]"
-            
+
             elif anomaly_type == "missing_reference":
                 anomalous_transaction["reference_number"] = None
                 anomalous_transaction["description"] += " [ANOMALY: Missing Reference]"
-            
+
             anomalous_transactions.append(anomalous_transaction)
-        
+
         return anomalous_transactions
 
 

@@ -1,18 +1,17 @@
 """
 Pytest configuration and fixtures for unit tests
 """
-import pytest
-import asyncio
-from unittest.mock import Mock, patch
-from datetime import datetime, date
-from decimal import Decimal
-
-import sys
 import os
+import sys
+from datetime import date, datetime
+from decimal import Decimal
+from unittest.mock import Mock, patch
+
+import pytest
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from agents.base_agent import AgentDecision
-
 
 # Remove custom event_loop fixture to use pytest-asyncio's default
 
@@ -139,28 +138,28 @@ def mock_database_session():
     """Create a mock database session with common query patterns"""
     def _create_session():
         session = Mock()
-        
+
         # Setup common query patterns
         query_mock = Mock()
         session.query.return_value = query_mock
-        
+
         filter_mock = Mock()
         query_mock.filter.return_value = filter_mock
-        
+
         # Add common query chain methods
         filter_mock.all.return_value = []
         filter_mock.first.return_value = None
         filter_mock.count.return_value = 0
         filter_mock.order_by.return_value = filter_mock
-        
+
         # Session management
         session.add = Mock()
         session.commit = Mock()
         session.rollback = Mock()
         session.close = Mock()
-        
+
         return session
-    
+
     return _create_session
 
 
@@ -236,11 +235,11 @@ def mock_sqlalchemy():
     """Mock SQLAlchemy components"""
     with patch('agents.base_agent.create_engine') as mock_engine, \
          patch('agents.base_agent.sessionmaker') as mock_sessionmaker:
-        
+
         # Setup session mock
         session_mock = Mock()
         mock_sessionmaker.return_value = session_mock
-        
+
         yield {
             'engine': mock_engine,
             'sessionmaker': mock_sessionmaker,
@@ -250,7 +249,7 @@ def mock_sqlalchemy():
 
 class AgentTestHelper:
     """Helper class for common agent testing operations"""
-    
+
     @staticmethod
     def create_decision_context(**kwargs):
         """Create a standardized decision context"""
@@ -260,7 +259,7 @@ class AgentTestHelper:
         }
         default_context.update(kwargs)
         return default_context
-    
+
     @staticmethod
     def assert_decision_structure(decision: AgentDecision, expected_type: str = None):
         """Assert that a decision has the proper structure"""
@@ -271,23 +270,23 @@ class AgentTestHelper:
         assert decision.reasoning is not None
         assert 0.0 <= decision.confidence <= 1.0
         assert isinstance(decision.timestamp, datetime)
-        
+
         if expected_type:
             assert decision.decision_type == expected_type
-    
+
     @staticmethod
     def create_mock_query_chain(return_value=None, count_value=0):
         """Create a mock query chain for database testing"""
         query_mock = Mock()
         filter_mock = Mock()
-        
+
         query_mock.filter.return_value = filter_mock
         filter_mock.filter.return_value = filter_mock  # Allow chaining
         filter_mock.all.return_value = return_value or []
         filter_mock.first.return_value = return_value[0] if return_value else None
         filter_mock.count.return_value = count_value
         filter_mock.order_by.return_value = filter_mock
-        
+
         return query_mock
 
 

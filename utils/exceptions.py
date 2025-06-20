@@ -1,18 +1,18 @@
 """
 Custom exceptions for the Business Agent Management System
 """
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 
 class BusinessAgentError(Exception):
     """Base exception for all business agent system errors"""
-    
+
     def __init__(self, message: str, error_code: Optional[str] = None, context: Optional[Dict[str, Any]] = None):
         super().__init__(message)
         self.error_code = error_code
         self.context = context or {}
         self.message = message
-    
+
     def __str__(self) -> str:
         if self.error_code:
             return f"[{self.error_code}] {self.message}"
@@ -116,7 +116,7 @@ class ValidationError(BusinessAgentError):
 
 class RetryableError(BusinessAgentError):
     """Base class for errors that can be retried"""
-    
+
     def __init__(self, message: str, retry_after: Optional[int] = None, **kwargs):
         super().__init__(message, **kwargs)
         self.retry_after = retry_after  # Seconds to wait before retry

@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Dict, Any, Optional
-from sqlalchemy import Column, Integer, String, DateTime, Text, Float, JSON
-from pydantic import BaseModel, Field
-import json
 from decimal import Decimal
+from typing import Any, Dict, Optional
+
+from pydantic import BaseModel, Field
+from sqlalchemy import JSON, Column, DateTime, Float, Integer, String, Text
 
 # Import Base from existing models
 from models.financial import Base
@@ -13,7 +13,7 @@ def serialize_context(context: Optional[Dict[str, Any]]) -> Optional[Dict[str, A
     """Convert Decimal objects to float for JSON serialization"""
     if not context:
         return context
-    
+
     def convert_value(value):
         if isinstance(value, Decimal):
             return float(value)
@@ -25,14 +25,14 @@ def serialize_context(context: Optional[Dict[str, Any]]) -> Optional[Dict[str, A
             return value.isoformat()
         else:
             return value
-    
+
     return {k: convert_value(v) for k, v in context.items()}
 
 
 class AgentDecisionModel(Base):
     """SQLAlchemy model for storing agent decisions"""
     __tablename__ = "agent_decisions"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     agent_id = Column(String(100), nullable=False, index=True)
     decision_type = Column(String(100), nullable=False, index=True)
@@ -53,7 +53,7 @@ class AgentDecision(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score between 0 and 1")
     context: Optional[Dict[str, Any]] = Field(default=None, description="Additional context data")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="When the decision was made")
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for storage"""
         return {
@@ -65,7 +65,7 @@ class AgentDecision(BaseModel):
             "context": self.context,
             "timestamp": self.timestamp
         }
-    
+
     def to_db_model(self) -> AgentDecisionModel:
         """Convert to SQLAlchemy model for database storage"""
         return AgentDecisionModel(
@@ -77,7 +77,7 @@ class AgentDecision(BaseModel):
             context=serialize_context(self.context),
             timestamp=self.timestamp
         )
-    
+
     @classmethod
     def from_db_model(cls, db_model: AgentDecisionModel) -> "AgentDecision":
         """Create from SQLAlchemy model"""

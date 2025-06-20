@@ -1,13 +1,12 @@
+import uuid
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field, ConfigDict
-from sqlalchemy import Column, String, Numeric, DateTime, Integer, Text, Boolean
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import Boolean, Column, DateTime, Numeric, String, Text
 from sqlalchemy.orm import declarative_base
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
 
 Base = declarative_base()
 
@@ -31,7 +30,7 @@ class AccountType(str, Enum):
 
 class Account(Base):
     __tablename__ = "accounts"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(255), nullable=False)
     account_type = Column(String(50), nullable=False)
@@ -44,7 +43,7 @@ class Account(Base):
 
 class Transaction(Base):
     __tablename__ = "transactions"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     description = Column(String(500), nullable=False)
     amount = Column(Numeric(10, 2), nullable=False)
@@ -61,7 +60,7 @@ class Transaction(Base):
 
 class AccountModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     name: str
     account_type: AccountType
@@ -74,7 +73,7 @@ class AccountModel(BaseModel):
 
 class TransactionModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     description: str
     amount: Decimal
@@ -114,7 +113,7 @@ class CashFlowStatement(BaseModel):
 
 class AccountsReceivable(Base):
     __tablename__ = "accounts_receivable"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     customer_name = Column(String(255), nullable=False)
     invoice_number = Column(String(100), nullable=False)
@@ -128,7 +127,7 @@ class AccountsReceivable(Base):
 
 class AccountsPayable(Base):
     __tablename__ = "accounts_payable"
-    
+
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     vendor_name = Column(String(255), nullable=False)
     invoice_number = Column(String(100), nullable=False)
@@ -142,7 +141,7 @@ class AccountsPayable(Base):
 
 class AccountsReceivableModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     customer_name: str
     invoice_number: str
@@ -156,7 +155,7 @@ class AccountsReceivableModel(BaseModel):
 
 class AccountsPayableModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: Optional[str] = None
     vendor_name: str
     invoice_number: str

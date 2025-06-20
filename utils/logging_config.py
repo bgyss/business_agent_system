@@ -4,18 +4,17 @@ Structured logging configuration for the Business Agent Management System
 import json
 import logging
 import logging.config
-import sys
+import traceback
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional
-import traceback
+from typing import Any, Dict, Optional
 
 from .exceptions import BusinessAgentError
 
 
 class StructuredFormatter(logging.Formatter):
     """Custom formatter for structured JSON logging"""
-    
+
     def format(self, record: logging.LogRecord) -> str:
         # Base log data
         log_data = {
@@ -27,7 +26,7 @@ class StructuredFormatter(logging.Formatter):
             "function": record.funcName,
             "line": record.lineno,
         }
-        
+
         # Add extra context if available
         if hasattr(record, 'agent_id'):
             log_data['agent_id'] = record.agent_id
@@ -41,7 +40,7 @@ class StructuredFormatter(logging.Formatter):
             log_data['error_code'] = record.error_code
         if hasattr(record, 'context'):
             log_data['context'] = record.context
-        
+
         # Add exception information if present
         if record.exc_info:
             log_data['exception'] = {
@@ -49,36 +48,36 @@ class StructuredFormatter(logging.Formatter):
                 'message': str(record.exc_info[1]),
                 'traceback': traceback.format_exception(*record.exc_info)
             }
-        
+
         # Add stack trace for errors
         if record.levelno >= logging.ERROR and not record.exc_info:
             log_data['stack_trace'] = traceback.format_stack()
-        
+
         return json.dumps(log_data, default=str)
 
 
 class BusinessAgentAdapter(logging.LoggerAdapter):
     """Logger adapter for adding business context to log messages"""
-    
+
     def __init__(self, logger: logging.Logger, extra: Dict[str, Any]):
         super().__init__(logger, extra)
-    
+
     def process(self, msg: str, kwargs: Dict[str, Any]) -> tuple:
         # Merge extra context with any context in kwargs
         if 'extra' in kwargs:
             kwargs['extra'].update(self.extra)
         else:
             kwargs['extra'] = self.extra.copy()
-        
+
         return msg, kwargs
-    
+
     def log_decision(self, level: int, decision_id: str, message: str, **kwargs):
         """Log an agent decision with structured context"""
         extra = kwargs.get('extra', {})
         extra['decision_id'] = decision_id
         kwargs['extra'] = extra
         self.log(level, message, **kwargs)
-    
+
     def log_performance(self, metric_name: str, value: float, unit: str = "ms", **kwargs):
         """Log a performance metric"""
         extra = kwargs.get('extra', {})
@@ -89,15 +88,15 @@ class BusinessAgentAdapter(logging.LoggerAdapter):
         }
         kwargs['extra'] = extra
         self.info(f"Performance metric: {metric_name} = {value}{unit}", **kwargs)
-    
+
     def log_error(self, error: Exception, message: Optional[str] = None, **kwargs):
         """Log an error with structured context"""
         extra = kwargs.get('extra', {})
-        
+
         if isinstance(error, BusinessAgentError):
             extra['error_code'] = error.error_code
             extra['context'] = error.context
-        
+
         error_message = message or f"Error occurred: {str(error)}"
         kwargs['extra'] = extra
         self.error(error_message, exc_info=error, **kwargs)
@@ -160,9 +159,9 @@ def setup_logging(
             "handlers": []
         }
     }
-    
+
     handler_names = []
-    
+
     # Console handler
     if console_output:
         config["handlers"]["console"] = {
@@ -172,13 +171,13 @@ def setup_logging(
             "stream": "ext://sys.stdout"
         }
         handler_names.append("console")
-    
+
     # File handler
     if log_file:
         # Ensure log directory exists
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         config["handlers"]["file"] = {
             "class": "logging.handlers.RotatingFileHandler",
             "level": log_level,
@@ -189,7 +188,7 @@ def setup_logging(
             "encoding": "utf-8"
         }
         handler_names.append("file")
-    
+
     # Error file handler (always structured for easier parsing)
     if log_file:
         error_log_file = log_path.parent / f"{log_path.stem}_errors{log_path.suffix}"
@@ -203,17 +202,17 @@ def setup_logging(
             "encoding": "utf-8"
         }
         handler_names.append("error_file")
-    
+
     # Assign handlers to loggers
     for logger_name in ["business_agent_system", "agents", "simulation", "dashboard", "root"]:
         if logger_name in config["loggers"]:
             config["loggers"][logger_name]["handlers"] = handler_names
         else:
             config[logger_name]["handlers"] = handler_names
-    
+
     # Apply configuration
     logging.config.dictConfig(config)
-    
+
     # Set up some third-party library logging levels
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("anthropic").setLevel(logging.WARNING)
@@ -250,7 +249,7 @@ def get_agent_logger(agent_id: str, business_type: Optional[str] = None) -> Busi
     context = {"agent_id": agent_id}
     if business_type:
         context["business_type"] = business_type
-    
+
     return get_logger(f"agents.{agent_id}", **context)
 
 
@@ -276,19 +275,19 @@ def get_dashboard_logger() -> BusinessAgentAdapter:
 
 class LogContext:
     """Context manager for adding structured context to logs"""
-    
+
     def __init__(self, logger: BusinessAgentAdapter, **context):
         self.logger = logger
         self.context = context
         self.original_extra = logger.extra.copy()
-    
+
     def __enter__(self):
         self.logger.extra.update(self.context)
         return self.logger
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.logger.extra = self.original_extra
-        
+
         # Log any exceptions that occurred
         if exc_type and issubclass(exc_type, Exception):
             self.logger.log_error(exc_val, "Exception occurred in log context")
@@ -296,23 +295,23 @@ class LogContext:
 
 class PerformanceContext:
     """Context manager for performance logging"""
-    
+
     def __init__(self, logger: BusinessAgentAdapter, operation_name: str):
         self.logger = logger
         self.operation_name = operation_name
         self.start_time = None
-    
+
     def __enter__(self):
         import time
         self.start_time = time.perf_counter()
         self.logger.debug(f"Starting operation: {self.operation_name}")
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         import time
         end_time = time.perf_counter()
         duration_ms = (end_time - self.start_time) * 1000
-        
+
         if exc_type:
             self.logger.log_performance(
                 f"{self.operation_name}_duration",
