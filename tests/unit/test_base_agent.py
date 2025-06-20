@@ -415,3 +415,41 @@ class TestBaseAgent:
         )
         
         assert agent.message_queue is custom_queue
+    
+    @pytest.mark.asyncio
+    async def test_receive_messages_exception_handling(self, concrete_agent):
+        """Test exception handling in receive_messages (lines 98-99)"""
+        # Mock message queue to raise an exception
+        mock_queue = AsyncMock()
+        mock_queue.get.side_effect = Exception("Message queue error")
+        concrete_agent.message_queue = mock_queue
+        
+        # Should handle the exception gracefully
+        with patch('agents.base_agent.logger') as mock_logger:
+            await concrete_agent._receive_messages()
+            mock_logger.error.assert_called()
+    
+    @pytest.mark.asyncio  
+    async def test_agent_loop_exception_handling(self, concrete_agent):
+        """Test agent main loop handles exceptions gracefully (lines 133-134)"""
+        # Make periodic_check raise an exception
+        concrete_agent.periodic_check = AsyncMock(side_effect=Exception("Test error"))
+        
+        # Start the agent
+        start_task = asyncio.create_task(concrete_agent.start())
+        
+        # Give it a moment to encounter the error
+        await asyncio.sleep(0.1)
+        
+        # Agent should continue running despite the error
+        assert concrete_agent.is_running is True
+        
+        # Stop the agent
+        await concrete_agent.stop()
+        
+        # Cancel the task
+        start_task.cancel()
+        try:
+            await start_task
+        except asyncio.CancelledError:
+            pass

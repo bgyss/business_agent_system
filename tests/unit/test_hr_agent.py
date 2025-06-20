@@ -602,3 +602,68 @@ class TestHRAgent:
         decision = await hr_agent.process_data(data)
         
         assert decision is None
+    
+    @pytest.mark.asyncio
+    async def test_process_data_database_exception(self, hr_agent, mock_db_session):
+        """Test exception handling during data processing (lines 63-65)"""
+        mock_session_instance = Mock()
+        mock_db_session.return_value = mock_session_instance
+        mock_session_instance.query.side_effect = Exception("Database error")
+        
+        data = {"type": "time_record", "record": {"employee_id": 1}}
+        
+        # Should handle database errors gracefully
+        decision = await hr_agent.process_data(data)
+        assert decision is None
+        
+        # Session should still be closed
+        mock_session_instance.close.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_process_data_high_labor_cost_scenario(self, hr_agent, mock_db_session):
+        """Test high labor cost alert generation (lines 255-264)"""
+        data = {"type": "daily_labor_analysis"}
+        
+        mock_session_instance = Mock()
+        mock_db_session.return_value = mock_session_instance
+        
+        # Mock very high labor cost scenario - multiple expensive employees working long hours
+        yesterday_records = []
+        for emp_id in range(1, 6):  # 5 employees
+            yesterday_records.extend([
+                Mock(employee_id=emp_id, timestamp=datetime(2024, 1, 1, 8, 0), record_type=TimeRecordType.CLOCK_IN),
+                Mock(employee_id=emp_id, timestamp=datetime(2024, 1, 1, 22, 0), record_type=TimeRecordType.CLOCK_OUT),  # 14 hours each
+            ])
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = yesterday_records
+        
+        # Mock high-paid employees
+        expensive_employee = Mock(
+            id=1, first_name="Senior", last_name="Manager", 
+            position="Manager", hourly_rate=Decimal("30.00")
+        )
+        mock_session_instance.query.return_value.filter.return_value.first.return_value = expensive_employee
+        
+        decision = await hr_agent.process_data(data)
+        
+        # Should generate high labor cost alert
+        assert decision is not None
+        assert decision.decision_type in ["daily_labor_analysis", "high_labor_cost"]
+    
+    def test_calculate_daily_hours_edge_cases(self, hr_agent):
+        """Test edge cases in time calculation (line 163)"""
+        # Test with empty records
+        assert hr_agent._calculate_daily_hours([]) == 0.0
+        
+        # Test with malformed data
+        malformed_records = [
+            {"timestamp": "invalid_date", "record_type": TimeRecordType.CLOCK_IN}
+        ]
+        result = hr_agent._calculate_daily_hours(malformed_records)
+        assert result == 0.0  # Should handle gracefully
+        
+        # Test with single record (unpaired)
+        single_record = [
+            {"timestamp": "2024-01-01T09:00:00", "record_type": TimeRecordType.CLOCK_IN}
+        ]
+        result = hr_agent._calculate_daily_hours(single_record)
+        assert result == 0.0  # No complete pairs

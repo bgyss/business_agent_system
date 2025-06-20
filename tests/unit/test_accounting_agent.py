@@ -491,3 +491,39 @@ class TestAccountingAgent:
         decision = await accounting_agent.process_data(data)
         
         assert decision is None
+    
+    @pytest.mark.asyncio
+    async def test_process_data_database_exception(self, accounting_agent, mock_db_session):
+        """Test exception handling during data processing (lines 63-65)"""
+        mock_session_instance = Mock()
+        mock_db_session.return_value = mock_session_instance
+        mock_session_instance.query.side_effect = Exception("Database error")
+        
+        data = {"type": "new_transaction", "transaction": {"amount": 100}}
+        
+        # Should handle database errors gracefully
+        decision = await accounting_agent.process_data(data)
+        assert decision is None
+        
+        # Session should still be closed
+        mock_session_instance.close.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_periodic_check_aging_analysis_timing(self, accounting_agent, mock_db_session):
+        """Test aging analysis timing trigger (lines 375-378)"""
+        mock_session_instance = Mock()
+        mock_db_session.return_value = mock_session_instance
+        
+        # Mock aging analysis items
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = []
+        
+        with patch('agents.accounting_agent.datetime') as mock_datetime:
+            mock_datetime.now.return_value = Mock(hour=9)  # 9 AM trigger
+            
+            # Mock the queue
+            mock_queue = AsyncMock()
+            accounting_agent.message_queue = mock_queue
+            
+            # Should complete without error
+            result = await accounting_agent.periodic_check()
+            assert result is None

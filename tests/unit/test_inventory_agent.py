@@ -574,3 +574,45 @@ class TestInventoryAgent:
         decision = await inventory_agent.process_data(data)
         
         assert decision is None
+    
+    @pytest.mark.asyncio
+    async def test_process_data_database_exception(self, inventory_agent, mock_db_session):
+        """Test exception handling during data processing (lines 62-64)"""
+        mock_session_instance = Mock()
+        mock_db_session.return_value = mock_session_instance
+        mock_session_instance.query.side_effect = Exception("Database error")
+        
+        data = {"type": "stock_movement", "movement": {"item_id": 1}}
+        
+        # Should handle database errors gracefully
+        decision = await inventory_agent.process_data(data)
+        assert decision is None
+        
+        # Session should still be closed
+        mock_session_instance.close.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_process_data_stock_adjustment(self, inventory_agent, mock_db_session, sample_item):
+        """Test stock adjustment movement processing (line 88)"""
+        movement_data = {
+            "item_id": 1,
+            "movement_type": StockMovementType.ADJUSTMENT,
+            "quantity": 5,
+            "notes": "Inventory adjustment after count"
+        }
+        
+        data = {
+            "type": "stock_movement",
+            "movement": movement_data
+        }
+        
+        mock_session_instance = Mock()
+        mock_db_session.return_value = mock_session_instance
+        mock_session_instance.query.return_value.filter.return_value.first.return_value = sample_item
+        
+        decision = await inventory_agent.process_data(data)
+        
+        # Adjustment movements should trigger analysis
+        assert decision is not None
+        assert decision.decision_type == "stock_adjustment_alert"
+        assert "Stock adjustment" in decision.action
