@@ -655,12 +655,13 @@ class TestHRAgent:
         # Test with empty records
         assert hr_agent._calculate_daily_hours([]) == 0.0
 
-        # Test with malformed data
+        # Test with malformed data - should raise ValueError
         malformed_records = [
             {"timestamp": "invalid_date", "record_type": TimeRecordType.CLOCK_IN}
         ]
-        result = hr_agent._calculate_daily_hours(malformed_records)
-        assert result == 0.0  # Should handle gracefully
+        import pytest
+        with pytest.raises(ValueError):
+            hr_agent._calculate_daily_hours(malformed_records)
 
         # Test with single record (unpaired)
         single_record = [

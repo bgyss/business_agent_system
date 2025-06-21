@@ -1,22 +1,14 @@
 # Business Agent Management System
 
-> 🤖 **Transform your business operations with AI-powered autonomous management**
+## Preamble
 
-**Business Agent Management System** is a cutting-edge autonomous business management platform that uses AI agents to monitor, analyze, and optimize your business operations 24/7. Built on Anthropic's Claude AI, this system deploys intelligent agents that understand your business context and make smart decisions to keep your operations running smoothly.
+This project explores agent-based solutions for Small/Medium Business (SMB) simulation and automated business management workflows. Built semi-autonomously using Claude Code and Windsurf, it demonstrates practical applications of AI agents in business operations and decision-making.
 
-## Why Business Agent Management System?
+**Status**: Work in progress - intended as a foundation for further development rather than production use.
 
-**🎯 Autonomous Decision Making**: Stop micromanaging your business operations. Our AI agents continuously monitor your financial health, inventory levels, and workforce management, making intelligent decisions based on real-time data analysis.
+Interested in agent-based business automation or want to explore similar solutions for your organization? 
 
-**💰 Cost Optimization**: Identify cost-saving opportunities, prevent stockouts, optimize labor costs, and catch financial anomalies before they become problems. Our restaurant clients typically see 15-25% reduction in operational costs within the first quarter.
-
-**📈 Scale Without Complexity**: Whether you're running a single restaurant or managing multiple retail locations, our system adapts to your business needs and grows with you.
-
-**🔄 Real-time Intelligence**: Get instant insights into your business performance with live dashboards, automated reports, and proactive alerts when your attention is needed.
-
-A comprehensive autonomous business management system powered by AI agents that monitor and optimize three key business areas: accounting/bookkeeping, inventory management, and human resources.
-
-Built with **Nix** for reproducible builds and **uv** for fast Python dependency management.
+Contact: _bgyss at hey dot com_
 
 ## Features
 

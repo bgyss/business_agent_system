@@ -446,7 +446,7 @@ class TestStressScenarios:
 
     @pytest.mark.stress
     @pytest.mark.agent
-    def test_agent_error_recovery_stress(self, test_accounting_agent):
+    async def test_agent_error_recovery_stress(self, test_accounting_agent):
         """Stress test agent error recovery capabilities."""
         successful_operations = 0
         error_recoveries = 0

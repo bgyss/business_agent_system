@@ -277,7 +277,7 @@ class InventoryAgent(BaseAgent):
         }
 
         # Check if this movement triggers a low stock alert
-        if new_stock <= item.reorder_point and item.current_stock > item.reorder_point:
+        if item.reorder_point is not None and new_stock <= item.reorder_point and item.current_stock > item.reorder_point:
             reasoning = await self.analyze_with_claude(
                 f"Item {item.name} (SKU: {item.sku}) has dropped to {new_stock} units, "
                 f"which is at or below the reorder point of {item.reorder_point}. "
@@ -325,7 +325,7 @@ class InventoryAgent(BaseAgent):
         for item in items:
             if item.current_stock <= 0:
                 out_of_stock_items.append(item)
-            elif item.current_stock <= item.reorder_point:
+            elif item.reorder_point is not None and item.current_stock <= item.reorder_point:
                 low_stock_items.append(item)
 
         if not low_stock_items and not out_of_stock_items:
@@ -598,7 +598,7 @@ class InventoryAgent(BaseAgent):
             items = session.query(Item).filter(Item.status == ItemStatus.ACTIVE).all()
 
             total_value = sum(float(item.current_stock * item.unit_cost) for item in items)
-            low_stock_items = [item for item in items if item.current_stock <= item.reorder_point]
+            low_stock_items = [item for item in items if item.reorder_point is not None and item.current_stock <= item.reorder_point]
             out_of_stock_items = [item for item in items if item.current_stock <= 0]
 
             # Get top moving items (simplified - based on recent movements)
@@ -2355,7 +2355,7 @@ class InventoryAgent(BaseAgent):
                 optimal_reorder = await self.calculate_optimal_reorder_point(session, item.id)
                 if optimal_reorder:
                     # Compare with current settings
-                    current_gap = abs(item.reorder_point - optimal_reorder.optimal_reorder_point)
+                    current_gap = abs((item.reorder_point or 0) - optimal_reorder.optimal_reorder_point)
                     if current_gap > 5:  # Significant difference
                         advanced_suggestions.append({
                             "item_id": item.id,

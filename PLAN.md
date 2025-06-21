@@ -55,6 +55,31 @@ This document serves as a comprehensive development plan for the Business Agent 
 - [ ] **Decision Confidence Tuning** - Better calibration of confidence scores
 - [ ] **Anomaly Detection Refinement** - More sophisticated pattern recognition
 
+#### LLM Testing & Caching Strategy
+- [ ] **VCR.py Implementation** - Record & replay pattern for deterministic LLM testing
+  - Install and configure VCR.py with pytest-vcr for agent tests
+  - Create cassette library structure for organized test recordings
+  - Implement filter_headers for API key redaction in cassettes
+  - Configure record_mode strategies (once, new_episodes, none for CI)
+  
+- [ ] **Mock LLM Testing Framework** - Stand-in LLMs for unit testing
+  - Integrate FakeListLLM for orchestration logic testing
+  - Create MockLLM HTTP endpoint for network-layer testing
+  - Build test fixtures with pre-programmed agent responses
+  - Implement agent decision validation without API costs
+
+- [ ] **Semantic Caching Infrastructure** - Advanced caching for LLM responses
+  - Evaluate GPTCache for embedding-based semantic matching
+  - Implement cache-hit rate optimization for similar prompts
+  - Design cache invalidation strategies for agent prompt evolution
+  - Configure semantic similarity thresholds for cache retrieval
+
+- [ ] **Advanced Testing Patterns** - Comprehensive LLM testing coverage
+  - Create agent-specific test cassettes for different business scenarios
+  - Implement CI/CD cassette validation with record_mode="none"
+  - Build semantic cache testing for prompt variations
+  - Establish baseline performance metrics for cached vs live responses
+
 #### Dashboard Enhancements
 - [ ] **Real-time Notifications** - Alert system for critical agent decisions
 - [ ] **Decision History Filtering** - Filter decisions by agent, type, confidence, time
