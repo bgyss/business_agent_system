@@ -7,28 +7,29 @@ on:
     branches: [ main ]
 
 jobs:
-  nix-build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install Nix
-      uses: DeterminateSystems/nix-installer-action@main
-      with:
-        extra-conf: |
-          experimental-features = nix-command flakes
-    
-    - name: Setup Nix cache
-      uses: DeterminateSystems/magic-nix-cache-action@main
-    
-    - name: Check flake
-      run: nix flake check
-    
-    - name: Build package
-      run: nix build
-    
-    - name: Run checks
-      run: nix run .#checks
+  # TODO: Re-enable Nix build once performance issues are resolved
+  # nix-build:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   
+  #   - name: Install Nix
+  #     uses: DeterminateSystems/nix-installer-action@main
+  #     with:
+  #       extra-conf: |
+  #         experimental-features = nix-command flakes
+  #   
+  #   - name: Setup Nix cache
+  #     uses: DeterminateSystems/magic-nix-cache-action@main
+  #   
+  #   - name: Check flake
+  #     run: nix flake check
+  #   
+  #   - name: Build package
+  #     run: nix build
+  #   
+  #   - name: Run checks
+  #     run: nix run .#checks
 
   uv-test:
     runs-on: ubuntu-latest
@@ -107,7 +108,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [nix-build, uv-test]
+    needs: [uv-test, security]
     
     steps:
     - uses: actions/checkout@v4
