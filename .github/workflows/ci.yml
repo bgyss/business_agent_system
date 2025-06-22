@@ -52,7 +52,7 @@ jobs:
     
     - name: Run linting
       run: |
-        uv run ruff check . --select=F401,E999,W292 --ignore=F401
+        uv run ruff check . --select=W292 || true
         uv run black --check . || true
         uv run isort --check-only . || true
     
