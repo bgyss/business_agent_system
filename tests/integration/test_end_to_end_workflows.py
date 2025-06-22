@@ -1,6 +1,7 @@
 """
 End-to-end integration tests for complete business workflows.
 """
+
 import asyncio
 from datetime import datetime
 
@@ -14,7 +15,9 @@ class TestCompleteBusinessWorkflows:
     """Test complete end-to-end business workflows."""
 
     @pytest.mark.asyncio
-    async def test_full_system_startup_to_shutdown(self, temp_config_file, mock_anthropic_client, mock_env_vars):
+    async def test_full_system_startup_to_shutdown(
+        self, temp_config_file, mock_anthropic_client, mock_env_vars
+    ):
         """Test complete system lifecycle from startup to shutdown."""
         system = BusinessAgentSystem(temp_config_file)
 
@@ -45,7 +48,7 @@ class TestCompleteBusinessWorkflows:
             assert status["system_running"] is False  # Not in full run mode yet
 
             # Check that agents are still running
-            for agent_name, agent_status in status["agents"].items():
+            for _agent_name, agent_status in status["agents"].items():
                 assert agent_status["running"] is True
 
         finally:
@@ -57,7 +60,9 @@ class TestCompleteBusinessWorkflows:
                 assert agent.is_running is False
 
     @pytest.mark.asyncio
-    async def test_business_simulation_with_agent_responses(self, business_system, integration_helper):
+    async def test_business_simulation_with_agent_responses(
+        self, business_system, integration_helper
+    ):
         """Test business simulation with agent decision making."""
         # Initialize and start system components
         business_system.initialize_simulator()
@@ -80,7 +85,9 @@ class TestCompleteBusinessWorkflows:
 
             # Check that simulation is generating messages
             # and agents are processing them
-            total_decisions = sum(len(agent.decisions_log) for agent in business_system.agents.values())
+            total_decisions = sum(
+                len(agent.decisions_log) for agent in business_system.agents.values()
+            )
 
             # May be 0 if no decisions needed, but system should be stable
             assert total_decisions >= 0
@@ -124,9 +131,9 @@ class TestCompleteBusinessWorkflows:
                 "description": "Large expense transaction",
                 "transaction_date": datetime.now().date().isoformat(),
                 "transaction_type": "debit",
-                "account_id": "checking_account"
+                "account_id": "checking_account",
             },
-            "cycle": 1
+            "cycle": 1,
         }
 
         await integration_helper.send_test_message(system, large_transaction)
@@ -161,12 +168,8 @@ class TestCompleteBusinessWorkflows:
         # Send inventory update message
         inventory_update = {
             "type": "inventory_update",
-            "item": {
-                "sku": "TEST001",
-                "current_stock": 5,  # Low stock
-                "reorder_point": 10
-            },
-            "cycle": 1
+            "item": {"sku": "TEST001", "current_stock": 5, "reorder_point": 10},  # Low stock
+            "cycle": 1,
         }
 
         await integration_helper.send_test_message(system, inventory_update)
@@ -178,9 +181,9 @@ class TestCompleteBusinessWorkflows:
                 "item_sku": "TEST001",
                 "movement_type": "consumption",
                 "quantity": -3,  # Stock going down
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             },
-            "cycle": 1
+            "cycle": 1,
         }
 
         await integration_helper.send_test_message(system, stock_movement)
@@ -214,19 +217,15 @@ class TestCompleteBusinessWorkflows:
                 "employee_id": "EMP001",
                 "date": datetime.now().date().isoformat(),
                 "hours_scheduled": 10,  # Overtime hours
-                "hourly_rate": 25.00
+                "hourly_rate": 25.00,
             },
-            "cycle": 1
+            "cycle": 1,
         }
 
         await integration_helper.send_test_message(system, schedule_update)
 
         # Send labor cost analysis request
-        labor_analysis = {
-            "type": "labor_cost_analysis",
-            "period": "daily",
-            "cycle": 1
-        }
+        labor_analysis = {"type": "labor_cost_analysis", "period": "daily", "cycle": 1}
 
         await integration_helper.send_test_message(system, labor_analysis)
 
@@ -260,9 +259,9 @@ class TestCompleteBusinessWorkflows:
                 "description": "Large inventory purchase",
                 "transaction_date": datetime.now().date().isoformat(),
                 "transaction_type": "debit",
-                "account_id": "checking_account"
+                "account_id": "checking_account",
             },
-            "cycle": 1
+            "cycle": 1,
         }
 
         await integration_helper.send_test_message(system, large_purchase)
@@ -273,12 +272,12 @@ class TestCompleteBusinessWorkflows:
             "delivery": {
                 "items": [
                     {"sku": "FOOD001", "quantity": 100, "unit_cost": 15.00},
-                    {"sku": "FOOD002", "quantity": 50, "unit_cost": 25.00}
+                    {"sku": "FOOD002", "quantity": 50, "unit_cost": 25.00},
                 ],
                 "supplier": "Main Food Supplier",
-                "total_cost": 2750.00
+                "total_cost": 2750.00,
             },
-            "cycle": 1
+            "cycle": 1,
         }
 
         await integration_helper.send_test_message(system, inventory_delivery)
@@ -289,9 +288,9 @@ class TestCompleteBusinessWorkflows:
             "alert": {
                 "current_balance": 3000.00,  # Low after purchase
                 "threshold": 5000.00,
-                "severity": "medium"
+                "severity": "medium",
             },
-            "cycle": 1
+            "cycle": 1,
         }
 
         await integration_helper.send_test_message(system, cash_alert)
@@ -300,7 +299,7 @@ class TestCompleteBusinessWorkflows:
         await asyncio.sleep(5)
 
         # Verify all agents are still running and responsive
-        for agent_name, agent in system.agents.items():
+        for _agent_name, agent in system.agents.items():
             assert agent.is_running is True
             health = await agent.health_check()
             assert health["status"] == "running"
@@ -320,7 +319,7 @@ class TestCompleteBusinessWorkflows:
             {"type": "new_transaction"},  # Missing required fields
             {"type": "new_transaction", "transaction": {"amount": "not_a_number"}},
             {},  # Empty message
-            None  # Null message - this might not be sent, but test robustness
+            None,  # Null message - this might not be sent, but test robustness
         ]
 
         for message in malformed_messages[:-1]:  # Skip None message
@@ -334,7 +333,7 @@ class TestCompleteBusinessWorkflows:
         await asyncio.sleep(2)
 
         # Verify system is still operational after errors
-        for agent_name, agent in system.agents.items():
+        for _agent_name, agent in system.agents.items():
             assert agent.is_running is True
             health = await agent.health_check()
             assert health["status"] == "running"
@@ -343,7 +342,7 @@ class TestCompleteBusinessWorkflows:
         valid_message = {
             "type": "system_status_check",
             "timestamp": datetime.now().isoformat(),
-            "cycle": 1
+            "cycle": 1,
         }
 
         await integration_helper.send_test_message(system, valid_message)
@@ -360,19 +359,13 @@ class TestCompleteBusinessWorkflows:
 
         # Force decisions by sending messages that should trigger responses
         decision_triggering_messages = [
-            {
-                "type": "cash_flow_check",
-                "cycle": 1
-            },
+            {"type": "cash_flow_check", "cycle": 1},
             {
                 "type": "daily_analysis",
                 "analysis_date": datetime.now().date().isoformat(),
-                "cycle": 1
+                "cycle": 1,
             },
-            {
-                "type": "aging_analysis",
-                "cycle": 1
-            }
+            {"type": "aging_analysis", "cycle": 1},
         ]
 
         for message in decision_triggering_messages:
@@ -384,6 +377,7 @@ class TestCompleteBusinessWorkflows:
 
         # Check decision persistence in database
         from sqlalchemy.orm import sessionmaker
+
         Session = sessionmaker(bind=system.agents["accounting"].engine)
         session = Session()
 
@@ -434,9 +428,9 @@ class TestBusinessScenarios:
                     "description": "Emergency equipment repair",
                     "transaction_type": "debit",
                     "account_id": "checking_account",
-                    "transaction_date": datetime.now().date().isoformat()
+                    "transaction_date": datetime.now().date().isoformat(),
                 },
-                "cycle": 1
+                "cycle": 1,
             },
             # Revenue drop
             {
@@ -444,15 +438,12 @@ class TestBusinessScenarios:
                 "alert": {
                     "current_daily_average": 800.00,
                     "expected_daily_average": 2000.00,
-                    "variance_percentage": -60.0
+                    "variance_percentage": -60.0,
                 },
-                "cycle": 2
+                "cycle": 2,
             },
             # Cash flow check
-            {
-                "type": "cash_flow_check",
-                "cycle": 3
-            }
+            {"type": "cash_flow_check", "cycle": 3},
         ]
 
         for event in crisis_events:
@@ -491,11 +482,11 @@ class TestBusinessScenarios:
                     "items": [
                         {"sku": "FOOD001", "current_stock": 2, "reorder_point": 15},
                         {"sku": "FOOD002", "current_stock": 0, "reorder_point": 20},
-                        {"sku": "FOOD003", "current_stock": 5, "reorder_point": 25}
+                        {"sku": "FOOD003", "current_stock": 5, "reorder_point": 25},
                     ],
-                    "severity": "high"
+                    "severity": "high",
                 },
-                "cycle": 1
+                "cycle": 1,
             },
             # High consumption rate
             {
@@ -503,10 +494,10 @@ class TestBusinessScenarios:
                 "spike": {
                     "period": "last_24_hours",
                     "consumption_rate_increase": 150.0,  # 150% of normal
-                    "affected_items": ["FOOD001", "FOOD002", "FOOD003"]
+                    "affected_items": ["FOOD001", "FOOD002", "FOOD003"],
                 },
-                "cycle": 2
-            }
+                "cycle": 2,
+            },
         ]
 
         for event in shortage_events:
@@ -540,9 +531,9 @@ class TestBusinessScenarios:
                 "surge": {
                     "increase_percentage": 80.0,
                     "duration_days": 14,
-                    "reason": "holiday_season"
+                    "reason": "holiday_season",
                 },
-                "cycle": 1
+                "cycle": 1,
             },
             # Increased inventory consumption
             {
@@ -550,9 +541,9 @@ class TestBusinessScenarios:
                 "increase": {
                     "factor": 1.8,
                     "affected_categories": ["food", "beverages"],
-                    "duration_days": 14
+                    "duration_days": 14,
                 },
-                "cycle": 2
+                "cycle": 2,
             },
             # Additional staffing needs
             {
@@ -560,10 +551,10 @@ class TestBusinessScenarios:
                 "alert": {
                     "projected_hours_needed": 200,  # Extra hours
                     "current_capacity": 120,
-                    "period": "next_week"
+                    "period": "next_week",
                 },
-                "cycle": 3
-            }
+                "cycle": 3,
+            },
         ]
 
         for event in seasonal_events:
@@ -574,7 +565,7 @@ class TestBusinessScenarios:
         await asyncio.sleep(4)
 
         # Verify all agents are handling the seasonal changes
-        for agent_name, agent in system.agents.items():
+        for _agent_name, agent in system.agents.items():
             assert agent.is_running is True
 
             # Each agent should be able to provide insights
@@ -595,10 +586,10 @@ class TestBusinessScenarios:
             {"type": "cash_flow_check", "cycle": 2},
             {"type": "inventory_check", "cycle": 3},
             {"type": "labor_analysis", "cycle": 4},
-            {"type": "aging_analysis", "cycle": 5}
+            {"type": "aging_analysis", "cycle": 5},
         ]
 
-        for i, event in enumerate(normal_events):
+        for _i, event in enumerate(normal_events):
             await integration_helper.send_test_message(system, event)
             await asyncio.sleep(0.5)  # Quick succession for normal ops
 
@@ -610,7 +601,7 @@ class TestBusinessScenarios:
         assert status["system_running"] is True
 
         # All agents should be operational
-        for agent_name, agent_status in status["agents"].items():
+        for _agent_name, agent_status in status["agents"].items():
             assert agent_status["running"] is True
 
         # System should be able to provide comprehensive status

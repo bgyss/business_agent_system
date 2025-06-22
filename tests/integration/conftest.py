@@ -1,6 +1,7 @@
 """
 Integration test fixtures and configuration.
 """
+
 import asyncio
 import os
 import tempfile
@@ -24,7 +25,7 @@ from simulation.business_simulator import BusinessSimulator
 @pytest.fixture
 def temp_db():
     """Create a temporary database for testing."""
-    db_fd, db_path = tempfile.mkstemp(suffix='.db')
+    db_fd, db_path = tempfile.mkstemp(suffix=".db")
     os.close(db_fd)
     db_url = f"sqlite:///{db_path}"
 
@@ -50,12 +51,9 @@ def test_config(temp_db):
         "business": {
             "name": "Test Restaurant",
             "type": "restaurant",
-            "description": "Test restaurant for integration testing"
+            "description": "Test restaurant for integration testing",
         },
-        "database": {
-            "url": temp_db,
-            "echo": False
-        },
+        "database": {"url": temp_db, "echo": False},
         "agents": {
             "accounting": {
                 "enabled": True,
@@ -64,23 +62,23 @@ def test_config(temp_db):
                 "alert_thresholds": {
                     "cash_low": 1000,
                     "receivables_overdue": 30,
-                    "payables_overdue": 7
-                }
+                    "payables_overdue": 7,
+                },
             },
             "inventory": {
                 "enabled": True,
                 "check_interval": 1,
                 "low_stock_multiplier": 1.3,
                 "reorder_lead_time": 3,
-                "consumption_analysis_days": 30
+                "consumption_analysis_days": 30,
             },
             "hr": {
                 "enabled": True,
                 "check_interval": 1,
                 "overtime_threshold": 8,
                 "max_labor_cost_percentage": 0.32,
-                "scheduling_buffer_hours": 2
-            }
+                "scheduling_buffer_hours": 2,
+            },
         },
         "simulation": {
             "enabled": True,
@@ -95,28 +93,33 @@ def test_config(temp_db):
                 "avg_transaction_size": 25,
                 "seasonal_factors": dict.fromkeys(range(1, 13), 1.0),
                 "customer_patterns": {
-                    "monday": 0.8, "tuesday": 0.9, "wednesday": 1.0,
-                    "thursday": 1.1, "friday": 1.3, "saturday": 1.4, "sunday": 1.0
-                }
-            }
+                    "monday": 0.8,
+                    "tuesday": 0.9,
+                    "wednesday": 1.0,
+                    "thursday": 1.1,
+                    "friday": 1.3,
+                    "saturday": 1.4,
+                    "sunday": 1.0,
+                },
+            },
         },
         "logging": {
             "level": "DEBUG",
-            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         },
         "anthropic": {
             "model": "claude-3-5-sonnet-20241022",
             "max_tokens": 1000,
-            "temperature": 0.1
-        }
+            "temperature": 0.1,
+        },
     }
 
 
 @pytest.fixture
 def temp_config_file(test_config):
     """Create a temporary config file."""
-    config_fd, config_path = tempfile.mkstemp(suffix='.yaml')
-    with os.fdopen(config_fd, 'w') as f:
+    config_fd, config_path = tempfile.mkstemp(suffix=".yaml")
+    with os.fdopen(config_fd, "w") as f:
         yaml.dump(test_config, f)
 
     yield config_path
@@ -132,12 +135,14 @@ def mock_anthropic_client():
     """Mock the Anthropic client to avoid API calls during testing."""
     mock_response = Mock()
     mock_response.content = [Mock()]
-    mock_response.content[0].text = "Mock Claude response: Analysis complete. No anomalies detected. Confidence: 0.85"
+    mock_response.content[0].text = (
+        "Mock Claude response: Analysis complete. No anomalies detected. Confidence: 0.85"
+    )
 
     mock_client = Mock()
     mock_client.messages.create.return_value = mock_response
 
-    with patch('agents.base_agent.Anthropic') as mock_anthropic:
+    with patch("agents.base_agent.Anthropic") as mock_anthropic:
         mock_anthropic.return_value = mock_client
         yield mock_client
 
@@ -145,9 +150,7 @@ def mock_anthropic_client():
 @pytest.fixture
 def mock_env_vars():
     """Mock environment variables for testing."""
-    test_env = {
-        'ANTHROPIC_API_KEY': 'test-api-key-for-testing'
-    }
+    test_env = {"ANTHROPIC_API_KEY": "test-api-key-for-testing"}
 
     with patch.dict(os.environ, test_env, clear=False):
         yield test_env
@@ -200,7 +203,9 @@ class IntegrationTestHelper:
         start_time = asyncio.get_event_loop().time()
         while len(agent.decisions_log) < expected_count:
             if asyncio.get_event_loop().time() - start_time > timeout:
-                raise TimeoutError(f"Agent {agent.agent_id} did not make {expected_count} decisions within {timeout}s")
+                raise TimeoutError(
+                    f"Agent {agent.agent_id} did not make {expected_count} decisions within {timeout}s"
+                )
             await asyncio.sleep(0.1)
         return agent.decisions_log[-expected_count:]
 
@@ -215,15 +220,25 @@ class IntegrationTestHelper:
     def verify_database_tables(db_url):
         """Verify that all expected database tables exist."""
         from sqlalchemy import create_engine, inspect
+
         engine = create_engine(db_url)
         inspector = inspect(engine)
         tables = inspector.get_table_names()
 
         expected_tables = [
-            'accounts', 'transactions', 'accounts_receivable', 'accounts_payable',
-            'items', 'stock_movements', 'suppliers', 'purchase_orders', 'purchase_order_items',
-            'employees', 'time_records', 'schedules',
-            'agent_decisions'
+            "accounts",
+            "transactions",
+            "accounts_receivable",
+            "accounts_payable",
+            "items",
+            "stock_movements",
+            "suppliers",
+            "purchase_orders",
+            "purchase_order_items",
+            "employees",
+            "time_records",
+            "schedules",
+            "agent_decisions",
         ]
 
         for table in expected_tables:

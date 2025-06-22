@@ -1,6 +1,7 @@
 """
 Unit tests for AccountingAgent class
 """
+
 import os
 import sys
 from datetime import date, datetime, timedelta
@@ -25,7 +26,7 @@ class TestAccountingAgent:
     @pytest.fixture
     def mock_anthropic(self):
         """Mock Anthropic client"""
-        with patch('agents.base_agent.Anthropic') as mock_client:
+        with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [Mock(text="Accounting analysis: Transaction appears normal")]
             mock_client.return_value.messages.create.return_value = mock_response
@@ -34,8 +35,9 @@ class TestAccountingAgent:
     @pytest.fixture
     def mock_db_session(self):
         """Mock database session"""
-        with patch('agents.base_agent.create_engine'), \
-             patch('agents.base_agent.sessionmaker') as mock_sessionmaker:
+        with patch("agents.base_agent.create_engine"), patch(
+            "agents.base_agent.sessionmaker"
+        ) as mock_sessionmaker:
             mock_session = Mock()
             mock_sessionmaker.return_value = mock_session
             yield mock_session
@@ -49,8 +51,8 @@ class TestAccountingAgent:
             "alert_thresholds": {
                 "cash_low": 1000,
                 "receivables_overdue": 30,
-                "payables_overdue": 7
-            }
+                "payables_overdue": 7,
+            },
         }
 
     @pytest.fixture
@@ -60,7 +62,7 @@ class TestAccountingAgent:
             agent_id="accounting_agent",
             api_key="test_api_key",
             config=agent_config,
-            db_url="sqlite:///:memory:"
+            db_url="sqlite:///:memory:",
         )
 
     def test_initialization(self, accounting_agent, agent_config):
@@ -88,13 +90,10 @@ class TestAccountingAgent:
             "amount": Decimal("1500.00"),
             "transaction_type": TransactionType.INCOME,
             "category": "sales",
-            "transaction_date": datetime.now()
+            "transaction_date": datetime.now(),
         }
 
-        data = {
-            "type": "new_transaction",
-            "transaction": transaction_data
-        }
+        data = {"type": "new_transaction", "transaction": transaction_data}
 
         # Mock similar transactions query
         mock_session_instance = Mock()
@@ -104,9 +103,11 @@ class TestAccountingAgent:
         similar_transactions = [
             Mock(amount=Decimal("1000.00")),
             Mock(amount=Decimal("1100.00")),
-            Mock(amount=Decimal("900.00"))
+            Mock(amount=Decimal("900.00")),
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = similar_transactions
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            similar_transactions
+        )
 
         decision = await accounting_agent.process_data(data)
 
@@ -129,9 +130,11 @@ class TestAccountingAgent:
         yesterday_transactions = [
             Mock(amount=Decimal("1000.00"), transaction_type=TransactionType.INCOME),
             Mock(amount=Decimal("500.00"), transaction_type=TransactionType.EXPENSE),
-            Mock(amount=Decimal("300.00"), transaction_type=TransactionType.EXPENSE)
+            Mock(amount=Decimal("300.00"), transaction_type=TransactionType.EXPENSE),
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = yesterday_transactions
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            yesterday_transactions
+        )
 
         decision = await accounting_agent.process_data(data)
 
@@ -149,11 +152,10 @@ class TestAccountingAgent:
         mock_db_session.return_value = mock_session_instance
 
         # Mock cash accounts with low balance
-        cash_accounts = [
-            Mock(balance=Decimal("500.00")),
-            Mock(balance=Decimal("300.00"))
-        ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = cash_accounts
+        cash_accounts = [Mock(balance=Decimal("500.00")), Mock(balance=Decimal("300.00"))]
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            cash_accounts
+        )
 
         decision = await accounting_agent.process_data(data)
 
@@ -163,7 +165,9 @@ class TestAccountingAgent:
         assert decision.confidence == 0.9
 
     @pytest.mark.asyncio
-    async def test_process_data_cash_flow_check_sufficient_cash(self, accounting_agent, mock_db_session):
+    async def test_process_data_cash_flow_check_sufficient_cash(
+        self, accounting_agent, mock_db_session
+    ):
         """Test cash flow check with sufficient cash"""
         data = {"type": "cash_flow_check"}
 
@@ -171,11 +175,10 @@ class TestAccountingAgent:
         mock_db_session.return_value = mock_session_instance
 
         # Mock cash accounts with sufficient balance
-        cash_accounts = [
-            Mock(balance=Decimal("5000.00")),
-            Mock(balance=Decimal("3000.00"))
-        ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = cash_accounts
+        cash_accounts = [Mock(balance=Decimal("5000.00")), Mock(balance=Decimal("3000.00"))]
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            cash_accounts
+        )
 
         decision = await accounting_agent.process_data(data)
 
@@ -195,14 +198,14 @@ class TestAccountingAgent:
                 customer_name="Customer A",
                 amount=Decimal("1500.00"),
                 due_date=date.today() - timedelta(days=45),
-                invoice_number="INV-001"
+                invoice_number="INV-001",
             ),
             Mock(
                 customer_name="Customer B",
                 amount=Decimal("800.00"),
                 due_date=date.today() - timedelta(days=60),
-                invoice_number="INV-002"
-            )
+                invoice_number="INV-002",
+            ),
         ]
 
         # Mock overdue payables
@@ -211,14 +214,14 @@ class TestAccountingAgent:
                 vendor_name="Vendor A",
                 amount=Decimal("500.00"),
                 due_date=date.today() - timedelta(days=10),
-                invoice_number="BILL-001"
+                invoice_number="BILL-001",
             )
         ]
 
         # Setup mock to return different results for different queries
         mock_session_instance.query.return_value.filter.return_value.all.side_effect = [
             overdue_receivables,
-            overdue_payables
+            overdue_payables,
         ]
 
         decision = await accounting_agent.process_data(data)
@@ -229,7 +232,9 @@ class TestAccountingAgent:
         assert decision.confidence == 0.85
 
     @pytest.mark.asyncio
-    async def test_analyze_transaction_no_similar_transactions(self, accounting_agent, mock_db_session):
+    async def test_analyze_transaction_no_similar_transactions(
+        self, accounting_agent, mock_db_session
+    ):
         """Test transaction analysis with no similar transactions"""
         transaction_data = {
             "id": "1",
@@ -237,7 +242,7 @@ class TestAccountingAgent:
             "amount": Decimal("1500.00"),
             "transaction_type": TransactionType.INCOME,
             "category": "sales",
-            "transaction_date": datetime.now()
+            "transaction_date": datetime.now(),
         }
 
         mock_session_instance = Mock()
@@ -246,7 +251,9 @@ class TestAccountingAgent:
         # Mock empty similar transactions
         mock_session_instance.query.return_value.filter.return_value.all.return_value = []
 
-        decision = await accounting_agent._analyze_transaction(mock_session_instance, transaction_data)
+        decision = await accounting_agent._analyze_transaction(
+            mock_session_instance, transaction_data
+        )
 
         assert decision is None
 
@@ -259,7 +266,7 @@ class TestAccountingAgent:
             "amount": Decimal("1000.00"),
             "transaction_type": TransactionType.INCOME,
             "category": "sales",
-            "transaction_date": datetime.now()
+            "transaction_date": datetime.now(),
         }
 
         mock_session_instance = Mock()
@@ -268,11 +275,15 @@ class TestAccountingAgent:
         similar_transactions = [
             Mock(amount=Decimal("950.00")),
             Mock(amount=Decimal("1050.00")),
-            Mock(amount=Decimal("1000.00"))
+            Mock(amount=Decimal("1000.00")),
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = similar_transactions
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            similar_transactions
+        )
 
-        decision = await accounting_agent._analyze_transaction(mock_session_instance, transaction_data)
+        decision = await accounting_agent._analyze_transaction(
+            mock_session_instance, transaction_data
+        )
 
         assert decision is None  # No anomaly detected
 
@@ -295,7 +306,9 @@ class TestAccountingAgent:
         accounts = [
             Mock(balance=Decimal("2000.00"), account_type=AccountType.CHECKING),
             Mock(balance=Decimal("1500.00"), account_type=AccountType.SAVINGS),
-            Mock(balance=Decimal("5000.00"), account_type=AccountType.CREDIT)  # Should not be included
+            Mock(
+                balance=Decimal("5000.00"), account_type=AccountType.CREDIT
+            ),  # Should not be included
         ]
         mock_session_instance.query.return_value.filter.return_value.all.return_value = accounts
 
@@ -324,7 +337,7 @@ class TestAccountingAgent:
         # Mock transactions
         transactions = [
             Mock(amount=Decimal("1000.00"), transaction_type=TransactionType.INCOME),
-            Mock(amount=Decimal("500.00"), transaction_type=TransactionType.EXPENSE)
+            Mock(amount=Decimal("500.00"), transaction_type=TransactionType.EXPENSE),
         ]
         mock_session_instance.query.return_value.filter.return_value.all.return_value = transactions
 
@@ -337,7 +350,13 @@ class TestAccountingAgent:
 
         # Setup different return values for different queries
         # Need more values because _get_current_alerts makes additional queries
-        query_results = [transactions, cash_accounts, receivables, payables, cash_accounts]  # Extra for alerts
+        query_results = [
+            transactions,
+            cash_accounts,
+            receivables,
+            payables,
+            cash_accounts,
+        ]  # Extra for alerts
         mock_session_instance.query.return_value.filter.return_value.all.side_effect = query_results
 
         # Mock count for overdue receivables check in alerts
@@ -351,7 +370,7 @@ class TestAccountingAgent:
                 context={},
                 reasoning="test",
                 action="test",
-                confidence=0.8
+                confidence=0.8,
             )
         ]
 
@@ -370,7 +389,9 @@ class TestAccountingAgent:
 
         # Mock low cash accounts
         cash_accounts = [Mock(balance=Decimal("500.00"))]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = cash_accounts
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            cash_accounts
+        )
         mock_session_instance.query.return_value.filter.return_value.count.return_value = 0
 
         alerts = await accounting_agent._get_current_alerts(mock_session_instance)
@@ -387,7 +408,9 @@ class TestAccountingAgent:
 
         # Mock sufficient cash but overdue receivables
         cash_accounts = [Mock(balance=Decimal("5000.00"))]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = cash_accounts
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            cash_accounts
+        )
         mock_session_instance.query.return_value.filter.return_value.count.return_value = 3
 
         alerts = await accounting_agent._get_current_alerts(mock_session_instance)
@@ -405,10 +428,12 @@ class TestAccountingAgent:
 
         # Mock accounts for cash flow check
         cash_accounts = [Mock(balance=Decimal("5000.00"))]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = cash_accounts
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            cash_accounts
+        )
 
         # Mock datetime to trigger aging analysis
-        with patch('agents.accounting_agent.datetime') as mock_datetime:
+        with patch("agents.accounting_agent.datetime") as mock_datetime:
             mock_datetime.now.return_value = Mock(hour=9)  # 9 AM
             mock_datetime.now.return_value.date.return_value = date.today()
 
@@ -436,15 +461,15 @@ class TestAccountingAgent:
 
     def test_config_defaults(self):
         """Test configuration defaults"""
-        with patch('agents.base_agent.Anthropic'), \
-             patch('agents.base_agent.create_engine'), \
-             patch('agents.base_agent.sessionmaker'):
+        with patch("agents.base_agent.Anthropic"), patch("agents.base_agent.create_engine"), patch(
+            "agents.base_agent.sessionmaker"
+        ):
 
             agent = AccountingAgent(
                 agent_id="test_agent",
                 api_key="test_key",
                 config={},  # Empty config
-                db_url="sqlite:///:memory:"
+                db_url="sqlite:///:memory:",
             )
 
             assert agent.anomaly_threshold == 0.2  # Default value
@@ -461,7 +486,7 @@ class TestAccountingAgent:
             "amount": Decimal("1000.00"),
             "transaction_type": TransactionType.INCOME,
             "category": "sales",
-            "transaction_date": datetime.now()
+            "transaction_date": datetime.now(),
         }
 
         mock_session_instance = Mock()
@@ -470,11 +495,15 @@ class TestAccountingAgent:
         similar_transactions = [
             Mock(amount=Decimal("1000.00")),
             Mock(amount=Decimal("1000.00")),
-            Mock(amount=Decimal("1000.00"))
+            Mock(amount=Decimal("1000.00")),
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = similar_transactions
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            similar_transactions
+        )
 
-        decision = await accounting_agent._analyze_transaction(mock_session_instance, transaction_data)
+        decision = await accounting_agent._analyze_transaction(
+            mock_session_instance, transaction_data
+        )
 
         assert decision is None  # No anomaly with zero variance
 
@@ -517,7 +546,7 @@ class TestAccountingAgent:
         # Mock aging analysis items
         mock_session_instance.query.return_value.filter.return_value.all.return_value = []
 
-        with patch('agents.accounting_agent.datetime') as mock_datetime:
+        with patch("agents.accounting_agent.datetime") as mock_datetime:
             mock_datetime.now.return_value = Mock(hour=9)  # 9 AM trigger
 
             # Mock the queue
@@ -533,38 +562,41 @@ class TestAccountingAgent:
         """Test transaction analysis with insufficient similar transactions"""
         transaction_data = {
             "id": "1",
-            "description": "Test transaction", 
+            "description": "Test transaction",
             "amount": Decimal("500.00"),
             "transaction_type": TransactionType.EXPENSE,
             "category": "office_supplies",
-            "transaction_date": datetime.now()
+            "transaction_date": datetime.now(),
         }
 
         mock_session_instance = Mock()
         # Mock only 2 similar transactions (less than 3 required)
-        similar_transactions = [
-            Mock(amount=Decimal("100.00")),
-            Mock(amount=Decimal("110.00"))
-        ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = similar_transactions
+        similar_transactions = [Mock(amount=Decimal("100.00")), Mock(amount=Decimal("110.00"))]
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            similar_transactions
+        )
 
-        # Should handle insufficient data gracefully 
-        decision = await accounting_agent._analyze_transaction(mock_session_instance, transaction_data)
-        
+        # Should handle insufficient data gracefully
+        decision = await accounting_agent._analyze_transaction(
+            mock_session_instance, transaction_data
+        )
+
         # With insufficient data (only 2 transactions), it may still detect anomalies
         # but should not crash. Decision can be None or an anomaly detection.
         assert decision is None or decision.decision_type == "transaction_anomaly"
 
     @pytest.mark.asyncio
-    async def test_analyze_transaction_statistical_analysis(self, accounting_agent, mock_db_session):
+    async def test_analyze_transaction_statistical_analysis(
+        self, accounting_agent, mock_db_session
+    ):
         """Test statistical analysis with sufficient data (lines 434-449)"""
         transaction_data = {
-            "id": "1", 
+            "id": "1",
             "description": "Statistical test",
             "amount": Decimal("200.00"),  # Potential outlier
             "transaction_type": TransactionType.EXPENSE,
             "category": "test_category",
-            "transaction_date": datetime.now()
+            "transaction_date": datetime.now(),
         }
 
         mock_session_instance = Mock()
@@ -574,12 +606,16 @@ class TestAccountingAgent:
             Mock(amount=Decimal("105.00")),
             Mock(amount=Decimal("110.00")),
             Mock(amount=Decimal("95.00")),
-            Mock(amount=Decimal("102.00"))
+            Mock(amount=Decimal("102.00")),
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = similar_transactions
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            similar_transactions
+        )
 
-        with patch.object(accounting_agent, 'analyze_with_claude', return_value="Anomaly detected"):
-            decision = await accounting_agent._analyze_transaction(mock_session_instance, transaction_data)
+        with patch.object(accounting_agent, "analyze_with_claude", return_value="Anomaly detected"):
+            decision = await accounting_agent._analyze_transaction(
+                mock_session_instance, transaction_data
+            )
 
         # Should detect statistical outlier
         assert decision is not None
@@ -593,11 +629,15 @@ class TestAccountingAgent:
 
         # Mock cash accounts with low balance
         mock_accounts = [Mock(balance=Decimal("500.00"))]  # Below threshold
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = mock_accounts
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            mock_accounts
+        )
 
         data = {"type": "cash_flow_check"}
 
-        with patch.object(accounting_agent, 'analyze_with_claude', return_value="Low cash detected"):
+        with patch.object(
+            accounting_agent, "analyze_with_claude", return_value="Low cash detected"
+        ):
             decision = await accounting_agent.process_data(data)
 
         assert decision is not None
@@ -613,12 +653,12 @@ class TestAccountingAgent:
         overdue_receivables = [
             Mock(customer="Customer A", amount=Decimal("2000.00"), days_overdue=45)
         ]
-        
+
         # Setup query chain for receivables
         receivables_query = Mock()
         receivables_query.filter.return_value.all.return_value = overdue_receivables
-        
-        # Setup query chain for payables  
+
+        # Setup query chain for payables
         payables_query = Mock()
         payables_query.filter.return_value.all.return_value = []
 
@@ -626,7 +666,9 @@ class TestAccountingAgent:
 
         data = {"type": "aging_analysis"}
 
-        with patch.object(accounting_agent, 'analyze_with_claude', return_value="Overdue receivables found"):
+        with patch.object(
+            accounting_agent, "analyze_with_claude", return_value="Overdue receivables found"
+        ):
             decision = await accounting_agent.process_data(data)
 
         # Aging analysis may return None if no overdue items found
@@ -640,7 +682,7 @@ class TestAccountingAgent:
         zero_variance_data = {
             "variance_percentage": 0.0,
             "transaction_count": 5,
-            "data_quality": "good"
+            "data_quality": "good",
         }
         # Test confidence score calculation indirectly since method requires session
         # This validates the test data structure for confidence calculations
@@ -652,7 +694,7 @@ class TestAccountingAgent:
         high_variance_data = {
             "variance_percentage": 2.0,  # 200% variance
             "transaction_count": 10,
-            "data_quality": "poor"
+            "data_quality": "poor",
         }
         assert high_variance_data["variance_percentage"] == 2.0
         assert high_variance_data["transaction_count"] == 10
@@ -669,29 +711,31 @@ class TestAccountingAgent:
             Mock(
                 amount=Decimal("1000.00"),
                 transaction_type=TransactionType.INCOME,
-                date=date.today()
+                date=date.today(),
             ),
             Mock(
                 amount=Decimal("-500.00"),
                 transaction_type=TransactionType.EXPENSE,
-                date=date.today()
+                date=date.today(),
             ),
             Mock(
-                amount=Decimal("250.00"),
-                transaction_type=TransactionType.INCOME,
-                date=date.today()
-            )
+                amount=Decimal("250.00"), transaction_type=TransactionType.INCOME, date=date.today()
+            ),
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = mixed_transactions
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            mixed_transactions
+        )
 
         data = {"type": "daily_analysis"}
 
-        with patch.object(accounting_agent, 'analyze_with_claude', return_value="Daily analysis complete"):
+        with patch.object(
+            accounting_agent, "analyze_with_claude", return_value="Daily analysis complete"
+        ):
             decision = await accounting_agent.process_data(data)
 
         assert decision is not None
 
-    @pytest.mark.asyncio 
+    @pytest.mark.asyncio
     async def test_claude_api_error_handling(self, accounting_agent, mock_db_session):
         """Test Claude API error handling"""
         mock_session_instance = Mock()
@@ -701,16 +745,22 @@ class TestAccountingAgent:
             "id": "1",
             "amount": Decimal("1500.00"),
             "transaction_type": TransactionType.EXPENSE,
-            "description": "Large expense"
+            "description": "Large expense",
         }
 
         # Mock similar transactions
         similar_transactions = [Mock(amount=Decimal("100.00")) for _ in range(5)]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = similar_transactions
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            similar_transactions
+        )
 
         # Mock Claude API failure
-        with patch.object(accounting_agent, 'analyze_with_claude', side_effect=Exception("API Error")):
-            decision = await accounting_agent.process_data({"type": "new_transaction", "transaction": transaction_data})
+        with patch.object(
+            accounting_agent, "analyze_with_claude", side_effect=Exception("API Error")
+        ):
+            decision = await accounting_agent.process_data(
+                {"type": "new_transaction", "transaction": transaction_data}
+            )
 
         # Should handle API errors gracefully
         assert decision is None or decision is not None  # Either is acceptable
@@ -725,13 +775,17 @@ class TestAccountingAgent:
         multiple_accounts = [
             Mock(account_name="Checking", balance=Decimal("2000.00")),
             Mock(account_name="Savings", balance=Decimal("5000.00")),
-            Mock(account_name="Petty Cash", balance=Decimal("200.00"))
+            Mock(account_name="Petty Cash", balance=Decimal("200.00")),
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = multiple_accounts
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            multiple_accounts
+        )
 
         data = {"type": "cash_flow_check"}
 
-        with patch.object(accounting_agent, 'analyze_with_claude', return_value="Multiple accounts analyzed"):
+        with patch.object(
+            accounting_agent, "analyze_with_claude", return_value="Multiple accounts analyzed"
+        ):
             decision = await accounting_agent.process_data(data)
 
         # Should analyze all accounts
@@ -747,12 +801,14 @@ class TestAccountingAgent:
             "id": "zero_tx",
             "amount": Decimal("0.00"),
             "transaction_type": TransactionType.EXPENSE,
-            "description": "Zero amount adjustment"
+            "description": "Zero amount adjustment",
         }
 
         # Should handle zero amounts gracefully
-        decision = await accounting_agent.process_data({"type": "new_transaction", "transaction": zero_transaction})
-        
+        decision = await accounting_agent.process_data(
+            {"type": "new_transaction", "transaction": zero_transaction}
+        )
+
         # Either result is acceptable for zero amounts
         assert decision is None or decision is not None
 
@@ -765,21 +821,27 @@ class TestAccountingAgent:
         # Mock transactions for forecasting with proper datetime objects
         mock_transactions = [
             Mock(
-                transaction_date=datetime.now() - timedelta(days=i), 
-                amount=Decimal('100.00') * (i+1),
-                transaction_type=TransactionType.INCOME
+                transaction_date=datetime.now() - timedelta(days=i),
+                amount=Decimal("100.00") * (i + 1),
+                transaction_type=TransactionType.INCOME,
             )
             for i in range(10)
         ]
-        mock_session_instance.query.return_value.filter.return_value.order_by.return_value.all.return_value = mock_transactions
+        mock_session_instance.query.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            mock_transactions
+        )
 
         data = {"type": "cash_flow_forecast", "forecast_days": 30}
 
-        with patch.object(accounting_agent, 'analyze_with_claude', return_value="Cash flow forecast complete"):
+        with patch.object(
+            accounting_agent, "analyze_with_claude", return_value="Cash flow forecast complete"
+        ):
             decision = await accounting_agent.process_data(data)
 
         # Should call cash flow forecasting
-        assert decision is not None or decision is None  # Method may return None if insufficient data
+        assert (
+            decision is not None or decision is None
+        )  # Method may return None if insufficient data
 
     @pytest.mark.asyncio
     async def test_process_data_trend_analysis(self, accounting_agent, mock_db_session):
@@ -790,22 +852,28 @@ class TestAccountingAgent:
         # Mock financial data for trend analysis with proper transaction objects
         mock_transactions = [
             Mock(
-                amount=Decimal('1000.00') + i*10,
+                amount=Decimal("1000.00") + i * 10,
                 transaction_type=TransactionType.INCOME,
                 transaction_date=datetime.now() - timedelta(days=i),
-                category="revenue"
-            ) 
+                category="revenue",
+            )
             for i in range(30)
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = mock_transactions
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            mock_transactions
+        )
 
         data = {"type": "trend_analysis", "analysis_period": "monthly"}
 
-        with patch.object(accounting_agent, 'analyze_with_claude', return_value="Trend analysis complete"):
+        with patch.object(
+            accounting_agent, "analyze_with_claude", return_value="Trend analysis complete"
+        ):
             decision = await accounting_agent.process_data(data)
 
         # Should call trend analysis
-        assert decision is not None or decision is None  # Method may return None if no significant trends
+        assert (
+            decision is not None or decision is None
+        )  # Method may return None if no significant trends
 
     @pytest.mark.asyncio
     async def test_process_data_outcome_feedback(self, accounting_agent, mock_db_session):
@@ -814,11 +882,11 @@ class TestAccountingAgent:
         mock_db_session.return_value = mock_session_instance
 
         data = {
-            "type": "outcome_feedback", 
+            "type": "outcome_feedback",
             "decision_id": "test_decision_001",
             "was_correct": True,
             "decision_type": "transaction_anomaly",
-            "feedback_notes": "predicted_correctly"
+            "feedback_notes": "predicted_correctly",
         }
 
         # Add some decision outcomes to trigger adjustment logic
@@ -827,14 +895,18 @@ class TestAccountingAgent:
             "test_002": {"was_correct": False, "decision_type": "transaction_anomaly"},
             "test_003": {"was_correct": False, "decision_type": "transaction_anomaly"},
             "test_004": {"was_correct": False, "decision_type": "transaction_anomaly"},
-            "test_005": {"was_correct": False, "decision_type": "transaction_anomaly"}
+            "test_005": {"was_correct": False, "decision_type": "transaction_anomaly"},
         }
 
-        with patch.object(accounting_agent, 'analyze_with_claude', return_value="Feedback processed"):
+        with patch.object(
+            accounting_agent, "analyze_with_claude", return_value="Feedback processed"
+        ):
             decision = await accounting_agent.process_data(data)
 
         # Should process decision outcome feedback
-        assert decision is not None or decision is None  # Method may return None if no adjustment needed
+        assert (
+            decision is not None or decision is None
+        )  # Method may return None if no adjustment needed
 
     @pytest.mark.asyncio
     async def test_analyze_aging_claude_exception(self, accounting_agent, mock_db_session):
@@ -848,7 +920,9 @@ class TestAccountingAgent:
         data = {"type": "aging_analysis"}
 
         # Mock Claude API failure
-        with patch.object(accounting_agent, 'analyze_with_claude', side_effect=Exception("Claude API Error")):
+        with patch.object(
+            accounting_agent, "analyze_with_claude", side_effect=Exception("Claude API Error")
+        ):
             decision = await accounting_agent.process_data(data)
 
         # Should handle Claude API exceptions gracefully
@@ -866,11 +940,13 @@ class TestAccountingAgent:
                 amount=Decimal("100.00"),
                 transaction_type=TransactionType.EXPENSE,
                 category="test",
-                transaction_date=datetime.now() - timedelta(days=i)
-            ) 
+                transaction_date=datetime.now() - timedelta(days=i),
+            )
             for i in range(5)
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = similar_transactions
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            similar_transactions
+        )
 
         transaction_data = {
             "id": "1",
@@ -878,14 +954,18 @@ class TestAccountingAgent:
             "transaction_type": TransactionType.EXPENSE,
             "transaction_date": datetime.now(),
             "description": "Test transaction",
-            "category": "test"
+            "category": "test",
         }
 
         # Mock Claude API failure
-        with patch.object(accounting_agent, 'analyze_with_claude', side_effect=Exception("API timeout")):
+        with patch.object(
+            accounting_agent, "analyze_with_claude", side_effect=Exception("API timeout")
+        ):
             # The exception should be caught by the process_data method
             with pytest.raises(Exception, match="API timeout"):
-                decision = await accounting_agent._analyze_transaction(mock_session_instance, transaction_data)
+                await accounting_agent._analyze_transaction(
+                    mock_session_instance, transaction_data
+                )
 
     @pytest.mark.asyncio
     async def test_daily_analysis_claude_exception(self, accounting_agent, mock_db_session):
@@ -896,22 +976,24 @@ class TestAccountingAgent:
         # Mock transaction data with proper attributes
         mock_transactions = [
             Mock(
-                amount=Decimal('500.00'), 
+                amount=Decimal("500.00"),
                 transaction_type=TransactionType.INCOME,
-                transaction_date=datetime.now() - timedelta(days=1)
+                transaction_date=datetime.now() - timedelta(days=1),
             )
         ]
         # Mock both current and historical transactions
         mock_session_instance.query.return_value.filter.return_value.all.side_effect = [
             mock_transactions,  # Daily transactions
-            mock_transactions * 10  # Historical transactions
+            mock_transactions * 10,  # Historical transactions
         ]
 
         # Mock Claude API failure
-        with patch.object(accounting_agent, 'analyze_with_claude', side_effect=Exception("API Error")):
+        with patch.object(
+            accounting_agent, "analyze_with_claude", side_effect=Exception("API Error")
+        ):
             # The exception should be caught by the process_data method
             with pytest.raises(Exception, match="API Error"):
-                decision = await accounting_agent._perform_daily_analysis(mock_session_instance)
+                await accounting_agent._perform_daily_analysis(mock_session_instance)
 
     @pytest.mark.asyncio
     async def test_cash_flow_analysis_claude_exception(self, accounting_agent, mock_db_session):
@@ -920,11 +1002,15 @@ class TestAccountingAgent:
         mock_db_session.return_value = mock_session_instance
 
         # Mock cash accounts
-        mock_accounts = [Mock(balance=Decimal('1000.00'))]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = mock_accounts
+        mock_accounts = [Mock(balance=Decimal("1000.00"))]
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            mock_accounts
+        )
 
         # Mock Claude API failure
-        with patch.object(accounting_agent, 'analyze_with_claude', side_effect=Exception("API Error")):
+        with patch.object(
+            accounting_agent, "analyze_with_claude", side_effect=Exception("API Error")
+        ):
             decision = await accounting_agent._check_cash_flow(mock_session_instance)
 
         # Should handle API errors gracefully
@@ -938,14 +1024,19 @@ class TestAccountingAgent:
 
         # Mock transaction data for forecasting
         mock_transactions = [
-            Mock(date=date.today() - timedelta(days=i), amount=Decimal('100.00'))
-            for i in range(30)
+            Mock(date=date.today() - timedelta(days=i), amount=Decimal("100.00")) for i in range(30)
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = mock_transactions
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            mock_transactions
+        )
 
         # Mock Claude API failure during forecasting
-        with patch.object(accounting_agent, 'analyze_with_claude', side_effect=Exception("Forecasting API Error")):
-            decision = await accounting_agent._forecast_cash_flow(mock_session_instance, forecast_days=30)
+        with patch.object(
+            accounting_agent, "analyze_with_claude", side_effect=Exception("Forecasting API Error")
+        ):
+            decision = await accounting_agent._forecast_cash_flow(
+                mock_session_instance, forecast_days=30
+            )
 
         # Should handle API errors in forecasting
         assert decision is None or decision is not None
@@ -955,12 +1046,12 @@ class TestAccountingAgent:
         """Test agent with minimal/empty configuration"""
         # Test with minimal config
         minimal_config = {}
-        
+
         agent = AccountingAgent(
             agent_id="minimal_agent",
             api_key="test_key",
             config=minimal_config,
-            db_url="sqlite:///:memory:"
+            db_url="sqlite:///:memory:",
         )
 
         # Should use default values
@@ -973,21 +1064,19 @@ class TestAccountingAgent:
         # Test with invalid config values
         invalid_config = {
             "anomaly_threshold": -0.5,  # Invalid negative threshold
-            "alert_thresholds": {
-                "cash_low": -1000  # Invalid negative alert
-            }
+            "alert_thresholds": {"cash_low": -1000},  # Invalid negative alert
         }
-        
+
         agent = AccountingAgent(
             agent_id="invalid_agent",
-            api_key="test_key", 
+            api_key="test_key",
             config=invalid_config,
-            db_url="sqlite:///:memory:"
+            db_url="sqlite:///:memory:",
         )
 
         # Should handle invalid config gracefully
-        assert hasattr(agent, 'anomaly_threshold')
-        assert hasattr(agent, 'alert_thresholds')
+        assert hasattr(agent, "anomaly_threshold")
+        assert hasattr(agent, "alert_thresholds")
 
     @pytest.mark.asyncio
     async def test_missing_configuration_keys(self, mock_anthropic, mock_db_session):
@@ -997,12 +1086,12 @@ class TestAccountingAgent:
             "anomaly_threshold": 0.3
             # Missing alert_thresholds
         }
-        
+
         agent = AccountingAgent(
             agent_id="partial_agent",
             api_key="test_key",
             config=partial_config,
-            db_url="sqlite:///:memory:"
+            db_url="sqlite:///:memory:",
         )
 
         # Should use defaults for missing keys
@@ -1017,13 +1106,17 @@ class TestAccountingAgent:
 
         # Mock minimal transaction history
         mock_transactions = [
-            Mock(date=date.today() - timedelta(days=i), amount=Decimal('100.00') + i)
+            Mock(date=date.today() - timedelta(days=i), amount=Decimal("100.00") + i)
             for i in range(7)  # One week of data
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = mock_transactions
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            mock_transactions
+        )
 
-        with patch.object(accounting_agent, 'analyze_with_claude', return_value="Basic forecast"):
-            decision = await accounting_agent._forecast_cash_flow(mock_session_instance, forecast_days=7)
+        with patch.object(accounting_agent, "analyze_with_claude", return_value="Basic forecast"):
+            decision = await accounting_agent._forecast_cash_flow(
+                mock_session_instance, forecast_days=7
+            )
 
         # Should handle minimal data for forecasting
         assert decision is not None or decision is None
@@ -1038,7 +1131,7 @@ class TestAccountingAgent:
             "decision_id": "test_001",
             "was_correct": True,
             "decision_type": "transaction_anomaly",
-            "feedback_notes": "correctly_predicted"
+            "feedback_notes": "correctly_predicted",
         }
 
         # Add sufficient decision outcomes to trigger adjustment logic
@@ -1047,11 +1140,15 @@ class TestAccountingAgent:
             "test_003": {"was_correct": False, "decision_type": "transaction_anomaly"},
             "test_004": {"was_correct": False, "decision_type": "transaction_anomaly"},
             "test_005": {"was_correct": False, "decision_type": "transaction_anomaly"},
-            "test_006": {"was_correct": False, "decision_type": "transaction_anomaly"}
+            "test_006": {"was_correct": False, "decision_type": "transaction_anomaly"},
         }
 
-        with patch.object(accounting_agent, 'analyze_with_claude', return_value="Outcome processed"):
+        with patch.object(
+            accounting_agent, "analyze_with_claude", return_value="Outcome processed"
+        ):
             decision = await accounting_agent._process_decision_outcome(outcome_data)
 
         # Should process decision outcomes
-        assert decision is not None or decision is None  # Method may return None if no adjustment needed
+        assert (
+            decision is not None or decision is None
+        )  # Method may return None if no adjustment needed

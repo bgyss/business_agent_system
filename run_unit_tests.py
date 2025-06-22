@@ -21,12 +21,14 @@ def main():
         return 1
 
     cmd = [
-        str(venv_python), "-m", "pytest",
+        str(venv_python),
+        "-m",
+        "pytest",
         "tests/unit/",
         "-v",
         "--tb=short",
         "--disable-warnings",
-        "--asyncio-mode=auto"
+        "--asyncio-mode=auto",
     ]
 
     print("Running unit tests...")
@@ -41,6 +43,7 @@ def main():
     except Exception as e:
         print(f"Error running tests: {e}")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

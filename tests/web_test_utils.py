@@ -1,6 +1,7 @@
 """
 Utility functions and classes for web testing
 """
+
 import subprocess
 import time
 from typing import Any, Dict, List
@@ -23,7 +24,7 @@ class DashboardTestData:
             "revenue": 25000.00,
             "expenses": 18000.00,
             "net_income": 7000.00,
-            "cash_balance": 15000.00
+            "cash_balance": 15000.00,
         }
 
     @staticmethod
@@ -33,17 +34,13 @@ class DashboardTestData:
             "total_items": 150,
             "total_value": 12000.00,
             "low_stock_items": 5,
-            "out_of_stock_items": 2
+            "out_of_stock_items": 2,
         }
 
     @staticmethod
     def get_sample_hr_data() -> Dict[str, Any]:
         """Get sample HR data for testing"""
-        return {
-            "total_employees": 12,
-            "active_employees": 10,
-            "recent_time_entries": 45
-        }
+        return {"total_employees": 12, "active_employees": 10, "recent_time_entries": 45}
 
 
 class StreamlitPageObject:
@@ -57,10 +54,9 @@ class StreamlitPageObject:
     def navigate_to_live_monitoring(self):
         """Navigate to live monitoring view"""
         radio_button = self.wait.until(
-            EC.element_to_be_clickable((
-                By.XPATH,
-                "//label[contains(text(), 'Live Agent Monitoring')]"
-            ))
+            EC.element_to_be_clickable(
+                (By.XPATH, "//label[contains(text(), 'Live Agent Monitoring')]")
+            )
         )
         radio_button.click()
         time.sleep(2)
@@ -68,19 +64,16 @@ class StreamlitPageObject:
     def navigate_to_historical_analytics(self):
         """Navigate to historical analytics view"""
         radio_button = self.wait.until(
-            EC.element_to_be_clickable((
-                By.XPATH,
-                "//label[contains(text(), 'Historical Analytics')]"
-            ))
+            EC.element_to_be_clickable(
+                (By.XPATH, "//label[contains(text(), 'Historical Analytics')]")
+            )
         )
         radio_button.click()
         time.sleep(2)
 
     def select_business_config(self, config_name: str):
         """Select a business configuration from dropdown"""
-        dropdown = self.wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "select"))
-        )
+        dropdown = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "select")))
 
         for option in dropdown.find_elements(By.TAG_NAME, "option"):
             if config_name.lower() in option.text.lower():
@@ -91,10 +84,12 @@ class StreamlitPageObject:
     def select_time_period(self, days: int):
         """Select time period for analysis"""
         time_dropdown = self.wait.until(
-            EC.element_to_be_clickable((
-                By.XPATH,
-                "//label[contains(text(), 'Analysis Period')]/following-sibling::div//select"
-            ))
+            EC.element_to_be_clickable(
+                (
+                    By.XPATH,
+                    "//label[contains(text(), 'Analysis Period')]/following-sibling::div//select",
+                )
+            )
         )
 
         for option in time_dropdown.find_elements(By.TAG_NAME, "option"):
@@ -108,10 +103,9 @@ class StreamlitPageObject:
         """Check if live monitoring view is active"""
         try:
             self.wait.until(
-                EC.presence_of_element_located((
-                    By.XPATH,
-                    "//text()[contains(., 'LIVE - Agent Activity Monitor')]"
-                ))
+                EC.presence_of_element_located(
+                    (By.XPATH, "//text()[contains(., 'LIVE - Agent Activity Monitor')]")
+                )
             )
             return True
         except TimeoutException:
@@ -121,10 +115,9 @@ class StreamlitPageObject:
         """Check if historical analytics view is active"""
         try:
             self.wait.until(
-                EC.presence_of_element_located((
-                    By.XPATH,
-                    "//h2[contains(text(), 'Historical Analytics')]"
-                ))
+                EC.presence_of_element_located(
+                    (By.XPATH, "//h2[contains(text(), 'Historical Analytics')]")
+                )
             )
             return True
         except TimeoutException:
@@ -137,8 +130,7 @@ class StreamlitPageObject:
         try:
             # Look for metric components
             metric_elements = self.driver.find_elements(
-                By.CSS_SELECTOR,
-                "[data-testid='metric-container']"
+                By.CSS_SELECTOR, "[data-testid='metric-container']"
             )
 
             for element in metric_elements:
@@ -164,15 +156,11 @@ class StreamlitPageObject:
         try:
             # Look for agent status cards or sections
             agent_elements = self.driver.find_elements(
-                By.XPATH,
-                "//div[contains(@class, 'agent-status') or contains(text(), 'Agent')]"
+                By.XPATH, "//div[contains(@class, 'agent-status') or contains(text(), 'Agent')]"
             )
 
             for element in agent_elements:
-                agent_info = {
-                    "text": element.text,
-                    "status": "unknown"
-                }
+                agent_info = {"text": element.text, "status": "unknown"}
 
                 # Determine status based on text content or styling
                 if "✅" in element.text or "running" in element.text.lower():
@@ -200,7 +188,7 @@ class StreamlitPageObject:
                 "//div[contains(text(), 'Revenue')]",
                 "//div[contains(text(), 'Expense')]",
                 "//div[contains(text(), 'Chart')]",
-                "//div[contains(text(), 'Trend')]"
+                "//div[contains(text(), 'Trend')]",
             ]
 
             for selector in title_selectors:
@@ -219,10 +207,7 @@ class StreamlitPageObject:
         """Click the refresh button"""
         try:
             refresh_button = self.wait.until(
-                EC.element_to_be_clickable((
-                    By.XPATH,
-                    "//button[contains(text(), 'Refresh')]"
-                ))
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Refresh')]"))
             )
             refresh_button.click()
             time.sleep(3)  # Wait for refresh to complete
@@ -235,9 +220,7 @@ class StreamlitPageObject:
         """Wait for the dashboard to finish loading"""
         # Wait for Streamlit to finish loading
         try:
-            self.wait.until(
-                EC.presence_of_element_located((By.TAG_NAME, "h1"))
-            )
+            self.wait.until(EC.presence_of_element_located((By.TAG_NAME, "h1")))
 
             # Additional wait for dynamic content
             time.sleep(3)
@@ -246,7 +229,7 @@ class StreamlitPageObject:
             loading_selectors = [
                 "[data-testid='stSpinner']",
                 ".stSpinner",
-                "//div[contains(text(), 'Loading')]"
+                "//div[contains(text(), 'Loading')]",
             ]
 
             for selector in loading_selectors:
@@ -281,7 +264,7 @@ class WebTestReporter:
         """Capture page source and save to file"""
         try:
             full_path = f"test_artifacts/{filename}"
-            with open(full_path, 'w', encoding='utf-8') as f:
+            with open(full_path, "w", encoding="utf-8") as f:
                 f.write(self.driver.page_source)
             return full_path
         except Exception as e:
@@ -292,14 +275,16 @@ class WebTestReporter:
         """Get basic page performance information"""
         try:
             # Execute JavaScript to get performance information
-            perf_data = self.driver.execute_script("""
+            perf_data = self.driver.execute_script(
+                """
                 return {
                     loadTime: performance.timing.loadEventEnd - performance.timing.navigationStart,
                     domReady: performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart,
                     url: window.location.href,
                     title: document.title
                 };
-            """)
+            """
+            )
             return perf_data
         except WebDriverException:
             return {"error": "Could not retrieve performance data"}
@@ -312,11 +297,13 @@ class StreamlitProcessManager:
     def find_streamlit_processes() -> List[psutil.Process]:
         """Find running Streamlit processes"""
         processes = []
-        for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        for proc in psutil.process_iter(["pid", "name", "cmdline"]):
             try:
-                if 'streamlit' in proc.info['name'].lower():
+                if "streamlit" in proc.info["name"].lower():
                     processes.append(proc)
-                elif proc.info['cmdline'] and any('streamlit' in arg for arg in proc.info['cmdline']):
+                elif proc.info["cmdline"] and any(
+                    "streamlit" in arg for arg in proc.info["cmdline"]
+                ):
                     processes.append(proc)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 pass
@@ -337,19 +324,22 @@ class StreamlitProcessManager:
                     pass
 
     @staticmethod
-    def start_streamlit_for_testing(port: int = 8502, config_file: str = "config/restaurant_config.yaml") -> subprocess.Popen:
+    def start_streamlit_for_testing(
+        port: int = 8502, config_file: str = "config/restaurant_config.yaml"
+    ) -> subprocess.Popen:
         """Start Streamlit process for testing"""
         cmd = [
-            "streamlit", "run",
+            "streamlit",
+            "run",
             "dashboard/app.py",
-            "--server.port", str(port),
-            "--server.headless", "true",
-            "--browser.gatherUsageStats", "false",
-            "--server.enableXsrfProtection", "false"
+            "--server.port",
+            str(port),
+            "--server.headless",
+            "true",
+            "--browser.gatherUsageStats",
+            "false",
+            "--server.enableXsrfProtection",
+            "false",
         ]
 
-        return subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
+        return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

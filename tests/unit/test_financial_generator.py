@@ -1,6 +1,7 @@
 """
 Unit tests for FinancialDataGenerator class
 """
+
 import os
 import sys
 from datetime import datetime, timedelta
@@ -32,7 +33,7 @@ class TestBusinessProfile:
             avg_transaction_size=50.0,
             expense_categories={"rent": 300, "supplies": 100},
             seasonal_factors={1: 0.8, 12: 1.2},
-            customer_patterns={"monday": 0.9, "friday": 1.1}
+            customer_patterns={"monday": 0.9, "friday": 1.1},
         )
 
         assert profile.name == "Test Business"
@@ -57,20 +58,9 @@ class TestFinancialDataGenerator:
             avg_daily_revenue=2000.0,
             revenue_variance=0.3,
             avg_transaction_size=40.0,
-            expense_categories={
-                "food_supplies": 500,
-                "labor": 600,
-                "rent": 100,
-                "utilities": 50
-            },
-            seasonal_factors={
-                1: 0.8, 6: 1.2, 12: 1.4
-            },
-            customer_patterns={
-                "monday": 0.7,
-                "friday": 1.3,
-                "saturday": 1.4
-            }
+            expense_categories={"food_supplies": 500, "labor": 600, "rent": 100, "utilities": 50},
+            seasonal_factors={1: 0.8, 6: 1.2, 12: 1.4},
+            customer_patterns={"monday": 0.7, "friday": 1.3, "saturday": 1.4},
         )
 
     @pytest.fixture
@@ -121,7 +111,7 @@ class TestFinancialDataGenerator:
             avg_transaction_size=75.0,
             expense_categories={},
             seasonal_factors={},
-            customer_patterns={}
+            customer_patterns={},
         )
         generator = FinancialDataGenerator(profile)
 
@@ -142,7 +132,7 @@ class TestFinancialDataGenerator:
             avg_transaction_size=100.0,
             expense_categories={},
             seasonal_factors={},
-            customer_patterns={}
+            customer_patterns={},
         )
         generator = FinancialDataGenerator(profile)
 
@@ -179,7 +169,7 @@ class TestFinancialDataGenerator:
             avg_transaction_size=75.0,
             expense_categories={},
             seasonal_factors={},
-            customer_patterns={}
+            customer_patterns={},
         )
         generator = FinancialDataGenerator(profile)
 
@@ -189,9 +179,11 @@ class TestFinancialDataGenerator:
         assert "Shipping Company" in vendors
         assert "Equipment Lease" in vendors
 
-    @patch('simulation.financial_generator.random.normalvariate')
-    @patch('simulation.financial_generator.random.choice')
-    def test_generate_daily_transactions_basic(self, mock_choice, mock_normalvariate, financial_generator):
+    @patch("simulation.financial_generator.random.normalvariate")
+    @patch("simulation.financial_generator.random.choice")
+    def test_generate_daily_transactions_basic(
+        self, mock_choice, mock_normalvariate, financial_generator
+    ):
         """Test basic daily transaction generation"""
         test_date = datetime(2024, 6, 15)  # June 15, Friday
 
@@ -205,11 +197,15 @@ class TestFinancialDataGenerator:
         assert len(transactions) > 0
 
         # Check revenue transactions
-        revenue_transactions = [t for t in transactions if t["transaction_type"] == TransactionType.INCOME]
+        revenue_transactions = [
+            t for t in transactions if t["transaction_type"] == TransactionType.INCOME
+        ]
         assert len(revenue_transactions) > 0
 
         # Check expense transactions
-        expense_transactions = [t for t in transactions if t["transaction_type"] == TransactionType.EXPENSE]
+        expense_transactions = [
+            t for t in transactions if t["transaction_type"] == TransactionType.EXPENSE
+        ]
         assert len(expense_transactions) > 0
 
         # Check transaction structure
@@ -235,8 +231,16 @@ class TestFinancialDataGenerator:
             june_transactions = financial_generator.generate_daily_transactions(june_date)
             january_transactions = financial_generator.generate_daily_transactions(january_date)
 
-            june_total = sum(t["amount"] for t in june_transactions if t["transaction_type"] == TransactionType.INCOME)
-            january_total = sum(t["amount"] for t in january_transactions if t["transaction_type"] == TransactionType.INCOME)
+            june_total = sum(
+                t["amount"]
+                for t in june_transactions
+                if t["transaction_type"] == TransactionType.INCOME
+            )
+            january_total = sum(
+                t["amount"]
+                for t in january_transactions
+                if t["transaction_type"] == TransactionType.INCOME
+            )
 
             june_totals.append(june_total)
             january_totals.append(january_total)
@@ -261,8 +265,16 @@ class TestFinancialDataGenerator:
             friday_transactions = financial_generator.generate_daily_transactions(friday_date)
             monday_transactions = financial_generator.generate_daily_transactions(monday_date)
 
-            friday_total = sum(t["amount"] for t in friday_transactions if t["transaction_type"] == TransactionType.INCOME)
-            monday_total = sum(t["amount"] for t in monday_transactions if t["transaction_type"] == TransactionType.INCOME)
+            friday_total = sum(
+                t["amount"]
+                for t in friday_transactions
+                if t["transaction_type"] == TransactionType.INCOME
+            )
+            monday_total = sum(
+                t["amount"]
+                for t in monday_transactions
+                if t["transaction_type"] == TransactionType.INCOME
+            )
 
             friday_totals.append(friday_total)
             monday_totals.append(monday_total)
@@ -273,7 +285,7 @@ class TestFinancialDataGenerator:
 
         assert friday_avg > monday_avg
 
-    @patch('simulation.financial_generator.random.random')
+    @patch("simulation.financial_generator.random.random")
     def test_generate_daily_transactions_large_expenses(self, mock_random, financial_generator):
         """Test generation of occasional large expenses"""
         test_date = datetime(2024, 6, 15)
@@ -281,8 +293,9 @@ class TestFinancialDataGenerator:
         # Mock random to trigger large expense generation
         mock_random.side_effect = [0.04, 0.7, 0.7, 0.7, 0.7]  # First call triggers large expense
 
-        with patch('simulation.financial_generator.random.choice') as mock_choice, \
-             patch('simulation.financial_generator.random.randint') as mock_randint:
+        with patch("simulation.financial_generator.random.choice") as mock_choice, patch(
+            "simulation.financial_generator.random.randint"
+        ) as mock_randint:
 
             mock_choice.return_value = ("Equipment Repair", "maintenance", 500)
             mock_randint.return_value = 500
@@ -303,7 +316,7 @@ class TestFinancialDataGenerator:
         vendor = financial_generator._get_vendor_for_category("nonexistent")
         assert vendor == "General Vendor"
 
-    @patch('simulation.financial_generator.random.random')
+    @patch("simulation.financial_generator.random.random")
     def test_generate_accounts_receivable(self, mock_random, financial_generator):
         """Test accounts receivable generation"""
         test_date = datetime(2024, 6, 15)
@@ -311,8 +324,9 @@ class TestFinancialDataGenerator:
         # Mock random to trigger receivable generation
         mock_random.return_value = 0.05  # 5% chance, should trigger
 
-        with patch('simulation.financial_generator.random.randint') as mock_randint, \
-             patch('simulation.financial_generator.random.choice') as mock_choice:
+        with patch("simulation.financial_generator.random.randint") as mock_randint, patch(
+            "simulation.financial_generator.random.choice"
+        ) as mock_choice:
 
             mock_randint.side_effect = [2500, 1000, 9999]  # amount, days, random number
             mock_choice.side_effect = [30, "Corporate Client A"]  # due days, customer
@@ -331,7 +345,7 @@ class TestFinancialDataGenerator:
             assert "status" in receivable
             assert receivable["status"] == "unpaid"
 
-    @patch('simulation.financial_generator.random.random')
+    @patch("simulation.financial_generator.random.random")
     def test_generate_accounts_receivable_no_generation(self, mock_random, financial_generator):
         """Test that receivables are not always generated"""
         test_date = datetime(2024, 6, 15)
@@ -344,7 +358,7 @@ class TestFinancialDataGenerator:
         assert isinstance(receivables, list)
         assert len(receivables) == 0
 
-    @patch('simulation.financial_generator.random.random')
+    @patch("simulation.financial_generator.random.random")
     def test_generate_accounts_payable(self, mock_random, financial_generator):
         """Test accounts payable generation"""
         test_date = datetime(2024, 6, 1)  # First of month for rent/insurance
@@ -352,7 +366,7 @@ class TestFinancialDataGenerator:
         # Mock random to trigger payable generation
         mock_random.return_value = 0.04  # 4% chance, should trigger
 
-        with patch('simulation.financial_generator.random.randint') as mock_randint:
+        with patch("simulation.financial_generator.random.randint") as mock_randint:
             mock_randint.return_value = 1500  # Fixed value for all randint calls
 
             payables = financial_generator.generate_accounts_payable(test_date)
@@ -375,8 +389,8 @@ class TestFinancialDataGenerator:
         mid_month = datetime(2024, 6, 15)
 
         # Mock to always trigger generation
-        with patch('simulation.financial_generator.random.random', return_value=0.01):
-            with patch('simulation.financial_generator.random.randint', return_value=1500):
+        with patch("simulation.financial_generator.random.random", return_value=0.01):
+            with patch("simulation.financial_generator.random.randint", return_value=1500):
 
                 first_payables = financial_generator.generate_accounts_payable(first_of_month)
                 mid_payables = financial_generator.generate_accounts_payable(mid_month)
@@ -412,7 +426,7 @@ class TestFinancialDataGenerator:
 
         # Period including a Sunday
         start_date = datetime(2024, 6, 1)  # Saturday
-        end_date = datetime(2024, 6, 3)    # Monday (Sunday is 6/2)
+        end_date = datetime(2024, 6, 3)  # Monday (Sunday is 6/2)
 
         period_data = financial_generator.generate_period_data(start_date, end_date)
 
@@ -427,7 +441,7 @@ class TestFinancialDataGenerator:
 
         # Period including a Sunday
         start_date = datetime(2024, 6, 1)  # Saturday
-        end_date = datetime(2024, 6, 3)    # Monday (Sunday is 6/2)
+        end_date = datetime(2024, 6, 3)  # Monday (Sunday is 6/2)
 
         period_data = financial_generator.generate_period_data(start_date, end_date)
 
@@ -437,9 +451,17 @@ class TestFinancialDataGenerator:
     def test_generate_anomalies_basic(self, financial_generator):
         """Test basic anomaly generation"""
         base_transactions = [
-            {"amount": 100, "transaction_date": datetime.now(), "description": "Normal transaction"},
-            {"amount": 200, "transaction_date": datetime.now(), "description": "Another transaction"},
-            {"amount": 50, "transaction_date": datetime.now(), "description": "Small transaction"}
+            {
+                "amount": 100,
+                "transaction_date": datetime.now(),
+                "description": "Normal transaction",
+            },
+            {
+                "amount": 200,
+                "transaction_date": datetime.now(),
+                "description": "Another transaction",
+            },
+            {"amount": 50, "transaction_date": datetime.now(), "description": "Small transaction"},
         ]
 
         anomalies = financial_generator.generate_anomalies(base_transactions, anomaly_rate=0.5)
@@ -457,8 +479,9 @@ class TestFinancialDataGenerator:
             {"amount": 100, "transaction_date": datetime.now(), "description": "Normal transaction"}
         ]
 
-        with patch('simulation.financial_generator.random.choice', return_value="unusual_amount"), \
-             patch('simulation.financial_generator.random.uniform', return_value=5.0):
+        with patch(
+            "simulation.financial_generator.random.choice", return_value="unusual_amount"
+        ), patch("simulation.financial_generator.random.uniform", return_value=5.0):
 
             anomalies = financial_generator.generate_anomalies(base_transactions, anomaly_rate=1.0)
 
@@ -470,11 +493,16 @@ class TestFinancialDataGenerator:
     def test_generate_anomalies_unusual_time(self, financial_generator):
         """Test unusual time anomaly generation"""
         base_transactions = [
-            {"amount": 100, "transaction_date": datetime(2024, 6, 15, 12, 0), "description": "Normal transaction"}
+            {
+                "amount": 100,
+                "transaction_date": datetime(2024, 6, 15, 12, 0),
+                "description": "Normal transaction",
+            }
         ]
 
-        with patch('simulation.financial_generator.random.choice', return_value="unusual_time"), \
-             patch('simulation.financial_generator.random.randint', side_effect=[3, 30]):
+        with patch(
+            "simulation.financial_generator.random.choice", return_value="unusual_time"
+        ), patch("simulation.financial_generator.random.randint", side_effect=[3, 30]):
 
             anomalies = financial_generator.generate_anomalies(base_transactions, anomaly_rate=1.0)
 
@@ -487,11 +515,16 @@ class TestFinancialDataGenerator:
     def test_generate_anomalies_duplicate(self, financial_generator):
         """Test duplicate anomaly generation"""
         base_transactions = [
-            {"amount": 100, "transaction_date": datetime(2024, 6, 15, 12, 0), "description": "Normal transaction"}
+            {
+                "amount": 100,
+                "transaction_date": datetime(2024, 6, 15, 12, 0),
+                "description": "Normal transaction",
+            }
         ]
 
-        with patch('simulation.financial_generator.random.choice', return_value="duplicate"), \
-             patch('simulation.financial_generator.random.randint', return_value=15):
+        with patch("simulation.financial_generator.random.choice", return_value="duplicate"), patch(
+            "simulation.financial_generator.random.randint", return_value=15
+        ):
 
             anomalies = financial_generator.generate_anomalies(base_transactions, anomaly_rate=1.0)
 
@@ -503,10 +536,17 @@ class TestFinancialDataGenerator:
     def test_generate_anomalies_missing_reference(self, financial_generator):
         """Test missing reference anomaly generation"""
         base_transactions = [
-            {"amount": 100, "transaction_date": datetime.now(), "description": "Normal transaction", "reference_number": "REF-001"}
+            {
+                "amount": 100,
+                "transaction_date": datetime.now(),
+                "description": "Normal transaction",
+                "reference_number": "REF-001",
+            }
         ]
 
-        with patch('simulation.financial_generator.random.choice', return_value="missing_reference"):
+        with patch(
+            "simulation.financial_generator.random.choice", return_value="missing_reference"
+        ):
 
             anomalies = financial_generator.generate_anomalies(base_transactions, anomaly_rate=1.0)
 

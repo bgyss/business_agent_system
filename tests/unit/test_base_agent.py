@@ -1,6 +1,7 @@
 """
 Unit tests for BaseAgent class
 """
+
 import asyncio
 import os
 import sys
@@ -30,7 +31,7 @@ class ConcreteAgent(BaseAgent):
                 context=data,
                 reasoning="Test reasoning",
                 action="Test action",
-                confidence=0.8
+                confidence=0.8,
             )
         return None
 
@@ -38,7 +39,7 @@ class ConcreteAgent(BaseAgent):
         return {
             "agent_id": self.agent_id,
             "status": "active",
-            "decisions_count": len(self.decisions_log)
+            "decisions_count": len(self.decisions_log),
         }
 
 
@@ -48,7 +49,7 @@ class TestBaseAgent:
     @pytest.fixture
     def mock_anthropic(self):
         """Mock Anthropic client"""
-        with patch('agents.base_agent.Anthropic') as mock_client:
+        with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [Mock(text="Test Claude response")]
             mock_client.return_value.messages.create.return_value = mock_response
@@ -57,8 +58,9 @@ class TestBaseAgent:
     @pytest.fixture
     def mock_db_session(self):
         """Mock database session"""
-        with patch('agents.base_agent.create_engine'), \
-             patch('agents.base_agent.sessionmaker') as mock_sessionmaker:
+        with patch("agents.base_agent.create_engine"), patch(
+            "agents.base_agent.sessionmaker"
+        ) as mock_sessionmaker:
             mock_session = Mock()
             mock_sessionmaker.return_value = mock_session
             yield mock_session
@@ -66,11 +68,7 @@ class TestBaseAgent:
     @pytest.fixture
     def agent_config(self):
         """Agent configuration for testing"""
-        return {
-            "check_interval": 60,
-            "anomaly_threshold": 0.2,
-            "test_param": "test_value"
-        }
+        return {"check_interval": 60, "anomaly_threshold": 0.2, "test_param": "test_value"}
 
     @pytest.fixture
     def concrete_agent(self, mock_anthropic, mock_db_session, agent_config):
@@ -79,7 +77,7 @@ class TestBaseAgent:
             agent_id="test_agent",
             api_key="test_api_key",
             config=agent_config,
-            db_url="sqlite:///:memory:"
+            db_url="sqlite:///:memory:",
         )
 
     def test_agent_initialization(self, concrete_agent, agent_config):
@@ -151,19 +149,19 @@ class TestBaseAgent:
             sender="other_agent",
             recipient="test_agent",
             message_type="direct",
-            content={"data": "test1"}
+            content={"data": "test1"},
         )
         message2 = AgentMessage(
             sender="other_agent",
             recipient="all",
             message_type="broadcast",
-            content={"data": "test2"}
+            content={"data": "test2"},
         )
         message3 = AgentMessage(
             sender="other_agent",
             recipient="different_agent",
             message_type="other",
-            content={"data": "test3"}
+            content={"data": "test3"},
         )
 
         await concrete_agent.message_queue.put(message1)
@@ -184,7 +182,7 @@ class TestBaseAgent:
             context={"test": "data"},
             reasoning="Test reasoning",
             action="Test action",
-            confidence=0.8
+            confidence=0.8,
         )
 
         # Mock successful database operations
@@ -210,7 +208,7 @@ class TestBaseAgent:
             context={"test": "data"},
             reasoning="Test reasoning",
             action="Test action",
-            confidence=0.8
+            confidence=0.8,
         )
 
         # Mock database error
@@ -234,7 +232,7 @@ class TestBaseAgent:
             sender="other_agent",
             recipient="test_agent",
             message_type="data_update",
-            content={"type": "test_data", "value": 123}
+            content={"type": "test_data", "value": 123},
         )
 
         await concrete_agent.handle_message(message)
@@ -247,10 +245,7 @@ class TestBaseAgent:
     async def test_handle_message_report_request(self, concrete_agent):
         """Test handling report request message"""
         message = AgentMessage(
-            sender="other_agent",
-            recipient="test_agent",
-            message_type="report_request",
-            content={}
+            sender="other_agent", recipient="test_agent", message_type="report_request", content={}
         )
 
         await concrete_agent.handle_message(message)
@@ -305,7 +300,7 @@ class TestBaseAgent:
                 context={"index": i},
                 reasoning=f"Reasoning {i}",
                 action=f"Action {i}",
-                confidence=0.8
+                confidence=0.8,
             )
             concrete_agent.decisions_log.append(decision)
 
@@ -324,7 +319,7 @@ class TestBaseAgent:
                 context={"index": i},
                 reasoning=f"Reasoning {i}",
                 action=f"Action {i}",
-                confidence=0.8
+                confidence=0.8,
             )
             concrete_agent.decisions_log.append(decision)
 
@@ -346,7 +341,7 @@ class TestBaseAgent:
             context={},
             reasoning="Test",
             action="Test",
-            confidence=0.8
+            confidence=0.8,
         )
         concrete_agent.decisions_log.append(decision)
 
@@ -391,10 +386,7 @@ class TestBaseAgent:
     def test_agent_message_creation(self):
         """Test AgentMessage creation and attributes"""
         message = AgentMessage(
-            sender="agent1",
-            recipient="agent2",
-            message_type="test",
-            content={"data": "value"}
+            sender="agent1", recipient="agent2", message_type="test", content={"data": "value"}
         )
 
         assert message.sender == "agent1"
@@ -411,7 +403,7 @@ class TestBaseAgent:
             api_key="test_api_key",
             config=agent_config,
             db_url="sqlite:///:memory:",
-            message_queue=custom_queue
+            message_queue=custom_queue,
         )
 
         assert agent.message_queue is custom_queue
@@ -421,6 +413,7 @@ class TestBaseAgent:
         """Test exception handling in receive_messages (lines 98-99)"""
         # Mock message queue to raise an exception
         from unittest.mock import Mock
+
         mock_queue = Mock()
         # Return False first time to enter loop, then True to break
         mock_queue.empty.side_effect = [False, True]
@@ -428,7 +421,7 @@ class TestBaseAgent:
         concrete_agent.message_queue = mock_queue
 
         # Should handle the exception gracefully
-        with patch.object(concrete_agent, 'logger') as mock_logger:
+        with patch.object(concrete_agent, "logger") as mock_logger:
             result = await concrete_agent.receive_messages()
             # The method should still return an empty list despite the error
             assert result == []

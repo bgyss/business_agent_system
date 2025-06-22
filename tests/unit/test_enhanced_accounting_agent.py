@@ -1,6 +1,7 @@
 """
 Unit tests for Enhanced AccountingAgent advanced financial analysis capabilities
 """
+
 import os
 import sys
 from datetime import date, datetime, timedelta
@@ -24,7 +25,7 @@ class TestEnhancedAccountingAgent:
     @pytest.fixture
     def mock_anthropic(self):
         """Mock Anthropic client"""
-        with patch('agents.base_agent.Anthropic') as mock_client:
+        with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [Mock(text="Advanced financial analysis completed")]
             mock_client.return_value.messages.create.return_value = mock_response
@@ -33,8 +34,9 @@ class TestEnhancedAccountingAgent:
     @pytest.fixture
     def mock_db_session(self):
         """Mock database session"""
-        with patch('agents.base_agent.create_engine'), \
-             patch('agents.base_agent.sessionmaker') as mock_sessionmaker:
+        with patch("agents.base_agent.create_engine"), patch(
+            "agents.base_agent.sessionmaker"
+        ) as mock_sessionmaker:
             mock_session = Mock()
             mock_sessionmaker.return_value = mock_session
             yield mock_session
@@ -48,7 +50,7 @@ class TestEnhancedAccountingAgent:
             "alert_thresholds": {
                 "cash_low": 1000,
                 "receivables_overdue": 30,
-                "payables_overdue": 7
+                "payables_overdue": 7,
             },
             "forecasting": {
                 "prediction_days": 30,
@@ -58,9 +60,9 @@ class TestEnhancedAccountingAgent:
                     "data_volume": 0.3,
                     "historical_accuracy": 0.25,
                     "trend_stability": 0.25,
-                    "seasonal_consistency": 0.2
-                }
-            }
+                    "seasonal_consistency": 0.2,
+                },
+            },
         }
 
     @pytest.fixture
@@ -70,15 +72,15 @@ class TestEnhancedAccountingAgent:
             agent_id="enhanced_accounting_agent",
             api_key="test_api_key",
             config=enhanced_agent_config,
-            db_url="sqlite:///:memory:"
+            db_url="sqlite:///:memory:",
         )
 
     def test_enhanced_initialization(self, enhanced_accounting_agent, enhanced_agent_config):
         """Test enhanced agent initialization with new config"""
         assert enhanced_accounting_agent.agent_id == "enhanced_accounting_agent"
         assert enhanced_accounting_agent.forecasting_config == enhanced_agent_config["forecasting"]
-        assert hasattr(enhanced_accounting_agent, 'decision_outcomes')
-        assert hasattr(enhanced_accounting_agent, 'forecasting_accuracy_history')
+        assert hasattr(enhanced_accounting_agent, "decision_outcomes")
+        assert hasattr(enhanced_accounting_agent, "forecasting_accuracy_history")
 
     def test_enhanced_system_prompt(self, enhanced_accounting_agent):
         """Test enhanced system prompt content"""
@@ -100,13 +102,10 @@ class TestEnhancedAccountingAgent:
             "amount": Decimal("5000.00"),  # Much larger than average
             "transaction_type": TransactionType.INCOME,
             "category": "sales",
-            "transaction_date": datetime.now()
+            "transaction_date": datetime.now(),
         }
 
-        data = {
-            "type": "new_transaction",
-            "transaction": transaction_data
-        }
+        data = {"type": "new_transaction", "transaction": transaction_data}
 
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
@@ -116,7 +115,9 @@ class TestEnhancedAccountingAgent:
             Mock(amount=Decimal("1000.00"), transaction_date=datetime.now() - timedelta(hours=i))
             for i in range(1, 11)  # 10 similar transactions
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = similar_transactions
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            similar_transactions
+        )
 
         decision = await enhanced_accounting_agent.process_data(data)
 
@@ -141,24 +142,32 @@ class TestEnhancedAccountingAgent:
         transactions = []
         for i in range(60):  # 60 days of data
             # Create income transactions
-            transactions.append(Mock(
-                amount=Decimal("1000.00") + Decimal(str(i * 10)),  # Trending upward
-                transaction_type=TransactionType.INCOME,
-                transaction_date=base_date + timedelta(days=i)
-            ))
+            transactions.append(
+                Mock(
+                    amount=Decimal("1000.00") + Decimal(str(i * 10)),  # Trending upward
+                    transaction_type=TransactionType.INCOME,
+                    transaction_date=base_date + timedelta(days=i),
+                )
+            )
             # Create expense transactions
-            transactions.append(Mock(
-                amount=Decimal("500.00"),
-                transaction_type=TransactionType.EXPENSE,
-                transaction_date=base_date + timedelta(days=i)
-            ))
+            transactions.append(
+                Mock(
+                    amount=Decimal("500.00"),
+                    transaction_type=TransactionType.EXPENSE,
+                    transaction_date=base_date + timedelta(days=i),
+                )
+            )
 
         # Mock cash accounts
         cash_accounts = [Mock(balance=Decimal("5000.00"))]
 
         # Setup mock to return transactions first, then cash accounts
-        mock_session_instance.query.return_value.filter.return_value.order_by.return_value.all.return_value = transactions
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = cash_accounts
+        mock_session_instance.query.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            transactions
+        )
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            cash_accounts
+        )
 
         decision = await enhanced_accounting_agent.process_data(data)
 
@@ -186,29 +195,34 @@ class TestEnhancedAccountingAgent:
             for i in range(period_days):
                 # Declining income trend
                 income_amount = daily_income_base - (i * 10)  # Decline by $10/day
-                transactions.append(Mock(
-                    amount=Decimal(str(max(100, income_amount))),
-                    transaction_type=TransactionType.INCOME,
-                    transaction_date=datetime.now() - timedelta(days=period_days-i),
-                    category="sales"
-                ))
+                transactions.append(
+                    Mock(
+                        amount=Decimal(str(max(100, income_amount))),
+                        transaction_type=TransactionType.INCOME,
+                        transaction_date=datetime.now() - timedelta(days=period_days - i),
+                        category="sales",
+                    )
+                )
                 # Stable expenses
-                transactions.append(Mock(
-                    amount=Decimal("300.00"),
-                    transaction_type=TransactionType.EXPENSE,
-                    transaction_date=datetime.now() - timedelta(days=period_days-i),
-                    category="operating"
-                ))
+                transactions.append(
+                    Mock(
+                        amount=Decimal("300.00"),
+                        transaction_type=TransactionType.EXPENSE,
+                        transaction_date=datetime.now() - timedelta(days=period_days - i),
+                        category="operating",
+                    )
+                )
             return transactions
 
         # Mock different period queries
         period_transactions = {
             7: create_period_transactions(7, 1000),
             30: create_period_transactions(30, 1000),
-            90: create_period_transactions(90, 1000)
+            90: create_period_transactions(90, 1000),
         }
 
         call_count = 0
+
         def mock_filter_side_effect(*args, **kwargs):
             nonlocal call_count
             result_mock = Mock()
@@ -238,28 +252,28 @@ class TestEnhancedAccountingAgent:
             "decision_1": {
                 "was_correct": True,
                 "decision_type": "transaction_anomaly",
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             },
             "decision_2": {
                 "was_correct": False,
                 "decision_type": "transaction_anomaly",
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             },
             "decision_3": {
                 "was_correct": False,
                 "decision_type": "transaction_anomaly",
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             },
             "decision_4": {
                 "was_correct": False,
                 "decision_type": "cash_flow_forecast",
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             },
             "decision_5": {
                 "was_correct": True,
                 "decision_type": "cash_flow_forecast",
-                "timestamp": datetime.now()
-            }
+                "timestamp": datetime.now(),
+            },
         }
 
         data = {
@@ -267,7 +281,7 @@ class TestEnhancedAccountingAgent:
             "decision_id": "decision_6",
             "was_correct": False,
             "decision_type": "transaction_anomaly",
-            "feedback_notes": "False positive - transaction was legitimate"
+            "feedback_notes": "False positive - transaction was legitimate",
         }
 
         decision = await enhanced_accounting_agent.process_data(data)
@@ -279,7 +293,9 @@ class TestEnhancedAccountingAgent:
         assert decision.context["pattern_analysis"]["needs_adjustment"] is True
 
     @pytest.mark.asyncio
-    async def test_detect_transaction_anomalies_multiple_methods(self, enhanced_accounting_agent, mock_db_session):
+    async def test_detect_transaction_anomalies_multiple_methods(
+        self, enhanced_accounting_agent, mock_db_session
+    ):
         """Test multi-algorithm anomaly detection"""
         transaction = TransactionModel(
             id="1",
@@ -287,15 +303,16 @@ class TestEnhancedAccountingAgent:
             amount=Decimal("2000.00"),  # Outlier amount
             transaction_type=TransactionType.INCOME,
             category="sales",
-            transaction_date=datetime.now().replace(hour=2)  # Unusual hour
+            transaction_date=datetime.now().replace(hour=2),  # Unusual hour
         )
 
         # Create similar transactions with normal amounts and times
         similar_transactions = [
             Mock(
                 amount=Decimal("1000.00"),
-                transaction_date=datetime.now().replace(hour=9)  # Normal business hour
-            ) for _ in range(10)
+                transaction_date=datetime.now().replace(hour=9),  # Normal business hour
+            )
+            for _ in range(10)
         ]
 
         mock_session = Mock()
@@ -321,11 +338,7 @@ class TestEnhancedAccountingAgent:
         """Test dynamic confidence calculation"""
         analysis_data = {
             "anomaly_count": 3,
-            "statistics": {
-                "sample_size": 25,
-                "mean": 1000.0,
-                "std_dev": 100.0
-            }
+            "statistics": {"sample_size": 25, "mean": 1000.0, "std_dev": 100.0},
         }
 
         # Mock historical accuracy
@@ -352,15 +365,14 @@ class TestEnhancedAccountingAgent:
     async def test_forecast_confidence_calculation(self, enhanced_accounting_agent):
         """Test forecast confidence calculation"""
         daily_flows = {
-            f"2024-01-{i:02d}": 100.0 + (i * 5)  # Consistent upward trend
-            for i in range(1, 31)
+            f"2024-01-{i:02d}": 100.0 + (i * 5) for i in range(1, 31)  # Consistent upward trend
         }
 
         forecasts = {
             "simple_moving_average": 250.0,
             "weighted_moving_average": 255.0,
             "trend_based": 260.0,
-            "seasonal_adjusted": 250.0
+            "seasonal_adjusted": 250.0,
         }
 
         confidence = await enhanced_accounting_agent._calculate_forecast_confidence(
@@ -380,15 +392,15 @@ class TestEnhancedAccountingAgent:
             amount=Decimal("1000.00"),
             transaction_type=TransactionType.INCOME,
             category="sales",
-            transaction_date=datetime.now().replace(hour=3, minute=0)  # 3 AM - unusual
+            transaction_date=datetime.now().replace(hour=3, minute=0),  # 3 AM - unusual
         )
 
         # Create similar transactions mostly during business hours
         similar_transactions = []
         for hour in [9, 10, 11, 14, 15, 16] * 5:  # Business hours, repeated
-            similar_transactions.append(Mock(
-                transaction_date=datetime.now().replace(hour=hour, minute=0)
-            ))
+            similar_transactions.append(
+                Mock(transaction_date=datetime.now().replace(hour=hour, minute=0))
+            )
 
         mock_session = Mock()
         result = await enhanced_accounting_agent._analyze_time_patterns(
@@ -410,22 +422,26 @@ class TestEnhancedAccountingAgent:
         for i in range(5):
             date = base_date - timedelta(days=i)
             # Income transaction
-            transactions.append(Mock(
-                amount=Decimal("1000.00"),
-                transaction_type=TransactionType.INCOME,
-                transaction_date=datetime.combine(date, datetime.min.time())
-            ))
+            transactions.append(
+                Mock(
+                    amount=Decimal("1000.00"),
+                    transaction_type=TransactionType.INCOME,
+                    transaction_date=datetime.combine(date, datetime.min.time()),
+                )
+            )
             # Expense transaction
-            transactions.append(Mock(
-                amount=Decimal("500.00"),
-                transaction_type=TransactionType.EXPENSE,
-                transaction_date=datetime.combine(date, datetime.min.time())
-            ))
+            transactions.append(
+                Mock(
+                    amount=Decimal("500.00"),
+                    transaction_type=TransactionType.EXPENSE,
+                    transaction_date=datetime.combine(date, datetime.min.time()),
+                )
+            )
 
         daily_flows = await enhanced_accounting_agent._prepare_daily_cash_flows(transactions)
 
         assert len(daily_flows) == 5
-        for date_key, flow in daily_flows.items():
+        for _date_key, flow in daily_flows.items():
             assert flow == 500.0  # 1000 income - 500 expense
 
     @pytest.mark.asyncio
@@ -436,9 +452,7 @@ class TestEnhancedAccountingAgent:
             for i in range(1, 21)  # 20 days of data
         }
 
-        forecasts = await enhanced_accounting_agent._generate_cash_flow_forecasts(
-            daily_flows, 30
-        )
+        forecasts = await enhanced_accounting_agent._generate_cash_flow_forecasts(daily_flows, 30)
 
         assert "simple_moving_average" in forecasts
         assert "weighted_moving_average" in forecasts
@@ -476,16 +490,14 @@ class TestEnhancedAccountingAgent:
             "7_days": {
                 "income_trend": -60,  # Declining income
                 "expense_trend": 80,  # Rising expenses
-                "daily_net": -150    # Negative net flow
+                "daily_net": -150,  # Negative net flow
             },
-            "30_days": {
-                "income_trend": 20,
-                "expense_trend": 10,
-                "daily_net": 50
-            }
+            "30_days": {"income_trend": 20, "expense_trend": 10, "daily_net": 50},
         }
 
-        significant_trends = await enhanced_accounting_agent._identify_significant_trends(trend_analysis)
+        significant_trends = await enhanced_accounting_agent._identify_significant_trends(
+            trend_analysis
+        )
 
         assert len(significant_trends) >= 2
         assert any("Declining income" in trend for trend in significant_trends)
@@ -500,8 +512,9 @@ class TestEnhancedAccountingAgent:
             f"decision_{i}": {
                 "decision_type": "transaction_anomaly",
                 "was_correct": i % 3 != 0,  # 33% accuracy - should trigger adjustment
-                "timestamp": datetime.now()
-            } for i in range(1, 7)
+                "timestamp": datetime.now(),
+            }
+            for i in range(1, 7)
         }
 
         # Add some cash flow decisions with better accuracy
@@ -509,7 +522,7 @@ class TestEnhancedAccountingAgent:
             enhanced_accounting_agent.decision_outcomes[f"decision_{i}"] = {
                 "decision_type": "cash_flow_forecast",
                 "was_correct": True,
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             }
 
         pattern_analysis = await enhanced_accounting_agent._analyze_decision_patterns()
@@ -520,18 +533,24 @@ class TestEnhancedAccountingAgent:
         assert pattern_analysis["total_decisions"] == 9
 
     @pytest.mark.asyncio
-    async def test_enhanced_periodic_check_scheduling(self, enhanced_accounting_agent, mock_db_session):
+    async def test_enhanced_periodic_check_scheduling(
+        self, enhanced_accounting_agent, mock_db_session
+    ):
         """Test enhanced periodic check with new scheduling"""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
         # Mock sufficient cash to avoid alerts
         cash_accounts = [Mock(balance=Decimal("5000.00"))]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = cash_accounts
-        mock_session_instance.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            cash_accounts
+        )
+        mock_session_instance.query.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
         # Test different hours and days
-        with patch('agents.accounting_agent.datetime') as mock_datetime:
+        with patch("agents.accounting_agent.datetime") as mock_datetime:
             # Test 9 AM on Monday (should trigger all analyses)
             mock_datetime.now.return_value = Mock(hour=9, weekday=lambda: 0)
             mock_datetime.now.return_value.date.return_value = date.today()
@@ -569,7 +588,9 @@ class TestEnhancedAccountingAgent:
         assert 0.8 <= total_factors <= 1.2  # Allow some flexibility
 
     @pytest.mark.asyncio
-    async def test_error_handling_in_enhanced_methods(self, enhanced_accounting_agent, mock_db_session):
+    async def test_error_handling_in_enhanced_methods(
+        self, enhanced_accounting_agent, mock_db_session
+    ):
         """Test error handling in new enhanced methods"""
         mock_session = Mock()
 
@@ -577,10 +598,13 @@ class TestEnhancedAccountingAgent:
         empty_result = await enhanced_accounting_agent._detect_transaction_anomalies(
             mock_session,
             TransactionModel(
-                id="1", description="test", amount=Decimal("100"),
-                transaction_type=TransactionType.INCOME, transaction_date=datetime.now()
+                id="1",
+                description="test",
+                amount=Decimal("100"),
+                transaction_type=TransactionType.INCOME,
+                transaction_date=datetime.now(),
             ),
-            []
+            [],
         )
         assert empty_result["is_anomaly"] is False
 
@@ -599,7 +623,9 @@ class TestEnhancedAccountingAgent:
         assert trend_single == 0
 
     @pytest.mark.asyncio
-    async def test_forecast_with_insufficient_data(self, enhanced_accounting_agent, mock_db_session):
+    async def test_forecast_with_insufficient_data(
+        self, enhanced_accounting_agent, mock_db_session
+    ):
         """Test cash flow forecasting behavior with insufficient data"""
         data = {"type": "cash_flow_forecast", "forecast_days": 30}
 
@@ -611,11 +637,14 @@ class TestEnhancedAccountingAgent:
             Mock(
                 amount=Decimal("1000.00"),
                 transaction_type=TransactionType.INCOME,
-                transaction_date=datetime.now() - timedelta(days=i)
-            ) for i in range(3)  # Only 3 days of data
+                transaction_date=datetime.now() - timedelta(days=i),
+            )
+            for i in range(3)  # Only 3 days of data
         ]
 
-        mock_session_instance.query.return_value.filter.return_value.order_by.return_value.all.return_value = few_transactions
+        mock_session_instance.query.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            few_transactions
+        )
 
         decision = await enhanced_accounting_agent.process_data(data)
 
@@ -623,7 +652,9 @@ class TestEnhancedAccountingAgent:
         assert decision is None
 
     @pytest.mark.asyncio
-    async def test_trend_analysis_with_no_significant_trends(self, enhanced_accounting_agent, mock_db_session):
+    async def test_trend_analysis_with_no_significant_trends(
+        self, enhanced_accounting_agent, mock_db_session
+    ):
         """Test trend analysis when no significant trends are detected"""
         data = {"type": "trend_analysis"}
 
@@ -634,22 +665,27 @@ class TestEnhancedAccountingAgent:
         def create_stable_transactions(period_days):
             transactions = []
             for i in range(period_days):
-                transactions.append(Mock(
-                    amount=Decimal("1000.00"),  # Stable income
-                    transaction_type=TransactionType.INCOME,
-                    transaction_date=datetime.now() - timedelta(days=period_days-i),
-                    category="sales"
-                ))
-                transactions.append(Mock(
-                    amount=Decimal("300.00"),  # Stable expenses
-                    transaction_type=TransactionType.EXPENSE,
-                    transaction_date=datetime.now() - timedelta(days=period_days-i),
-                    category="operating"
-                ))
+                transactions.append(
+                    Mock(
+                        amount=Decimal("1000.00"),  # Stable income
+                        transaction_type=TransactionType.INCOME,
+                        transaction_date=datetime.now() - timedelta(days=period_days - i),
+                        category="sales",
+                    )
+                )
+                transactions.append(
+                    Mock(
+                        amount=Decimal("300.00"),  # Stable expenses
+                        transaction_type=TransactionType.EXPENSE,
+                        transaction_date=datetime.now() - timedelta(days=period_days - i),
+                        category="operating",
+                    )
+                )
             return transactions
 
         # Mock queries for different periods
         call_count = 0
+
         def mock_filter_side_effect(*args, **kwargs):
             nonlocal call_count
             result_mock = Mock()

@@ -37,9 +37,12 @@ class PerformanceTestRunner:
         # Ensure output directory exists
         os.makedirs(output_dir, exist_ok=True)
 
-    def run_performance_tests(self, test_categories: Optional[List[str]] = None,
-                            generate_report: bool = True,
-                            compare_baseline: bool = True) -> Dict[str, Any]:
+    def run_performance_tests(
+        self,
+        test_categories: Optional[List[str]] = None,
+        generate_report: bool = True,
+        compare_baseline: bool = True,
+    ) -> Dict[str, Any]:
         """Run performance tests and generate reports."""
 
         # Default to all categories if none specified
@@ -51,7 +54,9 @@ class PerformanceTestRunner:
 
         # Build pytest command
         pytest_args = [
-            "python", "-m", "pytest",
+            "python",
+            "-m",
+            "pytest",
             "tests/performance/",
             "-v",
             "--tb=short",
@@ -67,14 +72,16 @@ class PerformanceTestRunner:
 
         # Add coverage if requested
         if os.getenv("COVERAGE", "false").lower() == "true":
-            pytest_args.extend([
-                "--cov=agents",
-                "--cov=models",
-                "--cov=simulation",
-                "--cov=dashboard",
-                f"--cov-report=html:{self.output_dir}/coverage_html",
-                f"--cov-report=xml:{self.output_dir}/coverage.xml"
-            ])
+            pytest_args.extend(
+                [
+                    "--cov=agents",
+                    "--cov=models",
+                    "--cov=simulation",
+                    "--cov=dashboard",
+                    f"--cov-report=html:{self.output_dir}/coverage_html",
+                    f"--cov-report=xml:{self.output_dir}/coverage.xml",
+                ]
+            )
 
         # Run tests
         print("Starting performance test execution...")
@@ -82,10 +89,7 @@ class PerformanceTestRunner:
 
         try:
             result = subprocess.run(
-                pytest_args,
-                capture_output=True,
-                text=True,
-                timeout=3600  # 1 hour timeout
+                pytest_args, capture_output=True, text=True, timeout=3600  # 1 hour timeout
             )
 
             success = result.returncode == 0
@@ -95,7 +99,7 @@ class PerformanceTestRunner:
             return {
                 "status": "timeout",
                 "message": "Tests timed out after 1 hour",
-                "duration": 3600
+                "duration": 3600,
             }
 
         end_time = datetime.now()
@@ -116,7 +120,7 @@ class PerformanceTestRunner:
             "start_time": start_time.isoformat(),
             "end_time": end_time.isoformat(),
             "categories_tested": test_categories,
-            "system_info": self.profiler.get_system_info()
+            "system_info": self.profiler.get_system_info(),
         }
 
         # Load benchmark results if available
@@ -170,18 +174,18 @@ class PerformanceTestRunner:
             "fastest_test": None,
             "slowest_test": None,
             "category_averages": {},
-            "overall_stats": {}
+            "overall_stats": {},
         }
 
         # Find fastest and slowest
         sorted_by_mean = sorted(benchmarks, key=lambda x: x["stats"]["mean"])
         summary["fastest_test"] = {
             "name": sorted_by_mean[0]["name"],
-            "mean_time": sorted_by_mean[0]["stats"]["mean"]
+            "mean_time": sorted_by_mean[0]["stats"]["mean"],
         }
         summary["slowest_test"] = {
             "name": sorted_by_mean[-1]["name"],
-            "mean_time": sorted_by_mean[-1]["stats"]["mean"]
+            "mean_time": sorted_by_mean[-1]["stats"]["mean"],
         }
 
         # Calculate overall statistics
@@ -190,7 +194,7 @@ class PerformanceTestRunner:
             "mean_of_means": sum(all_means) / len(all_means),
             "total_time": sum(all_means),
             "fastest_mean": min(all_means),
-            "slowest_mean": max(all_means)
+            "slowest_mean": max(all_means),
         }
 
         # Group by category (extract from test name)
@@ -219,7 +223,7 @@ class PerformanceTestRunner:
             summary["category_averages"][category] = {
                 "count": len(times),
                 "average_time": sum(times) / len(times),
-                "total_time": sum(times)
+                "total_time": sum(times),
             }
 
         return summary
@@ -254,8 +258,7 @@ class PerformanceTestRunner:
                 key_tests = [t for t in unique_tests if "agent" in t or "database" in t][:5]
                 if key_tests:
                     comparison_chart = self.reporter.create_comparison_chart(
-                        key_tests,
-                        output_path=f"{chart_dir}/performance_comparison.png"
+                        key_tests, output_path=f"{chart_dir}/performance_comparison.png"
                     )
                     chart_files.append(comparison_chart)
             except Exception as e:
@@ -283,8 +286,12 @@ class PerformanceTestRunner:
             if "benchmark_summary" in test_results:
                 summary = test_results["benchmark_summary"]
                 f.write(f"- **Total Benchmarks:** {summary['total_benchmarks']}\n")
-                f.write(f"- **Fastest Test:** {summary['fastest_test']['name']} ({summary['fastest_test']['mean_time']:.3f}s)\n")
-                f.write(f"- **Slowest Test:** {summary['slowest_test']['name']} ({summary['slowest_test']['mean_time']:.3f}s)\n")
+                f.write(
+                    f"- **Fastest Test:** {summary['fastest_test']['name']} ({summary['fastest_test']['mean_time']:.3f}s)\n"
+                )
+                f.write(
+                    f"- **Slowest Test:** {summary['slowest_test']['name']} ({summary['slowest_test']['mean_time']:.3f}s)\n"
+                )
 
             f.write("\n")
 
@@ -294,13 +301,20 @@ class PerformanceTestRunner:
             f.write(f"- **Platform:** {system_info.get('platform', 'Unknown')}\n")
             f.write(f"- **Python Version:** {system_info.get('python_version', 'Unknown')}\n")
             f.write(f"- **CPU Count:** {system_info.get('cpu_count', 'Unknown')}\n")
-            f.write(f"- **Memory Total:** {system_info.get('memory_total', 0) / 1024 / 1024 / 1024:.1f} GB\n")
+            f.write(
+                f"- **Memory Total:** {system_info.get('memory_total', 0) / 1024 / 1024 / 1024:.1f} GB\n"
+            )
             f.write("\n")
 
             # Category Performance
-            if "benchmark_summary" in test_results and "category_averages" in test_results["benchmark_summary"]:
+            if (
+                "benchmark_summary" in test_results
+                and "category_averages" in test_results["benchmark_summary"]
+            ):
                 f.write("## Performance by Category\n\n")
-                for category, stats in test_results["benchmark_summary"]["category_averages"].items():
+                for category, stats in test_results["benchmark_summary"][
+                    "category_averages"
+                ].items():
                     f.write(f"### {category.title()}\n")
                     f.write(f"- **Test Count:** {stats['count']}\n")
                     f.write(f"- **Average Time:** {stats['average_time']:.3f}s\n")
@@ -340,7 +354,7 @@ class PerformanceTestRunner:
             "baseline_available": False,
             "regressions_detected": 0,
             "improvements_detected": 0,
-            "status": "no_baseline"
+            "status": "no_baseline",
         }
 
 
@@ -352,32 +366,18 @@ def main():
         "--categories",
         nargs="+",
         choices=["agent", "database", "simulation", "dashboard", "stress"],
-        help="Test categories to run (default: all)"
+        help="Test categories to run (default: all)",
     )
 
     parser.add_argument(
-        "--output-dir",
-        default="tests/performance/results",
-        help="Output directory for results"
+        "--output-dir", default="tests/performance/results", help="Output directory for results"
     )
 
-    parser.add_argument(
-        "--no-report",
-        action="store_true",
-        help="Skip report generation"
-    )
+    parser.add_argument("--no-report", action="store_true", help="Skip report generation")
 
-    parser.add_argument(
-        "--no-baseline",
-        action="store_true",
-        help="Skip baseline comparison"
-    )
+    parser.add_argument("--no-baseline", action="store_true", help="Skip baseline comparison")
 
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Verbose output"
-    )
+    parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
 
@@ -388,21 +388,25 @@ def main():
     results = runner.run_performance_tests(
         test_categories=args.categories,
         generate_report=not args.no_report,
-        compare_baseline=not args.no_baseline
+        compare_baseline=not args.no_baseline,
     )
 
     # Print summary
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("PERFORMANCE TEST SUMMARY")
-    print("="*50)
+    print("=" * 50)
     print(f"Status: {results['status']}")
     print(f"Duration: {results['duration']:.2f} seconds")
 
     if "benchmark_summary" in results:
         summary = results["benchmark_summary"]
         print(f"Total benchmarks: {summary['total_benchmarks']}")
-        print(f"Fastest test: {summary['fastest_test']['name']} ({summary['fastest_test']['mean_time']:.3f}s)")
-        print(f"Slowest test: {summary['slowest_test']['name']} ({summary['slowest_test']['mean_time']:.3f}s)")
+        print(
+            f"Fastest test: {summary['fastest_test']['name']} ({summary['fastest_test']['mean_time']:.3f}s)"
+        )
+        print(
+            f"Slowest test: {summary['slowest_test']['name']} ({summary['slowest_test']['mean_time']:.3f}s)"
+        )
 
     print(f"\nResults saved to: {args.output_dir}")
 

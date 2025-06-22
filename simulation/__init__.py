@@ -11,5 +11,5 @@ __all__ = [
     "FinancialDataGenerator",
     "BusinessProfile",
     "get_restaurant_profile",
-    "get_retail_profile"
+    "get_retail_profile",
 ]

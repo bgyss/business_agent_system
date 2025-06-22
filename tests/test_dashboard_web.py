@@ -1,6 +1,7 @@
 """
 Web tests for the Streamlit dashboard using Selenium
 """
+
 import time
 
 import pytest
@@ -13,8 +14,10 @@ class TestDashboardBasicFunctionality:
 
     def test_dashboard_loads_successfully(self, dashboard_page, streamlit_helper):
         """Test that the dashboard loads and displays the main title"""
-        assert "Business Management Dashboard" in dashboard_page.title or \
-               streamlit_helper.wait_for_text("Business Management Dashboard")
+        assert (
+            "Business Management Dashboard" in dashboard_page.title
+            or streamlit_helper.wait_for_text("Business Management Dashboard")
+        )
 
     def test_sidebar_navigation_exists(self, dashboard_page, streamlit_helper):
         """Test that sidebar navigation elements are present"""
@@ -24,12 +27,10 @@ class TestDashboardBasicFunctionality:
         # Check for view selection radio buttons
         try:
             streamlit_helper.wait_for_element(
-                By.XPATH,
-                "//label[contains(text(), 'Live Agent Monitoring')]"
+                By.XPATH, "//label[contains(text(), 'Live Agent Monitoring')]"
             )
             streamlit_helper.wait_for_element(
-                By.XPATH,
-                "//label[contains(text(), 'Historical Analytics')]"
+                By.XPATH, "//label[contains(text(), 'Historical Analytics')]"
             )
         except TimeoutException:
             pytest.fail("Sidebar navigation elements not found")
@@ -95,10 +96,7 @@ class TestLiveMonitoringView:
 
         # Look for auto-refresh checkbox in sidebar
         try:
-            streamlit_helper.wait_for_element(
-                By.XPATH,
-                "//label[contains(text(), 'Auto-refresh')]"
-            )
+            streamlit_helper.wait_for_element(By.XPATH, "//label[contains(text(), 'Auto-refresh')]")
         except TimeoutException:
             pytest.fail("Auto-refresh toggle not found")
 
@@ -210,8 +208,7 @@ class TestInteractiveFeatures:
         # Test refresh button in sidebar
         try:
             refresh_button = streamlit_helper.wait_for_element(
-                By.XPATH,
-                "//button[contains(text(), 'Refresh Now')]"
+                By.XPATH, "//button[contains(text(), 'Refresh Now')]"
             )
             refresh_button.click()
             time.sleep(2)  # Wait for refresh
@@ -226,7 +223,7 @@ class TestInteractiveFeatures:
         try:
             time_period_dropdown = streamlit_helper.wait_for_element(
                 By.XPATH,
-                "//label[contains(text(), 'Analysis Period')]/following-sibling::div//select"
+                "//label[contains(text(), 'Analysis Period')]/following-sibling::div//select",
             )
             # Test that dropdown has options
             options = time_period_dropdown.find_elements(By.TAG_NAME, "option")
@@ -239,7 +236,7 @@ class TestInteractiveFeatures:
         try:
             config_dropdown = streamlit_helper.wait_for_element(
                 By.XPATH,
-                "//label[contains(text(), 'Select Business Configuration')]/following-sibling::div//select"
+                "//label[contains(text(), 'Select Business Configuration')]/following-sibling::div//select",
             )
             # Test that dropdown has options
             options = config_dropdown.find_elements(By.TAG_NAME, "option")
@@ -314,4 +311,6 @@ class TestAccessibility:
         for button in buttons[:5]:  # Check first 5 buttons
             # Buttons should have text or aria-label
             button_text = button.text or button.get_attribute("aria-label")
-            assert button_text, f"Button should have accessible text: {button.get_attribute('outerHTML')[:100]}"
+            assert (
+                button_text
+            ), f"Button should have accessible text: {button.get_attribute('outerHTML')[:100]}"

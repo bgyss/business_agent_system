@@ -22,7 +22,9 @@ def run_tests():
 
     # Run pytest with coverage
     cmd = [
-        sys.executable, "-m", "pytest",
+        sys.executable,
+        "-m",
+        "pytest",
         str(test_dir),
         "-v",  # Verbose output
         "--tb=short",  # Short traceback format
@@ -34,12 +36,15 @@ def run_tests():
     # Add coverage if available
     try:
         import coverage
-        cmd.extend([
-            "--cov=agents",
-            "--cov-report=term-missing",
-            "--cov-report=html:htmlcov/unit",
-            "--cov-fail-under=80"
-        ])
+
+        cmd.extend(
+            [
+                "--cov=agents",
+                "--cov-report=term-missing",
+                "--cov-report=html:htmlcov/unit",
+                "--cov-fail-under=80",
+            ]
+        )
         print("Running tests with coverage...")
     except ImportError:
         print("Coverage not available, running tests without coverage...")
@@ -60,11 +65,13 @@ def run_specific_test(test_name):
     os.chdir(project_root)
 
     cmd = [
-        sys.executable, "-m", "pytest",
+        sys.executable,
+        "-m",
+        "pytest",
         f"{test_dir}/{test_name}",
         "-v",
         "--tb=short",
-        "--asyncio-mode=auto"
+        "--asyncio-mode=auto",
     ]
 
     print(f"Running specific test: {test_name}")

@@ -1,6 +1,7 @@
 """
 Unit tests for InventorySimulator class
 """
+
 import os
 import sys
 from datetime import datetime
@@ -34,7 +35,7 @@ class TestInventoryProfile:
                 "minimum_stock": 5,
                 "maximum_stock": 100,
                 "reorder_point": 15,
-                "reorder_quantity": 40
+                "reorder_quantity": 40,
             }
         ]
 
@@ -44,7 +45,7 @@ class TestInventoryProfile:
             consumption_patterns={"monday": 0.8, "friday": 1.2},
             seasonal_factors={1: 0.8, 6: 1.2},
             waste_rate=0.05,
-            delivery_variance_days=2
+            delivery_variance_days=2,
         )
 
         assert profile.business_type == "restaurant"
@@ -75,7 +76,7 @@ class TestInventorySimulator:
                 "reorder_quantity": 40,
                 "unit_of_measure": "lbs",
                 "expiry_days": 5,
-                "variations": 1
+                "variations": 1,
             },
             {
                 "name": "Test Beverages",
@@ -90,8 +91,8 @@ class TestInventorySimulator:
                 "reorder_quantity": 75,
                 "unit_of_measure": "each",
                 "expiry_days": 180,
-                "variations": 2
-            }
+                "variations": 2,
+            },
         ]
 
         return InventoryProfile(
@@ -104,14 +105,24 @@ class TestInventorySimulator:
                 "thursday": 1.0,
                 "friday": 1.3,
                 "saturday": 1.4,
-                "sunday": 1.1
+                "sunday": 1.1,
             },
             seasonal_factors={
-                1: 0.8, 2: 0.8, 3: 0.9, 4: 1.0, 5: 1.1, 6: 1.2,
-                7: 1.3, 8: 1.2, 9: 1.0, 10: 1.0, 11: 1.1, 12: 1.4
+                1: 0.8,
+                2: 0.8,
+                3: 0.9,
+                4: 1.0,
+                5: 1.1,
+                6: 1.2,
+                7: 1.3,
+                8: 1.2,
+                9: 1.0,
+                10: 1.0,
+                11: 1.1,
+                12: 1.4,
             },
             waste_rate=0.05,
-            delivery_variance_days=2
+            delivery_variance_days=2,
         )
 
     @pytest.fixture
@@ -160,7 +171,7 @@ class TestInventorySimulator:
             consumption_patterns={},
             seasonal_factors={},
             waste_rate=0.01,
-            delivery_variance_days=3
+            delivery_variance_days=3,
         )
         simulator = InventorySimulator(profile)
 
@@ -181,9 +192,19 @@ class TestInventorySimulator:
         # Check item structure
         item = items[0]
         required_fields = [
-            "sku", "name", "description", "category", "unit_cost", "selling_price",
-            "current_stock", "minimum_stock", "maximum_stock", "reorder_point",
-            "reorder_quantity", "unit_of_measure", "status"
+            "sku",
+            "name",
+            "description",
+            "category",
+            "unit_cost",
+            "selling_price",
+            "current_stock",
+            "minimum_stock",
+            "maximum_stock",
+            "reorder_point",
+            "reorder_quantity",
+            "unit_of_measure",
+            "status",
         ]
 
         for field in required_fields:
@@ -229,7 +250,7 @@ class TestInventorySimulator:
                 "sku": "TEST001",
                 "category": "vegetables",
                 "current_stock": 50,
-                "unit_cost": 2.50
+                "unit_cost": 2.50,
             }
         ]
 
@@ -261,7 +282,7 @@ class TestInventorySimulator:
                 "sku": "TEST001",
                 "category": "vegetables",
                 "current_stock": 0,
-                "unit_cost": 2.50
+                "unit_cost": 2.50,
             }
         ]
 
@@ -270,7 +291,9 @@ class TestInventorySimulator:
         movements = inventory_simulator.simulate_daily_consumption(items, test_date)
 
         # Should not generate consumption movements for items with no stock
-        consumption_movements = [m for m in movements if m["movement_type"] == StockMovementType.OUT]
+        consumption_movements = [
+            m for m in movements if m["movement_type"] == StockMovementType.OUT
+        ]
         assert len(consumption_movements) == 0
 
     def test_simulate_daily_consumption_seasonal_factors(self, inventory_simulator):
@@ -281,7 +304,7 @@ class TestInventorySimulator:
                 "sku": "TEST001",
                 "category": "vegetables",
                 "current_stock": 100,
-                "unit_cost": 2.50
+                "unit_cost": 2.50,
             }
         ]
 
@@ -291,11 +314,17 @@ class TestInventorySimulator:
 
         # Reset stock for second test
         june_movements = inventory_simulator.simulate_daily_consumption(items.copy(), june_date)
-        january_movements = inventory_simulator.simulate_daily_consumption(items.copy(), january_date)
+        january_movements = inventory_simulator.simulate_daily_consumption(
+            items.copy(), january_date
+        )
 
         # Filter out waste movements for comparison
-        june_consumption = [m for m in june_movements if m["movement_type"] == StockMovementType.OUT]
-        january_consumption = [m for m in january_movements if m["movement_type"] == StockMovementType.OUT]
+        june_consumption = [
+            m for m in june_movements if m["movement_type"] == StockMovementType.OUT
+        ]
+        january_consumption = [
+            m for m in january_movements if m["movement_type"] == StockMovementType.OUT
+        ]
 
         # June should generally have higher consumption (this is probabilistic)
         if june_consumption and january_consumption:
@@ -317,7 +346,7 @@ class TestInventorySimulator:
         unknown_consumption = inventory_simulator._get_base_consumption("unknown", 100)
         assert unknown_consumption == 5.0  # 5% default rate
 
-    @patch('simulation.inventory_simulator.random.random')
+    @patch("simulation.inventory_simulator.random.random")
     def test_simulate_waste_basic(self, mock_random, inventory_simulator):
         """Test basic waste simulation"""
         items = [
@@ -327,7 +356,7 @@ class TestInventorySimulator:
                 "category": "vegetables",
                 "current_stock": 50,
                 "unit_cost": 2.50,
-                "expiry_days": 5  # Very perishable
+                "expiry_days": 5,  # Very perishable
             }
         ]
 
@@ -336,7 +365,7 @@ class TestInventorySimulator:
         # Mock random to trigger waste
         mock_random.return_value = 0.01  # Should trigger waste for perishable items
 
-        with patch('simulation.inventory_simulator.random.uniform', return_value=0.02):
+        with patch("simulation.inventory_simulator.random.uniform", return_value=0.02):
             waste_movements = inventory_simulator._simulate_waste(items, test_date)
 
             assert isinstance(waste_movements, list)
@@ -355,7 +384,7 @@ class TestInventorySimulator:
                 "category": "dry_goods",
                 "current_stock": 50,
                 "unit_cost": 4.00,
-                "expiry_days": None  # Non-perishable
+                "expiry_days": None,  # Non-perishable
             }
         ]
 
@@ -370,7 +399,7 @@ class TestInventorySimulator:
         # Non-perishable items should have very little waste
         assert total_waste < 10  # Very few waste events out of 100 runs
 
-    @patch('simulation.inventory_simulator.random.random')
+    @patch("simulation.inventory_simulator.random.random")
     def test_simulate_deliveries_basic(self, mock_random, inventory_simulator):
         """Test basic delivery simulation"""
         items = [
@@ -381,7 +410,7 @@ class TestInventorySimulator:
                 "current_stock": 10,  # Below reorder point
                 "reorder_point": 15,
                 "reorder_quantity": 40,
-                "unit_cost": 2.50
+                "unit_cost": 2.50,
             }
         ]
 
@@ -390,7 +419,7 @@ class TestInventorySimulator:
         # Mock to trigger delivery
         mock_random.side_effect = [0.2, 0.95]  # First for delivery chance, second for reliability
 
-        with patch('simulation.inventory_simulator.random.uniform', return_value=1.0):
+        with patch("simulation.inventory_simulator.random.uniform", return_value=1.0):
             deliveries = inventory_simulator.simulate_deliveries(items, test_date)
 
             assert isinstance(deliveries, list)
@@ -413,7 +442,7 @@ class TestInventorySimulator:
                 "current_stock": 50,  # Above reorder point
                 "reorder_point": 15,
                 "reorder_quantity": 40,
-                "unit_cost": 2.50
+                "unit_cost": 2.50,
             }
         ]
 
@@ -449,20 +478,20 @@ class TestInventorySimulator:
                 "name": "Expensive Supplier",
                 "items": ["vegetables"],
                 "reliability": 0.9,
-                "cost_multiplier": 1.5  # Expensive
+                "cost_multiplier": 1.5,  # Expensive
             },
             {
                 "name": "Cheap Unreliable Supplier",
                 "items": ["vegetables"],
                 "reliability": 0.5,  # Unreliable
-                "cost_multiplier": 0.8
+                "cost_multiplier": 0.8,
             },
             {
                 "name": "Good Supplier",
                 "items": ["vegetables"],
                 "reliability": 0.95,  # Very reliable
-                "cost_multiplier": 1.0  # Fair price
-            }
+                "cost_multiplier": 1.0,  # Fair price
+            },
         ]
 
         inventory_simulator.suppliers = mock_suppliers
@@ -483,7 +512,7 @@ class TestInventorySimulator:
                 "current_stock": 5,  # Below reorder point
                 "reorder_point": 15,
                 "reorder_quantity": 40,
-                "unit_cost": 2.50
+                "unit_cost": 2.50,
             }
         ]
 
@@ -525,7 +554,7 @@ class TestInventorySimulator:
                 "current_stock": 50,  # Above reorder point
                 "reorder_point": 15,
                 "reorder_quantity": 40,
-                "unit_cost": 2.50
+                "unit_cost": 2.50,
             }
         ]
 
@@ -546,7 +575,7 @@ class TestInventorySimulator:
                 "current_stock": 5,
                 "reorder_point": 15,
                 "reorder_quantity": 40,
-                "unit_cost": 2.50
+                "unit_cost": 2.50,
             },
             {
                 "id": 2,
@@ -555,8 +584,8 @@ class TestInventorySimulator:
                 "current_stock": 10,
                 "reorder_point": 25,
                 "reorder_quantity": 75,
-                "unit_cost": 1.25
-            }
+                "unit_cost": 1.25,
+            },
         ]
 
         test_date = datetime(2024, 6, 15)
@@ -568,10 +597,10 @@ class TestInventorySimulator:
 
         # If multiple suppliers are involved, check that items are grouped properly
         if len(purchase_orders) > 1:
-            suppliers = set(po["supplier_name"] for po in purchase_orders)
+            suppliers = {po["supplier_name"] for po in purchase_orders}
             assert len(suppliers) > 1  # Multiple suppliers
 
-    @patch('simulation.inventory_simulator.random.random')
+    @patch("simulation.inventory_simulator.random.random")
     def test_simulate_stock_adjustments_basic(self, mock_random, inventory_simulator):
         """Test basic stock adjustment simulation"""
         items = [
@@ -580,17 +609,21 @@ class TestInventorySimulator:
                 "sku": "TEST001",
                 "category": "vegetables",
                 "current_stock": 50,
-                "unit_cost": 2.50
+                "unit_cost": 2.50,
             }
         ]
 
         test_date = datetime(2024, 6, 15)
 
         # Mock to trigger adjustment
-        mock_random.side_effect = [0.04, 0.25]  # First triggers adjustment, second triggers discrepancy
+        mock_random.side_effect = [
+            0.04,
+            0.25,
+        ]  # First triggers adjustment, second triggers discrepancy
 
-        with patch('simulation.inventory_simulator.random.randint', return_value=2), \
-             patch('simulation.inventory_simulator.random.sample', return_value=items):
+        with patch("simulation.inventory_simulator.random.randint", return_value=2), patch(
+            "simulation.inventory_simulator.random.sample", return_value=items
+        ):
 
             adjustments = inventory_simulator.simulate_stock_adjustments(items, test_date)
 
@@ -609,14 +642,14 @@ class TestInventorySimulator:
                 "sku": "TEST001",
                 "category": "vegetables",
                 "current_stock": 50,
-                "unit_cost": 2.50
+                "unit_cost": 2.50,
             }
         ]
 
         test_date = datetime(2024, 6, 15)
 
         # Mock to trigger adjustment but not find discrepancy
-        with patch('simulation.inventory_simulator.random.random', side_effect=[0.04, 0.8]):
+        with patch("simulation.inventory_simulator.random.random", side_effect=[0.04, 0.8]):
             adjustments = inventory_simulator.simulate_stock_adjustments(items, test_date)
 
             # Should not create adjustments if no discrepancies found
@@ -648,14 +681,23 @@ class TestPredefinedProfiles:
         # Check item structure
         item = profile.items[0]
         required_fields = [
-            "name", "sku", "category", "unit_cost", "initial_stock",
-            "minimum_stock", "maximum_stock", "reorder_point", "reorder_quantity"
+            "name",
+            "sku",
+            "category",
+            "unit_cost",
+            "initial_stock",
+            "minimum_stock",
+            "maximum_stock",
+            "reorder_point",
+            "reorder_quantity",
         ]
         for field in required_fields:
             assert field in item
 
         # Check expiry days for perishables
-        perishable_items = [item for item in profile.items if item.get("expiry_days") and item["expiry_days"] <= 7]
+        perishable_items = [
+            item for item in profile.items if item.get("expiry_days") and item["expiry_days"] <= 7
+        ]
         assert len(perishable_items) > 0  # Should have some very perishable items
 
     def test_get_retail_inventory_profile(self):
@@ -694,14 +736,16 @@ class TestPredefinedProfiles:
         assert restaurant_profile.delivery_variance_days != retail_profile.delivery_variance_days
 
         # Different categories of items
-        restaurant_categories = set(item["category"] for item in restaurant_profile.items)
-        retail_categories = set(item["category"] for item in retail_profile.items)
+        restaurant_categories = {item["category"] for item in restaurant_profile.items}
+        retail_categories = {item["category"] for item in retail_profile.items}
 
         # Should have different categories
         assert restaurant_categories != retail_categories
 
         # Restaurant should have food categories
-        assert any("vegetables" in cat or "meat" in cat or "dairy" in cat for cat in restaurant_categories)
+        assert any(
+            "vegetables" in cat or "meat" in cat or "dairy" in cat for cat in restaurant_categories
+        )
 
         # Retail should have merchandise categories
         assert any("electronics" in cat or "clothing" in cat for cat in retail_categories)
@@ -723,7 +767,9 @@ class TestPredefinedProfiles:
         restaurant_profile = get_restaurant_inventory_profile()
 
         # Find items with variations
-        items_with_variations = [item for item in restaurant_profile.items if item.get("variations", 1) > 1]
+        items_with_variations = [
+            item for item in restaurant_profile.items if item.get("variations", 1) > 1
+        ]
         assert len(items_with_variations) > 0
 
         # Check that variation count makes sense
@@ -736,11 +782,11 @@ class TestPredefinedProfiles:
         restaurant_profile = get_restaurant_inventory_profile()
 
         # Check consumption patterns are reasonable (0.5 to 1.5 range)
-        for day, factor in restaurant_profile.consumption_patterns.items():
+        for _day, factor in restaurant_profile.consumption_patterns.items():
             assert 0.5 <= factor <= 1.5
 
         # Check seasonal factors are reasonable
-        for month, factor in restaurant_profile.seasonal_factors.items():
+        for _month, factor in restaurant_profile.seasonal_factors.items():
             assert 0.5 <= factor <= 2.0
 
         # Check waste rate is reasonable

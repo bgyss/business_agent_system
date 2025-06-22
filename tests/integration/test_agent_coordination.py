@@ -1,6 +1,7 @@
 """
 Integration tests for agent coordination and communication.
 """
+
 import asyncio
 from datetime import datetime
 
@@ -40,9 +41,9 @@ class TestAgentCoordination:
             "transaction": {
                 "amount": 100.00,
                 "description": "Test transaction",
-                "transaction_date": datetime.now().date().isoformat()
+                "transaction_date": datetime.now().date().isoformat(),
             },
-            "cycle": 1
+            "cycle": 1,
         }
 
         await integration_helper.send_test_message(system, test_message)
@@ -61,10 +62,7 @@ class TestAgentCoordination:
         system = running_system
 
         # Create a message that should trigger decisions
-        cash_flow_message = {
-            "type": "cash_flow_check",
-            "cycle": 1
-        }
+        cash_flow_message = {"type": "cash_flow_check", "cycle": 1}
 
         await integration_helper.send_test_message(system, cash_flow_message)
 
@@ -82,11 +80,11 @@ class TestAgentCoordination:
         if accounting_agent.decisions_log:
             # Verify decision structure
             decision = accounting_agent.decisions_log[0]
-            assert hasattr(decision, 'agent_id')
-            assert hasattr(decision, 'decision_type')
-            assert hasattr(decision, 'action')
-            assert hasattr(decision, 'reasoning')
-            assert hasattr(decision, 'confidence')
+            assert hasattr(decision, "agent_id")
+            assert hasattr(decision, "decision_type")
+            assert hasattr(decision, "action")
+            assert hasattr(decision, "reasoning")
+            assert hasattr(decision, "confidence")
 
     @pytest.mark.asyncio
     async def test_periodic_agent_checks(self, running_system):
@@ -98,7 +96,7 @@ class TestAgentCoordination:
 
         # At least one agent should have run periodic checks
         # We can't guarantee decisions will be made, but we can check they're responsive
-        for agent_name, agent in system.agents.items():
+        for _agent_name, agent in system.agents.items():
             assert agent.is_running is True
             # Agent should still be responsive
             health = await agent.health_check()
@@ -116,7 +114,7 @@ class TestAgentCoordination:
             sender="test_sender",
             recipient="accounting_agent",
             message_type="report_request",
-            content={"request_type": "financial_summary"}
+            content={"request_type": "financial_summary"},
         )
 
         # Send message directly to agent
@@ -161,7 +159,7 @@ class TestAgentCoordination:
             sender="test",
             recipient="accounting_agent",
             message_type="invalid_type",
-            content={"malformed": "data"}
+            content={"malformed": "data"},
         )
 
         # This should not crash the agent or system
@@ -186,7 +184,7 @@ class TestAgentCoordination:
         messages = [
             {"type": "new_transaction", "transaction": {"amount": 500.00}, "cycle": 1},
             {"type": "cash_flow_check", "cycle": 1},
-            {"type": "daily_analysis", "cycle": 1}
+            {"type": "daily_analysis", "cycle": 1},
         ]
 
         for message in messages:
@@ -200,7 +198,7 @@ class TestAgentCoordination:
         status = system.get_system_status()
         assert len(status["agents"]) == 3
 
-        for agent_name, agent_status in status["agents"].items():
+        for _agent_name, agent_status in status["agents"].items():
             assert agent_status["running"] is True
 
     @pytest.mark.asyncio
@@ -210,11 +208,7 @@ class TestAgentCoordination:
 
         # Send many messages quickly
         for i in range(100):
-            message = {
-                "type": "test_message",
-                "data": f"message_{i}",
-                "cycle": i
-            }
+            message = {"type": "test_message", "data": f"message_{i}", "cycle": i}
             await system.message_queue.put(message)
 
         # System should handle the load without crashing
@@ -228,7 +222,7 @@ class TestAgentCoordination:
         """Test agent health check functionality."""
         system = running_system
 
-        for agent_name, agent in system.agents.items():
+        for _agent_name, agent in system.agents.items():
             health = asyncio.run(agent.health_check())
 
             assert health["agent_id"] == agent.agent_id
@@ -250,7 +244,7 @@ class TestAgentCoordination:
 
         # Verify agent status details
         assert len(status["agents"]) == 3
-        for agent_name, agent_status in status["agents"].items():
+        for _agent_name, agent_status in status["agents"].items():
             required_agent_fields = ["running", "decisions"]
             for field in required_agent_fields:
                 assert field in agent_status
@@ -273,7 +267,7 @@ class TestAgentCommunicationPatterns:
             "type": "system_alert",
             "message": "Test broadcast",
             "priority": "high",
-            "cycle": 1
+            "cycle": 1,
         }
 
         await integration_helper.send_test_message(system, broadcast_message)
@@ -290,13 +284,13 @@ class TestAgentCommunicationPatterns:
         system = running_system
 
         accounting_agent = system.agents["accounting"]
-        inventory_agent = system.agents["inventory"]
+        system.agents["inventory"]
 
         # Test sending message from one agent to another
         await accounting_agent.send_message(
             recipient="inventory_agent",
             message_type="financial_data",
-            content={"cash_available": 5000.00}
+            content={"cash_available": 5000.00},
         )
 
         # Give time for message processing
@@ -315,7 +309,7 @@ class TestAgentCommunicationPatterns:
         low_cash_message = {
             "type": "cash_flow_alert",
             "cash_level": 500.00,  # Below threshold
-            "cycle": 1
+            "cycle": 1,
         }
 
         await integration_helper.send_test_message(system, low_cash_message)
@@ -344,14 +338,12 @@ class TestAgentCommunicationPatterns:
         messages = [
             {"type": "new_transaction", "transaction": {"amount": 100}, "cycle": 1},
             {"type": "inventory_update", "item": {"sku": "TEST001"}, "cycle": 1},
-            {"type": "employee_schedule", "schedule": {}, "cycle": 1}
+            {"type": "employee_schedule", "schedule": {}, "cycle": 1},
         ]
 
         # Send all messages concurrently
         for message in messages:
-            task = asyncio.create_task(
-                integration_helper.send_test_message(system, message)
-            )
+            task = asyncio.create_task(integration_helper.send_test_message(system, message))
             tasks.append(task)
 
         await asyncio.gather(*tasks)

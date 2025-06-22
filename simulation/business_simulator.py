@@ -64,29 +64,29 @@ class BusinessSimulator:
                         name="Business Checking",
                         account_type="checking",
                         balance=25000.00,
-                        description="Main business checking account"
+                        description="Main business checking account",
                     ),
                     Account(
                         id="savings_account",
                         name="Business Savings",
                         account_type="savings",
                         balance=50000.00,
-                        description="Business savings account"
+                        description="Business savings account",
                     ),
                     Account(
                         id="revenue_account",
                         name="Revenue",
                         account_type="revenue",
                         balance=0.00,
-                        description="Revenue tracking account"
+                        description="Revenue tracking account",
                     ),
                     Account(
                         id="expense_account",
                         name="General Expenses",
                         account_type="expense",
                         balance=0.00,
-                        description="General expense tracking account"
-                    )
+                        description="General expense tracking account",
+                    ),
                 ]
 
                 for account in initial_accounts:
@@ -106,7 +106,7 @@ class BusinessSimulator:
                         email=f"contact@{vendor_name.lower().replace(' ', '')}.com",
                         phone=f"555-{len(suppliers):04d}",
                         lead_time_days=vendor_info["payment_terms"] // 2,
-                        payment_terms=f"Net {vendor_info['payment_terms']} days"
+                        payment_terms=f"Net {vendor_info['payment_terms']} days",
                     )
                     suppliers.append(supplier)
                     session.add(supplier)
@@ -127,7 +127,7 @@ class BusinessSimulator:
                         position="General Manager",
                         department="Management",
                         hourly_rate=25.00,
-                        is_full_time=True
+                        is_full_time=True,
                     ),
                     Employee(
                         employee_id="EMP002",
@@ -138,7 +138,7 @@ class BusinessSimulator:
                         position="Server" if business_type == "restaurant" else "Sales Associate",
                         department="Operations",
                         hourly_rate=15.00,
-                        is_full_time=False
+                        is_full_time=False,
                     ),
                     Employee(
                         employee_id="EMP003",
@@ -149,8 +149,8 @@ class BusinessSimulator:
                         position="Cook" if business_type == "restaurant" else "Stock Clerk",
                         department="Operations",
                         hourly_rate=18.00,
-                        is_full_time=True
-                    )
+                        is_full_time=True,
+                    ),
                 ]
 
                 for employee in employees:
@@ -174,13 +174,12 @@ class BusinessSimulator:
         # Generate financial data
         financial_data = self.financial_generator.generate_period_data(
             datetime.combine(start_date, datetime.min.time()),
-            datetime.combine(end_date, datetime.min.time())
+            datetime.combine(end_date, datetime.min.time()),
         )
 
         # Add some anomalies for testing
         anomalous_transactions = self.financial_generator.generate_anomalies(
-            financial_data["transactions"],
-            anomaly_rate=0.01
+            financial_data["transactions"], anomaly_rate=0.01
         )
         financial_data["transactions"].extend(anomalous_transactions)
 
@@ -276,7 +275,9 @@ class BusinessSimulator:
         speed_multiplier = self.config.get("speed_multiplier", 1.0)
 
         if duration_minutes > 0:
-            print(f"Starting time-limited business simulation (duration: {duration_minutes} minutes, speed: {speed_multiplier}x)...")
+            print(
+                f"Starting time-limited business simulation (duration: {duration_minutes} minutes, speed: {speed_multiplier}x)..."
+            )
         else:
             print(f"Starting business simulation (speed: {speed_multiplier}x)...")
 
@@ -308,28 +309,51 @@ class BusinessSimulator:
 
                     # Notify agents of new data
                     if daily_transactions:
-                        await message_queue.put({
-                            "type": "new_transaction",
-                            "transaction": daily_transactions[-1],  # Send latest transaction
-                            "cycle": cycle_count
-                        })
+                        await message_queue.put(
+                            {
+                                "type": "new_transaction",
+                                "transaction": daily_transactions[-1],  # Send latest transaction
+                                "cycle": cycle_count,
+                            }
+                        )
 
                 finally:
                     session.close()
 
                 # Generate other events more frequently for testing
-                current_time = datetime.now()
+                datetime.now()
 
                 # Send cash flow check every 2 minutes for testing (adjusted for speed)
-                if cycle_count % max(1, int(120 / (self.config.get("simulation_interval", 10) * speed_multiplier))) == 0:
+                if (
+                    cycle_count
+                    % max(
+                        1,
+                        int(120 / (self.config.get("simulation_interval", 10) * speed_multiplier)),
+                    )
+                    == 0
+                ):
                     await message_queue.put({"type": "cash_flow_check", "cycle": cycle_count})
 
                 # Send daily analysis every 5 minutes for testing (adjusted for speed)
-                if cycle_count % max(1, int(300 / (self.config.get("simulation_interval", 10) * speed_multiplier))) == 0:
+                if (
+                    cycle_count
+                    % max(
+                        1,
+                        int(300 / (self.config.get("simulation_interval", 10) * speed_multiplier)),
+                    )
+                    == 0
+                ):
                     await message_queue.put({"type": "daily_analysis", "cycle": cycle_count})
 
                 # Send aging analysis every 10 minutes for testing (adjusted for speed)
-                if cycle_count % max(1, int(600 / (self.config.get("simulation_interval", 10) * speed_multiplier))) == 0:
+                if (
+                    cycle_count
+                    % max(
+                        1,
+                        int(600 / (self.config.get("simulation_interval", 10) * speed_multiplier)),
+                    )
+                    == 0
+                ):
                     await message_queue.put({"type": "aging_analysis", "cycle": cycle_count})
 
                 # Calculate sleep time adjusted for speed multiplier
@@ -354,17 +378,23 @@ class BusinessSimulator:
             receivable_count = session.query(AccountsReceivable).count()
             payable_count = session.query(AccountsPayable).count()
 
-            latest_transaction = session.query(Transaction).order_by(
-                Transaction.created_at.desc()
-            ).first()
+            latest_transaction = (
+                session.query(Transaction).order_by(Transaction.created_at.desc()).first()
+            )
 
             return {
                 "is_running": self.is_running,
                 "transaction_count": transaction_count,
                 "receivable_count": receivable_count,
                 "payable_count": payable_count,
-                "latest_transaction_date": latest_transaction.transaction_date if latest_transaction else None,
-                "business_type": self.financial_generator.profile.business_type if self.financial_generator else None
+                "latest_transaction_date": (
+                    latest_transaction.transaction_date if latest_transaction else None
+                ),
+                "business_type": (
+                    self.financial_generator.profile.business_type
+                    if self.financial_generator
+                    else None
+                ),
             }
 
         finally:
@@ -378,8 +408,8 @@ class BusinessSimulator:
                 "actions": [
                     "Reduce daily revenue by 40% for 2 weeks",
                     "Add unexpected large expense ($5000)",
-                    "Delay customer payments by 15 days"
-                ]
+                    "Delay customer payments by 15 days",
+                ],
             },
             {
                 "name": "Seasonal Rush",
@@ -387,8 +417,8 @@ class BusinessSimulator:
                 "actions": [
                     "Increase daily revenue by 60% for 1 month",
                     "Add overtime labor costs",
-                    "Increase supply costs by 20%"
-                ]
+                    "Increase supply costs by 20%",
+                ],
             },
             {
                 "name": "Equipment Failure",
@@ -396,8 +426,8 @@ class BusinessSimulator:
                 "actions": [
                     "Add emergency repair cost ($3000)",
                     "Reduce revenue by 25% for 3 days",
-                    "Add equipment rental costs"
-                ]
+                    "Add equipment rental costs",
+                ],
             },
             {
                 "name": "New Competitor",
@@ -405,9 +435,9 @@ class BusinessSimulator:
                 "actions": [
                     "Reduce daily revenue by 15% ongoing",
                     "Increase marketing expenses",
-                    "Add promotional discounts"
-                ]
-            }
+                    "Add promotional discounts",
+                ],
+            },
         ]
 
         return scenarios

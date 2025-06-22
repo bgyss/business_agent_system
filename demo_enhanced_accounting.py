@@ -19,11 +19,7 @@ async def demo_enhanced_accounting():
     # Initialize the enhanced agent
     config = {
         "anomaly_threshold": 0.25,
-        "alert_thresholds": {
-            "cash_low": 1000,
-            "receivables_overdue": 30,
-            "payables_overdue": 7
-        },
+        "alert_thresholds": {"cash_low": 1000, "receivables_overdue": 30, "payables_overdue": 7},
         "forecasting": {
             "prediction_days": 30,
             "seasonal_analysis_days": 365,
@@ -32,16 +28,16 @@ async def demo_enhanced_accounting():
                 "data_volume": 0.3,
                 "historical_accuracy": 0.25,
                 "trend_stability": 0.25,
-                "seasonal_consistency": 0.2
-            }
-        }
+                "seasonal_consistency": 0.2,
+            },
+        },
     }
 
     agent = EnhancedAccountingAgent(
         agent_id="demo_enhanced_agent",
         api_key="demo_key",
         config=config,
-        db_url="sqlite:///:memory:"
+        db_url="sqlite:///:memory:",
     )
 
     print("✓ Enhanced AccountingAgent initialized")
@@ -60,44 +56,35 @@ async def demo_enhanced_accounting():
         amount=Decimal("15000.00"),  # Much larger than typical
         transaction_type=TransactionType.EXPENSE,
         category="office_supplies",
-        transaction_date=datetime.now().replace(hour=3, minute=30)  # Unusual time
+        transaction_date=datetime.now().replace(hour=3, minute=30),  # Unusual time
     )
 
     # Create similar historical transactions
     similar_transactions = [
-        Mock(
-            amount=Decimal("150.00"),
-            transaction_date=datetime.now().replace(hour=10)
-        ),
-        Mock(
-            amount=Decimal("200.00"),
-            transaction_date=datetime.now().replace(hour=14)
-        ),
-        Mock(
-            amount=Decimal("175.00"),
-            transaction_date=datetime.now().replace(hour=11)
-        ),
-        Mock(
-            amount=Decimal("225.00"),
-            transaction_date=datetime.now().replace(hour=15)
-        ),
-        Mock(
-            amount=Decimal("190.00"),
-            transaction_date=datetime.now().replace(hour=9)
-        )
+        Mock(amount=Decimal("150.00"), transaction_date=datetime.now().replace(hour=10)),
+        Mock(amount=Decimal("200.00"), transaction_date=datetime.now().replace(hour=14)),
+        Mock(amount=Decimal("175.00"), transaction_date=datetime.now().replace(hour=11)),
+        Mock(amount=Decimal("225.00"), transaction_date=datetime.now().replace(hour=15)),
+        Mock(amount=Decimal("190.00"), transaction_date=datetime.now().replace(hour=9)),
     ]
 
     anomaly_results = await agent._detect_transaction_anomalies(
         None, suspicious_transaction, similar_transactions
     )
 
-    print(f"Transaction: ${suspicious_transaction.amount} at {suspicious_transaction.transaction_date.hour}:00")
+    print(
+        f"Transaction: ${suspicious_transaction.amount} at {suspicious_transaction.transaction_date.hour}:00"
+    )
     print(f"Similar transactions: ${[float(t.amount) for t in similar_transactions]}")
     print(f"Anomaly detected: {anomaly_results['is_anomaly']}")
     print(f"Detection methods triggered: {anomaly_results['anomaly_count']}/4")
-    print(f"  - Statistical outlier (Z-score): {anomaly_results['statistical_outlier']} (Z={anomaly_results['z_score']:.2f})")
+    print(
+        f"  - Statistical outlier (Z-score): {anomaly_results['statistical_outlier']} (Z={anomaly_results['z_score']:.2f})"
+    )
     print(f"  - IQR outlier: {anomaly_results['iqr_outlier']}")
-    print(f"  - Variance outlier: {anomaly_results['variance_outlier']} ({anomaly_results['median_variance']:.2%})")
+    print(
+        f"  - Variance outlier: {anomaly_results['variance_outlier']} ({anomaly_results['median_variance']:.2%})"
+    )
     print(f"  - Time anomaly: {anomaly_results['time_anomaly']}")
     print()
 
@@ -116,7 +103,9 @@ async def demo_enhanced_accounting():
         daily_flows[date_key] = daily_flow
 
     print(f"Historical data: {len(daily_flows)} days")
-    print(f"Cash flow trend: ${list(daily_flows.values())[:5]} ... ${list(daily_flows.values())[-5:]}")
+    print(
+        f"Cash flow trend: ${list(daily_flows.values())[:5]} ... ${list(daily_flows.values())[-5:]}"
+    )
 
     forecasts = await agent._generate_cash_flow_forecasts(daily_flows, 30)
     confidence = await agent._calculate_forecast_confidence(daily_flows, forecasts)
@@ -153,17 +142,34 @@ async def demo_enhanced_accounting():
 
     # Simulate decision outcomes for learning
     agent.decision_outcomes = {
-        "decision_1": {"decision_type": "transaction_anomaly", "was_correct": True, "timestamp": datetime.now()},
-        "decision_2": {"decision_type": "transaction_anomaly", "was_correct": True, "timestamp": datetime.now()},
-        "decision_3": {"decision_type": "transaction_anomaly", "was_correct": False, "timestamp": datetime.now()},
-        "decision_4": {"decision_type": "cash_flow_forecast", "was_correct": True, "timestamp": datetime.now()},
-        "decision_5": {"decision_type": "cash_flow_forecast", "was_correct": True, "timestamp": datetime.now()},
+        "decision_1": {
+            "decision_type": "transaction_anomaly",
+            "was_correct": True,
+            "timestamp": datetime.now(),
+        },
+        "decision_2": {
+            "decision_type": "transaction_anomaly",
+            "was_correct": True,
+            "timestamp": datetime.now(),
+        },
+        "decision_3": {
+            "decision_type": "transaction_anomaly",
+            "was_correct": False,
+            "timestamp": datetime.now(),
+        },
+        "decision_4": {
+            "decision_type": "cash_flow_forecast",
+            "was_correct": True,
+            "timestamp": datetime.now(),
+        },
+        "decision_5": {
+            "decision_type": "cash_flow_forecast",
+            "was_correct": True,
+            "timestamp": datetime.now(),
+        },
     }
 
-    analysis_data = {
-        "anomaly_count": 3,
-        "statistics": {"sample_size": 25}
-    }
+    analysis_data = {"anomaly_count": 3, "statistics": {"sample_size": 25}}
 
     confidence_result = await agent._calculate_dynamic_confidence(
         None, "transaction_anomaly", analysis_data
@@ -172,7 +178,7 @@ async def demo_enhanced_accounting():
     print("Confidence calculation for transaction anomaly:")
     print(f"  - Overall confidence: {confidence_result['score']:.2%}")
     print("  - Factors:")
-    for factor, value in confidence_result['factors'].items():
+    for factor, value in confidence_result["factors"].items():
         print(f"    - {factor}: {value:.2%}")
 
     historical_accuracy = await agent._get_historical_accuracy(None, "transaction_anomaly")
@@ -183,14 +189,14 @@ async def demo_enhanced_accounting():
     print("5. ENHANCED SYSTEM PROMPT")
     print("-" * 40)
     print("Key capabilities mentioned in system prompt:")
-    prompt_lines = agent.system_prompt.split('\n')
+    prompt_lines = agent.system_prompt.split("\n")
     start_printing = False
     for line in prompt_lines:
-        if 'Advanced capabilities:' in line:
+        if "Advanced capabilities:" in line:
             start_printing = True
-        if start_printing and line.strip().startswith('-'):
+        if start_printing and line.strip().startswith("-"):
             print(f"  {line.strip()}")
-        if 'When analyzing financial data' in line:
+        if "When analyzing financial data" in line:
             break
 
     print("\n=== Demonstration Complete ===")

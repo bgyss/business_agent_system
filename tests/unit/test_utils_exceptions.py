@@ -1,33 +1,33 @@
 """
 Test suite for utils.exceptions module
 """
+
 import pytest
-from typing import Dict, Any
 
 from utils.exceptions import (
-    BusinessAgentError,
-    AgentInitializationError,
-    AgentDecisionError,
     AgentCommunicationError,
-    DatabaseError,
-    DatabaseConnectionError,
-    DatabaseQueryError,
-    DatabaseTransactionError,
+    AgentDecisionError,
+    AgentInitializationError,
+    AnthropicAPIError,
+    BusinessAgentError,
+    BusinessProfileError,
+    CircuitBreakerOpenError,
     ConfigurationError,
     ConfigurationFileError,
     ConfigurationValidationError,
-    SimulationError,
-    DataGenerationError,
-    BusinessProfileError,
-    ExternalServiceError,
-    AnthropicAPIError,
     DashboardError,
+    DatabaseConnectionError,
+    DatabaseError,
+    DatabaseQueryError,
+    DatabaseTransactionError,
+    DataGenerationError,
     DataVisualizationError,
-    ResourceExhaustionError,
-    ValidationError,
-    RetryableError,
+    ExternalServiceError,
     NonRetryableError,
-    CircuitBreakerOpenError,
+    ResourceExhaustionError,
+    RetryableError,
+    SimulationError,
+    ValidationError,
 )
 
 

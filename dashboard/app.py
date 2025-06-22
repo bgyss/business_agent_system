@@ -53,34 +53,40 @@ class BusinessDashboard:
             start_date = end_date - timedelta(days=days)
 
             # Get transactions for the period
-            transactions = session.query(Transaction).filter(
-                Transaction.transaction_date >= start_date
-            ).all()
+            transactions = (
+                session.query(Transaction).filter(Transaction.transaction_date >= start_date).all()
+            )
 
             total_revenue = sum(
-                float(t.amount) for t in transactions
+                float(t.amount)
+                for t in transactions
                 if t.transaction_type == TransactionType.INCOME
             )
             total_expenses = sum(
-                float(t.amount) for t in transactions
+                float(t.amount)
+                for t in transactions
                 if t.transaction_type == TransactionType.EXPENSE
             )
 
             # Get cash balance
-            cash_accounts = session.query(Account).filter(
-                Account.account_type.in_(["checking", "savings"])
-            ).all()
+            cash_accounts = (
+                session.query(Account)
+                .filter(Account.account_type.in_(["checking", "savings"]))
+                .all()
+            )
             cash_balance = sum(float(acc.balance) for acc in cash_accounts)
 
             # Get receivables and payables
-            receivables = session.query(AccountsReceivable).filter(
-                AccountsReceivable.status == "unpaid"
-            ).all()
+            receivables = (
+                session.query(AccountsReceivable)
+                .filter(AccountsReceivable.status == "unpaid")
+                .all()
+            )
             total_receivables = sum(float(ar.amount) for ar in receivables)
 
-            payables = session.query(AccountsPayable).filter(
-                AccountsPayable.status == "unpaid"
-            ).all()
+            payables = (
+                session.query(AccountsPayable).filter(AccountsPayable.status == "unpaid").all()
+            )
             total_payables = sum(float(ap.amount) for ap in payables)
 
             return {
@@ -90,7 +96,7 @@ class BusinessDashboard:
                 "cash_balance": cash_balance,
                 "accounts_receivable": total_receivables,
                 "accounts_payable": total_payables,
-                "transaction_count": len(transactions)
+                "transaction_count": len(transactions),
             }
         finally:
             session.close()
@@ -102,20 +108,29 @@ class BusinessDashboard:
             start_date = end_date - timedelta(days=days)
 
             # Get daily revenue
-            daily_revenue = session.query(
-                func.date(Transaction.transaction_date).label('date'),
-                func.sum(Transaction.amount).label('revenue')
-            ).filter(
-                Transaction.transaction_type == TransactionType.INCOME,
-                func.date(Transaction.transaction_date) >= start_date
-            ).group_by(func.date(Transaction.transaction_date)).all()
+            daily_revenue = (
+                session.query(
+                    func.date(Transaction.transaction_date).label("date"),
+                    func.sum(Transaction.amount).label("revenue"),
+                )
+                .filter(
+                    Transaction.transaction_type == TransactionType.INCOME,
+                    func.date(Transaction.transaction_date) >= start_date,
+                )
+                .group_by(func.date(Transaction.transaction_date))
+                .all()
+            )
 
-            df = pd.DataFrame(daily_revenue, columns=['date', 'revenue'])
-            df['date'] = pd.to_datetime(df['date'])
+            df = pd.DataFrame(daily_revenue, columns=["date", "revenue"])
+            df["date"] = pd.to_datetime(df["date"])
 
-            fig = px.line(df, x='date', y='revenue',
-                         title='Daily Revenue Trend',
-                         labels={'revenue': 'Revenue ($)', 'date': 'Date'})
+            fig = px.line(
+                df,
+                x="date",
+                y="revenue",
+                title="Daily Revenue Trend",
+                labels={"revenue": "Revenue ($)", "date": "Date"},
+            )
             fig.update_layout(height=400)
 
             return fig
@@ -129,18 +144,21 @@ class BusinessDashboard:
             start_date = end_date - timedelta(days=days)
 
             # Get expenses by category
-            expense_by_category = session.query(
-                Transaction.category,
-                func.sum(Transaction.amount).label('total')
-            ).filter(
-                Transaction.transaction_type == TransactionType.EXPENSE,
-                Transaction.transaction_date >= start_date
-            ).group_by(Transaction.category).all()
+            expense_by_category = (
+                session.query(Transaction.category, func.sum(Transaction.amount).label("total"))
+                .filter(
+                    Transaction.transaction_type == TransactionType.EXPENSE,
+                    Transaction.transaction_date >= start_date,
+                )
+                .group_by(Transaction.category)
+                .all()
+            )
 
-            df = pd.DataFrame(expense_by_category, columns=['category', 'total'])
+            df = pd.DataFrame(expense_by_category, columns=["category", "total"])
 
-            fig = px.pie(df, values='total', names='category',
-                        title='Expense Breakdown by Category')
+            fig = px.pie(
+                df, values="total", names="category", title="Expense Breakdown by Category"
+            )
             fig.update_layout(height=400)
 
             return fig
@@ -154,14 +172,16 @@ class BusinessDashboard:
 
             total_items = len(items)
             total_value = sum(float(item.current_stock * item.unit_cost) for item in items)
-            low_stock_items = len([item for item in items if item.current_stock <= item.reorder_point])
+            low_stock_items = len(
+                [item for item in items if item.current_stock <= item.reorder_point]
+            )
             out_of_stock_items = len([item for item in items if item.current_stock <= 0])
 
             return {
                 "total_items": total_items,
                 "total_value": total_value,
                 "low_stock_items": low_stock_items,
-                "out_of_stock_items": out_of_stock_items
+                "out_of_stock_items": out_of_stock_items,
             }
         finally:
             session.close()
@@ -173,27 +193,39 @@ class BusinessDashboard:
 
             item_data = []
             for item in items:
-                item_data.append({
-                    'name': item.name,
-                    'current_stock': item.current_stock,
-                    'reorder_point': item.reorder_point,
-                    'status': 'Low Stock' if item.current_stock <= item.reorder_point else 'Normal'
-                })
+                item_data.append(
+                    {
+                        "name": item.name,
+                        "current_stock": item.current_stock,
+                        "reorder_point": item.reorder_point,
+                        "status": (
+                            "Low Stock" if item.current_stock <= item.reorder_point else "Normal"
+                        ),
+                    }
+                )
 
             df = pd.DataFrame(item_data)
 
             if len(df) > 0:
-                fig = px.bar(df.head(20), x='name', y='current_stock',
-                           color='status',
-                           title='Current Stock Levels (Top 20 Items)',
-                           labels={'current_stock': 'Stock Level', 'name': 'Item'})
-                fig.add_scatter(x=df['name'].head(20), y=df['reorder_point'].head(20),
-                              mode='markers', name='Reorder Point',
-                              marker=dict(color='red', symbol='diamond', size=8))
+                fig = px.bar(
+                    df.head(20),
+                    x="name",
+                    y="current_stock",
+                    color="status",
+                    title="Current Stock Levels (Top 20 Items)",
+                    labels={"current_stock": "Stock Level", "name": "Item"},
+                )
+                fig.add_scatter(
+                    x=df["name"].head(20),
+                    y=df["reorder_point"].head(20),
+                    mode="markers",
+                    name="Reorder Point",
+                    marker={"color": "red", "symbol": "diamond", "size": 8},
+                )
                 fig.update_layout(height=400, xaxis_tickangle=-45)
                 return fig
             else:
-                return px.bar(title='No inventory data available')
+                return px.bar(title="No inventory data available")
         finally:
             session.close()
 
@@ -205,14 +237,14 @@ class BusinessDashboard:
 
             # Get recent time records (last 7 days)
             week_ago = datetime.now() - timedelta(days=7)
-            recent_records = session.query(TimeRecord).filter(
-                TimeRecord.timestamp >= week_ago
-            ).all()
+            recent_records = (
+                session.query(TimeRecord).filter(TimeRecord.timestamp >= week_ago).all()
+            )
 
             return {
                 "total_employees": len(employees),
                 "active_employees": active_employees,
-                "recent_time_entries": len(recent_records)
+                "recent_time_entries": len(recent_records),
             }
         finally:
             session.close()
@@ -220,19 +252,24 @@ class BusinessDashboard:
     def get_recent_transactions(self, limit: int = 10):
         session = self.SessionLocal()
         try:
-            recent_transactions = session.query(Transaction).order_by(
-                Transaction.created_at.desc()
-            ).limit(limit).all()
+            recent_transactions = (
+                session.query(Transaction)
+                .order_by(Transaction.created_at.desc())
+                .limit(limit)
+                .all()
+            )
 
             transaction_data = []
             for tx in recent_transactions:
-                transaction_data.append({
-                    'Date': tx.transaction_date.strftime('%Y-%m-%d %H:%M'),
-                    'Description': tx.description,
-                    'Type': tx.transaction_type.title(),
-                    'Amount': f"${tx.amount:,.2f}",
-                    'Category': tx.category or 'N/A'
-                })
+                transaction_data.append(
+                    {
+                        "Date": tx.transaction_date.strftime("%Y-%m-%d %H:%M"),
+                        "Description": tx.description,
+                        "Type": tx.transaction_type.title(),
+                        "Amount": f"${tx.amount:,.2f}",
+                        "Category": tx.category or "N/A",
+                    }
+                )
 
             return pd.DataFrame(transaction_data)
         finally:
@@ -243,22 +280,26 @@ class BusinessDashboard:
         session = self.SessionLocal()
         try:
             # Join with Item to get item name
-            recent_movements = session.query(StockMovement, Item).join(
-                Item, StockMovement.item_id == Item.id
-            ).order_by(
-                StockMovement.created_at.desc()
-            ).limit(limit).all()
+            recent_movements = (
+                session.query(StockMovement, Item)
+                .join(Item, StockMovement.item_id == Item.id)
+                .order_by(StockMovement.created_at.desc())
+                .limit(limit)
+                .all()
+            )
 
             movement_data = []
             for movement, item in recent_movements:
-                movement_data.append({
-                    'Date': movement.movement_date.strftime('%Y-%m-%d %H:%M'),
-                    'Item': item.name if item else 'Unknown',
-                    'Type': movement.movement_type.replace('_', ' ').title(),
-                    'Quantity': f"{movement.quantity:+}",
-                    'Notes': movement.notes or 'N/A',
-                    'Reference': movement.reference_number or 'N/A'
-                })
+                movement_data.append(
+                    {
+                        "Date": movement.movement_date.strftime("%Y-%m-%d %H:%M"),
+                        "Item": item.name if item else "Unknown",
+                        "Type": movement.movement_type.replace("_", " ").title(),
+                        "Quantity": f"{movement.quantity:+}",
+                        "Notes": movement.notes or "N/A",
+                        "Reference": movement.reference_number or "N/A",
+                    }
+                )
 
             return pd.DataFrame(movement_data)
         finally:
@@ -271,43 +312,48 @@ class BusinessDashboard:
         session = self.SessionLocal()
         try:
             # Get recent decisions ordered by timestamp
-            db_decisions = session.query(AgentDecisionModel).order_by(
-                AgentDecisionModel.timestamp.desc()
-            ).limit(limit).all()
+            db_decisions = (
+                session.query(AgentDecisionModel)
+                .order_by(AgentDecisionModel.timestamp.desc())
+                .limit(limit)
+                .all()
+            )
 
             decisions = []
             for db_decision in db_decisions:
-                decisions.append({
-                    'agent_id': db_decision.agent_id,
-                    'decision_type': db_decision.decision_type,
-                    'timestamp': db_decision.timestamp,
-                    'reasoning': db_decision.reasoning,
-                    'action': db_decision.action,
-                    'confidence': db_decision.confidence,
-                    'context': db_decision.context or {}
-                })
+                decisions.append(
+                    {
+                        "agent_id": db_decision.agent_id,
+                        "decision_type": db_decision.decision_type,
+                        "timestamp": db_decision.timestamp,
+                        "reasoning": db_decision.reasoning,
+                        "action": db_decision.action,
+                        "confidence": db_decision.confidence,
+                        "context": db_decision.context or {},
+                    }
+                )
 
             # If no decisions in database, show sample data for demo
             if not decisions:
                 decisions = [
                     {
-                        'agent_id': 'accounting_agent',
-                        'decision_type': 'cash_flow_alert',
-                        'timestamp': datetime.now() - timedelta(minutes=5),
-                        'reasoning': 'Cash balance is $1,250 which is below the alert threshold of $1,500. The system recommends reviewing upcoming payables and accelerating receivables collection.',
-                        'action': 'Generate cash flow alert and recommend payment prioritization',
-                        'confidence': 0.92,
-                        'context': {'cash_balance': 1250, 'threshold': 1500}
+                        "agent_id": "accounting_agent",
+                        "decision_type": "cash_flow_alert",
+                        "timestamp": datetime.now() - timedelta(minutes=5),
+                        "reasoning": "Cash balance is $1,250 which is below the alert threshold of $1,500. The system recommends reviewing upcoming payables and accelerating receivables collection.",
+                        "action": "Generate cash flow alert and recommend payment prioritization",
+                        "confidence": 0.92,
+                        "context": {"cash_balance": 1250, "threshold": 1500},
                     },
                     {
-                        'agent_id': 'inventory_agent',
-                        'decision_type': 'reorder_recommendation',
-                        'timestamp': datetime.now() - timedelta(minutes=12),
-                        'reasoning': 'Tomatoes stock level (15 units) has fallen below reorder point (25 units). Historical consumption shows we use 8 units/day on average.',
-                        'action': 'Recommend reordering 50 units of tomatoes from primary supplier',
-                        'confidence': 0.87,
-                        'context': {'item': 'Tomatoes', 'current_stock': 15, 'reorder_point': 25}
-                    }
+                        "agent_id": "inventory_agent",
+                        "decision_type": "reorder_recommendation",
+                        "timestamp": datetime.now() - timedelta(minutes=12),
+                        "reasoning": "Tomatoes stock level (15 units) has fallen below reorder point (25 units). Historical consumption shows we use 8 units/day on average.",
+                        "action": "Recommend reordering 50 units of tomatoes from primary supplier",
+                        "confidence": 0.87,
+                        "context": {"item": "Tomatoes", "current_stock": 15, "reorder_point": 25},
+                    },
                 ]
 
             return decisions
@@ -329,17 +375,20 @@ class BusinessDashboard:
         for agent_name, config in agent_configs.items():
             if config.get("enabled", False):
                 agent_status[agent_name] = {
-                    'enabled': True,
-                    'status': 'running',  # This would be dynamic in a real implementation
-                    'last_check': datetime.now() - timedelta(minutes=2),
-                    'check_interval': config.get('check_interval', 300),
-                    'decision_count': len([d for d in self.load_agent_decisions() if d['agent_id'] == f"{agent_name}_agent"])
+                    "enabled": True,
+                    "status": "running",  # This would be dynamic in a real implementation
+                    "last_check": datetime.now() - timedelta(minutes=2),
+                    "check_interval": config.get("check_interval", 300),
+                    "decision_count": len(
+                        [
+                            d
+                            for d in self.load_agent_decisions()
+                            if d["agent_id"] == f"{agent_name}_agent"
+                        ]
+                    ),
                 }
             else:
-                agent_status[agent_name] = {
-                    'enabled': False,
-                    'status': 'disabled'
-                }
+                agent_status[agent_name] = {"enabled": False, "status": "disabled"}
 
         return agent_status
 
@@ -349,7 +398,7 @@ def main():
         page_title="Business Management Dashboard",
         page_icon="📊",
         layout="wide",
-        initial_sidebar_state="expanded"
+        initial_sidebar_state="expanded",
     )
 
     st.title("🏢 Business Management Dashboard")
@@ -359,38 +408,32 @@ def main():
 
     # View selection
     view_mode = st.sidebar.radio(
-        "Select View",
-        ["🔴 Live Agent Monitoring", "📊 Historical Analytics"],
-        index=0
+        "Select View", ["🔴 Live Agent Monitoring", "📊 Historical Analytics"], index=0
     )
 
     st.sidebar.header("Configuration")
 
     # Config file selection
-    config_files = [
-        "config/restaurant_config.yaml",
-        "config/retail_config.yaml"
-    ]
+    config_files = ["config/restaurant_config.yaml", "config/retail_config.yaml"]
 
     # Check which config files exist
     available_configs = [f for f in config_files if os.path.exists(f)]
 
     if not available_configs:
-        st.error("No configuration files found. Please ensure config files exist in the config/ directory.")
+        st.error(
+            "No configuration files found. Please ensure config files exist in the config/ directory."
+        )
         return
 
     selected_config = st.sidebar.selectbox(
         "Select Business Configuration",
         available_configs,
-        format_func=lambda x: x.split('/')[-1].replace('_config.yaml', '').title()
+        format_func=lambda x: x.split("/")[-1].replace("_config.yaml", "").title(),
     )
 
     # Time period selection
     time_period = st.sidebar.selectbox(
-        "Analysis Period",
-        [7, 14, 30, 60, 90],
-        index=2,
-        format_func=lambda x: f"Last {x} days"
+        "Analysis Period", [7, 14, 30, 60, 90], index=2, format_func=lambda x: f"Last {x} days"
     )
 
     # Refresh controls
@@ -448,7 +491,7 @@ def show_live_monitoring_view(dashboard):
         st.success("🟢 LIVE - Agent Activity Monitor")
 
     # Current time
-    st.metric("Current Time", datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    st.metric("Current Time", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     # Agent Status Section
     st.subheader("🤖 Agent Status")
@@ -459,10 +502,10 @@ def show_live_monitoring_view(dashboard):
 
         for idx, (agent_name, status) in enumerate(agent_status.items()):
             with cols[idx]:
-                agent_display_name = agent_name.replace('_', ' ').title()
+                agent_display_name = agent_name.replace("_", " ").title()
 
-                if status['enabled']:
-                    if status['status'] == 'running':
+                if status["enabled"]:
+                    if status["status"] == "running":
                         st.success(f"✅ {agent_display_name}")
                         st.write(f"Last check: {status['last_check'].strftime('%H:%M:%S')}")
                         st.write(f"Decisions: {status['decision_count']}")
@@ -483,17 +526,13 @@ def show_live_monitoring_view(dashboard):
     if agent_decisions:
         # Show only the most recent 5 decisions for live monitoring
         for decision in agent_decisions[:5]:
-            agent_name = decision['agent_id'].replace('_agent', '').title()
+            agent_name = decision["agent_id"].replace("_agent", "").title()
 
             # Color code by agent type
-            agent_colors = {
-                'accounting_agent': '🔴',
-                'inventory_agent': '🟢',
-                'hr_agent': '🔵'
-            }
+            agent_colors = {"accounting_agent": "🔴", "inventory_agent": "🟢", "hr_agent": "🔵"}
 
-            color_indicator = agent_colors.get(decision['agent_id'], '⚪')
-            time_ago = datetime.now() - decision['timestamp']
+            color_indicator = agent_colors.get(decision["agent_id"], "⚪")
+            time_ago = datetime.now() - decision["timestamp"]
 
             if time_ago.days > 0:
                 time_str = f"{time_ago.days} days ago"
@@ -503,25 +542,28 @@ def show_live_monitoring_view(dashboard):
                 time_str = f"{time_ago.seconds // 60} minutes ago"
 
             # Detailed display matching historical analysis
-            with st.expander(f"{color_indicator} {agent_name} - {decision['decision_type'].replace('_', ' ').title()} ({time_str})", expanded=True):
+            with st.expander(
+                f"{color_indicator} {agent_name} - {decision['decision_type'].replace('_', ' ').title()} ({time_str})",
+                expanded=True,
+            ):
                 col1, col2 = st.columns([3, 1])
 
                 with col1:
                     st.write("**Action Taken:**")
-                    st.write(decision['action'])
+                    st.write(decision["action"])
 
                     st.write("**Reasoning:**")
-                    reasoning_text = str(decision['reasoning'])
+                    reasoning_text = str(decision["reasoning"])
                     # Use st.text for literal text rendering
                     st.text(reasoning_text)
 
-                    if decision.get('context'):
+                    if decision.get("context"):
                         st.write("**Context:**")
-                        for key, value in decision['context'].items():
+                        for key, value in decision["context"].items():
                             st.write(f"- {key.replace('_', ' ').title()}: {value}")
 
                 with col2:
-                    confidence_pct = int(decision['confidence'] * 100)
+                    confidence_pct = int(decision["confidence"] * 100)
                     st.metric("Confidence", f"{confidence_pct}%")
 
                     if confidence_pct >= 90:
@@ -546,12 +588,17 @@ def show_live_monitoring_view(dashboard):
     with col2:
         # Get inventory alerts
         inventory_summary = dashboard.get_inventory_summary()
-        low_stock = inventory_summary['low_stock_items']
-        st.metric("Low Stock Alerts", low_stock, delta=None, delta_color="inverse" if low_stock > 0 else "normal")
+        low_stock = inventory_summary["low_stock_items"]
+        st.metric(
+            "Low Stock Alerts",
+            low_stock,
+            delta=None,
+            delta_color="inverse" if low_stock > 0 else "normal",
+        )
 
     with col3:
         # Get recent transaction count
-        st.metric("Today's Transactions", financial_summary['transaction_count'])
+        st.metric("Today's Transactions", financial_summary["transaction_count"])
 
     # Auto-refresh using Streamlit's built-in refresh
     if st.button("🔄 Refresh Live Data", use_container_width=True):
@@ -571,34 +618,22 @@ def show_historical_analytics_view(dashboard, time_period):
     financial_summary = dashboard.get_financial_summary(time_period)
 
     with col1:
-        st.metric(
-            "Revenue",
-            f"${financial_summary['total_revenue']:,.2f}",
-            delta=None
-        )
+        st.metric("Revenue", f"${financial_summary['total_revenue']:,.2f}", delta=None)
 
     with col2:
-        st.metric(
-            "Expenses",
-            f"${financial_summary['total_expenses']:,.2f}",
-            delta=None
-        )
+        st.metric("Expenses", f"${financial_summary['total_expenses']:,.2f}", delta=None)
 
     with col3:
-        net_income = financial_summary['net_income']
+        net_income = financial_summary["net_income"]
         st.metric(
             "Net Income",
             f"${net_income:,.2f}",
             delta=None,
-            delta_color="normal" if net_income >= 0 else "inverse"
+            delta_color="normal" if net_income >= 0 else "inverse",
         )
 
     with col4:
-        st.metric(
-            "Cash Balance",
-            f"${financial_summary['cash_balance']:,.2f}",
-            delta=None
-        )
+        st.metric("Cash Balance", f"${financial_summary['cash_balance']:,.2f}", delta=None)
 
     # Charts row
     col1, col2 = st.columns(2)
@@ -619,27 +654,27 @@ def show_historical_analytics_view(dashboard, time_period):
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric("Total Items", inventory_summary['total_items'])
+        st.metric("Total Items", inventory_summary["total_items"])
 
     with col2:
         st.metric("Inventory Value", f"${inventory_summary['total_value']:,.2f}")
 
     with col3:
-        low_stock = inventory_summary['low_stock_items']
+        low_stock = inventory_summary["low_stock_items"]
         st.metric(
             "Low Stock Items",
             low_stock,
             delta=None,
-            delta_color="inverse" if low_stock > 0 else "normal"
+            delta_color="inverse" if low_stock > 0 else "normal",
         )
 
     with col4:
-        out_of_stock = inventory_summary['out_of_stock_items']
+        out_of_stock = inventory_summary["out_of_stock_items"]
         st.metric(
             "Out of Stock",
             out_of_stock,
             delta=None,
-            delta_color="inverse" if out_of_stock > 0 else "normal"
+            delta_color="inverse" if out_of_stock > 0 else "normal",
         )
 
     # Inventory chart
@@ -662,13 +697,13 @@ def show_historical_analytics_view(dashboard, time_period):
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.metric("Total Employees", hr_summary['total_employees'])
+        st.metric("Total Employees", hr_summary["total_employees"])
 
     with col2:
-        st.metric("Active Employees", hr_summary['active_employees'])
+        st.metric("Active Employees", hr_summary["active_employees"])
 
     with col3:
-        st.metric("Recent Time Entries", hr_summary['recent_time_entries'])
+        st.metric("Recent Time Entries", hr_summary["recent_time_entries"])
 
     # Recent transactions
     st.header("💰 Recent Transactions")
@@ -687,17 +722,13 @@ def show_historical_analytics_view(dashboard, time_period):
     if agent_decisions:
         # Display decisions in expandable cards
         for decision in agent_decisions[:10]:  # Show last 10 decisions
-            agent_name = decision['agent_id'].replace('_agent', '').title()
+            agent_name = decision["agent_id"].replace("_agent", "").title()
 
             # Color code by agent type
-            agent_colors = {
-                'accounting_agent': '🔴',
-                'inventory_agent': '🟢',
-                'hr_agent': '🔵'
-            }
+            agent_colors = {"accounting_agent": "🔴", "inventory_agent": "🟢", "hr_agent": "🔵"}
 
-            color_indicator = agent_colors.get(decision['agent_id'], '⚪')
-            time_ago = datetime.now() - decision['timestamp']
+            color_indicator = agent_colors.get(decision["agent_id"], "⚪")
+            time_ago = datetime.now() - decision["timestamp"]
 
             if time_ago.days > 0:
                 time_str = f"{time_ago.days} days ago"
@@ -706,25 +737,27 @@ def show_historical_analytics_view(dashboard, time_period):
             else:
                 time_str = f"{time_ago.seconds // 60} minutes ago"
 
-            with st.expander(f"{color_indicator} {agent_name} - {decision['decision_type'].replace('_', ' ').title()} ({time_str})"):
+            with st.expander(
+                f"{color_indicator} {agent_name} - {decision['decision_type'].replace('_', ' ').title()} ({time_str})"
+            ):
                 col1, col2 = st.columns([3, 1])
 
                 with col1:
                     st.write("**Action Taken:**")
-                    st.write(decision['action'])
+                    st.write(decision["action"])
 
                     st.write("**Reasoning:**")
-                    reasoning_text = str(decision['reasoning'])
+                    reasoning_text = str(decision["reasoning"])
                     # Use st.text for literal text rendering
                     st.text(reasoning_text)
 
-                    if decision.get('context'):
+                    if decision.get("context"):
                         st.write("**Context:**")
-                        for key, value in decision['context'].items():
+                        for key, value in decision["context"].items():
                             st.write(f"- {key.replace('_', ' ').title()}: {value}")
 
                 with col2:
-                    confidence_pct = int(decision['confidence'] * 100)
+                    confidence_pct = int(decision["confidence"] * 100)
                     st.metric("Confidence", f"{confidence_pct}%")
 
                     if confidence_pct >= 90:
@@ -734,7 +767,9 @@ def show_historical_analytics_view(dashboard, time_period):
                     else:
                         st.error("Low confidence")
     else:
-        st.info("No agent decisions available. Agents may not be running or no decisions have been made yet.")
+        st.info(
+            "No agent decisions available. Agents may not be running or no decisions have been made yet."
+        )
 
     # System status
     st.header("⚙️ System Status")
@@ -765,10 +800,10 @@ def show_historical_analytics_view(dashboard, time_period):
 
         for idx, (agent_name, status) in enumerate(agent_status.items()):
             with cols[idx]:
-                agent_display_name = agent_name.replace('_', ' ').title()
+                agent_display_name = agent_name.replace("_", " ").title()
 
-                if status['enabled']:
-                    if status['status'] == 'running':
+                if status["enabled"]:
+                    if status["status"] == "running":
                         st.success(f"✅ {agent_display_name}")
                         st.write(f"Last check: {status['last_check'].strftime('%H:%M:%S')}")
                         st.write(f"Decisions: {status['decision_count']}")

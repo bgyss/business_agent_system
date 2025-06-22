@@ -48,7 +48,9 @@ class BusinessAgentSystem:
     def _setup_logging(self):
         log_config = self.config.get("logging", {})
         log_level = getattr(logging, log_config.get("level", "INFO"))
-        log_format = log_config.get("format", "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        log_format = log_config.get(
+            "format", "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
 
         # Create logs directory if it doesn't exist
         log_file = log_config.get("file")
@@ -60,8 +62,8 @@ class BusinessAgentSystem:
             format=log_format,
             handlers=[
                 logging.StreamHandler(sys.stdout),
-                logging.FileHandler(log_file) if log_file else logging.NullHandler()
-            ]
+                logging.FileHandler(log_file) if log_file else logging.NullHandler(),
+            ],
         )
 
     def initialize_agents(self):
@@ -75,7 +77,7 @@ class BusinessAgentSystem:
                 agent_id="accounting_agent",
                 api_key=self.api_key,
                 config=agent_configs["accounting"],
-                db_url=db_url
+                db_url=db_url,
             )
             self.logger.info("Accounting agent initialized")
 
@@ -85,17 +87,14 @@ class BusinessAgentSystem:
                 agent_id="inventory_agent",
                 api_key=self.api_key,
                 config=agent_configs["inventory"],
-                db_url=db_url
+                db_url=db_url,
             )
             self.logger.info("Inventory agent initialized")
 
         # Initialize HR Agent
         if agent_configs.get("hr", {}).get("enabled", False):
             self.agents["hr"] = HRAgent(
-                agent_id="hr_agent",
-                api_key=self.api_key,
-                config=agent_configs["hr"],
-                db_url=db_url
+                agent_id="hr_agent", api_key=self.api_key, config=agent_configs["hr"], db_url=db_url
             )
             self.logger.info("HR agent initialized")
 
@@ -152,20 +151,18 @@ class BusinessAgentSystem:
         while self.is_running:
             try:
                 # Get message with timeout
-                message = await asyncio.wait_for(
-                    self.message_queue.get(),
-                    timeout=1.0
-                )
+                message = await asyncio.wait_for(self.message_queue.get(), timeout=1.0)
 
                 # Process messages from simulation
                 if isinstance(message, dict):
                     # Create AgentMessage format for agents to process
                     from agents.base_agent import AgentMessage
+
                     agent_message = AgentMessage(
                         sender="simulator",
                         recipient="all",
                         message_type="data_update",
-                        content=message
+                        content=message,
                     )
 
                     # Process message directly with each agent
@@ -285,7 +282,7 @@ class BusinessAgentSystem:
             agent_status[name] = {
                 "running": agent.is_running,
                 "decisions": len(agent.decisions_log),
-                "last_activity": agent.decisions_log[-1].timestamp if agent.decisions_log else None
+                "last_activity": agent.decisions_log[-1].timestamp if agent.decisions_log else None,
             }
 
         simulator_status = None
@@ -298,17 +295,19 @@ class BusinessAgentSystem:
             "simulator": simulator_status,
             "business_config": {
                 "name": self.config["business"]["name"],
-                "type": self.config["business"]["type"]
+                "type": self.config["business"]["type"],
             },
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
 
 def signal_handler(system: BusinessAgentSystem):
     """Handle shutdown signals"""
+
     def handler(signum, frame):
         print(f"\nReceived signal {signum}, shutting down...")
         asyncio.create_task(system.shutdown())
+
     return handler
 
 
@@ -317,18 +316,16 @@ async def main():
     parser.add_argument(
         "--config",
         required=True,
-        help="Path to configuration file (e.g., config/restaurant_config.yaml)"
+        help="Path to configuration file (e.g., config/restaurant_config.yaml)",
     )
     parser.add_argument(
         "--mode",
         choices=["simulation", "production"],
         default="simulation",
-        help="Run mode (default: simulation)"
+        help="Run mode (default: simulation)",
     )
     parser.add_argument(
-        "--generate-historical",
-        type=int,
-        help="Generate N days of historical data and exit"
+        "--generate-historical", type=int, help="Generate N days of historical data and exit"
     )
 
     args = parser.parse_args()

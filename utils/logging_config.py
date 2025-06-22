@@ -1,6 +1,7 @@
 """
 Structured logging configuration for the Business Agent Management System
 """
+
 import json
 import logging
 import logging.config
@@ -28,30 +29,30 @@ class StructuredFormatter(logging.Formatter):
         }
 
         # Add extra context if available
-        if hasattr(record, 'agent_id'):
-            log_data['agent_id'] = record.agent_id
-        if hasattr(record, 'business_type'):
-            log_data['business_type'] = record.business_type
-        if hasattr(record, 'decision_id'):
-            log_data['decision_id'] = record.decision_id
-        if hasattr(record, 'performance_metric'):
-            log_data['performance_metric'] = record.performance_metric
-        if hasattr(record, 'error_code'):
-            log_data['error_code'] = record.error_code
-        if hasattr(record, 'context'):
-            log_data['context'] = record.context
+        if hasattr(record, "agent_id"):
+            log_data["agent_id"] = record.agent_id
+        if hasattr(record, "business_type"):
+            log_data["business_type"] = record.business_type
+        if hasattr(record, "decision_id"):
+            log_data["decision_id"] = record.decision_id
+        if hasattr(record, "performance_metric"):
+            log_data["performance_metric"] = record.performance_metric
+        if hasattr(record, "error_code"):
+            log_data["error_code"] = record.error_code
+        if hasattr(record, "context"):
+            log_data["context"] = record.context
 
         # Add exception information if present
         if record.exc_info:
-            log_data['exception'] = {
-                'type': record.exc_info[0].__name__,
-                'message': str(record.exc_info[1]),
-                'traceback': traceback.format_exception(*record.exc_info)
+            log_data["exception"] = {
+                "type": record.exc_info[0].__name__,
+                "message": str(record.exc_info[1]),
+                "traceback": traceback.format_exception(*record.exc_info),
             }
 
         # Add stack trace for errors
         if record.levelno >= logging.ERROR and not record.exc_info:
-            log_data['stack_trace'] = traceback.format_stack()
+            log_data["stack_trace"] = traceback.format_stack()
 
         return json.dumps(log_data, default=str)
 
@@ -64,41 +65,37 @@ class BusinessAgentAdapter(logging.LoggerAdapter):
 
     def process(self, msg: str, kwargs: Dict[str, Any]) -> tuple:
         # Merge extra context with any context in kwargs
-        if 'extra' in kwargs:
-            kwargs['extra'].update(self.extra)
+        if "extra" in kwargs:
+            kwargs["extra"].update(self.extra)
         else:
-            kwargs['extra'] = self.extra.copy()
+            kwargs["extra"] = self.extra.copy()
 
         return msg, kwargs
 
     def log_decision(self, level: int, decision_id: str, message: str, **kwargs):
         """Log an agent decision with structured context"""
-        extra = kwargs.get('extra', {})
-        extra['decision_id'] = decision_id
-        kwargs['extra'] = extra
+        extra = kwargs.get("extra", {})
+        extra["decision_id"] = decision_id
+        kwargs["extra"] = extra
         self.log(level, message, **kwargs)
 
     def log_performance(self, metric_name: str, value: float, unit: str = "ms", **kwargs):
         """Log a performance metric"""
-        extra = kwargs.get('extra', {})
-        extra['performance_metric'] = {
-            'name': metric_name,
-            'value': value,
-            'unit': unit
-        }
-        kwargs['extra'] = extra
+        extra = kwargs.get("extra", {})
+        extra["performance_metric"] = {"name": metric_name, "value": value, "unit": unit}
+        kwargs["extra"] = extra
         self.info(f"Performance metric: {metric_name} = {value}{unit}", **kwargs)
 
     def log_error(self, error: Exception, message: Optional[str] = None, **kwargs):
         """Log an error with structured context"""
-        extra = kwargs.get('extra', {})
+        extra = kwargs.get("extra", {})
 
         if isinstance(error, BusinessAgentError):
-            extra['error_code'] = error.error_code
-            extra['context'] = error.context
+            extra["error_code"] = error.error_code
+            extra["context"] = error.context
 
         error_message = message or f"Error occurred: {str(error)}"
-        kwargs['extra'] = extra
+        kwargs["extra"] = extra
         self.error(error_message, exc_info=error, **kwargs)
 
 
@@ -106,11 +103,11 @@ def setup_logging(
     log_level: str = "INFO",
     log_file: Optional[str] = None,
     structured: bool = True,
-    console_output: bool = True
+    console_output: bool = True,
 ) -> None:
     """
     Set up logging configuration for the business agent system
-    
+
     Args:
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         log_file: Path to log file (optional)
@@ -124,40 +121,19 @@ def setup_logging(
             "structured": {
                 "()": StructuredFormatter,
             },
-            "standard": {
-                "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-            },
+            "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
             "detailed": {
                 "format": "%(asctime)s [%(levelname)s] %(name)s:%(lineno)d %(funcName)s(): %(message)s"
-            }
+            },
         },
         "handlers": {},
         "loggers": {
-            "business_agent_system": {
-                "level": log_level,
-                "handlers": [],
-                "propagate": False
-            },
-            "agents": {
-                "level": log_level,
-                "handlers": [],
-                "propagate": False
-            },
-            "simulation": {
-                "level": log_level,
-                "handlers": [],
-                "propagate": False
-            },
-            "dashboard": {
-                "level": log_level,
-                "handlers": [],
-                "propagate": False
-            }
+            "business_agent_system": {"level": log_level, "handlers": [], "propagate": False},
+            "agents": {"level": log_level, "handlers": [], "propagate": False},
+            "simulation": {"level": log_level, "handlers": [], "propagate": False},
+            "dashboard": {"level": log_level, "handlers": [], "propagate": False},
         },
-        "root": {
-            "level": log_level,
-            "handlers": []
-        }
+        "root": {"level": log_level, "handlers": []},
     }
 
     handler_names = []
@@ -168,7 +144,7 @@ def setup_logging(
             "class": "logging.StreamHandler",
             "level": log_level,
             "formatter": "structured" if structured else "standard",
-            "stream": "ext://sys.stdout"
+            "stream": "ext://sys.stdout",
         }
         handler_names.append("console")
 
@@ -185,7 +161,7 @@ def setup_logging(
             "filename": log_file,
             "maxBytes": 10 * 1024 * 1024,  # 10MB
             "backupCount": 5,
-            "encoding": "utf-8"
+            "encoding": "utf-8",
         }
         handler_names.append("file")
 
@@ -199,7 +175,7 @@ def setup_logging(
             "filename": str(error_log_file),
             "maxBytes": 10 * 1024 * 1024,  # 10MB
             "backupCount": 5,
-            "encoding": "utf-8"
+            "encoding": "utf-8",
         }
         handler_names.append("error_file")
 
@@ -223,11 +199,11 @@ def setup_logging(
 def get_logger(name: str, **context) -> BusinessAgentAdapter:
     """
     Get a logger with business context
-    
+
     Args:
         name: Logger name
         **context: Additional context to include in all log messages
-    
+
     Returns:
         BusinessAgentAdapter instance
     """
@@ -238,11 +214,11 @@ def get_logger(name: str, **context) -> BusinessAgentAdapter:
 def get_agent_logger(agent_id: str, business_type: Optional[str] = None) -> BusinessAgentAdapter:
     """
     Get a logger specifically for an agent
-    
+
     Args:
         agent_id: Agent identifier
         business_type: Type of business (restaurant, retail, etc.)
-    
+
     Returns:
         BusinessAgentAdapter instance with agent context
     """
@@ -256,10 +232,10 @@ def get_agent_logger(agent_id: str, business_type: Optional[str] = None) -> Busi
 def get_simulation_logger(business_type: str) -> BusinessAgentAdapter:
     """
     Get a logger for business simulation
-    
+
     Args:
         business_type: Type of business being simulated
-    
+
     Returns:
         BusinessAgentAdapter instance with simulation context
     """
@@ -272,6 +248,7 @@ def get_dashboard_logger() -> BusinessAgentAdapter:
 
 
 # Context managers for structured logging
+
 
 class LogContext:
     """Context manager for adding structured context to logs"""
@@ -303,26 +280,20 @@ class PerformanceContext:
 
     def __enter__(self):
         import time
+
         self.start_time = time.perf_counter()
         self.logger.debug(f"Starting operation: {self.operation_name}")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         import time
+
         end_time = time.perf_counter()
         duration_ms = (end_time - self.start_time) * 1000
 
         if exc_type:
-            self.logger.log_performance(
-                f"{self.operation_name}_duration",
-                duration_ms,
-                "ms"
-            )
+            self.logger.log_performance(f"{self.operation_name}_duration", duration_ms, "ms")
             self.logger.error(f"Operation failed: {self.operation_name} after {duration_ms:.2f}ms")
         else:
-            self.logger.log_performance(
-                f"{self.operation_name}_duration",
-                duration_ms,
-                "ms"
-            )
+            self.logger.log_performance(f"{self.operation_name}_duration", duration_ms, "ms")
             self.logger.debug(f"Operation completed: {self.operation_name} in {duration_ms:.2f}ms")

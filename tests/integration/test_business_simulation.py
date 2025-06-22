@@ -1,6 +1,7 @@
 """
 Integration tests for business simulation workflows.
 """
+
 import asyncio
 from datetime import datetime, timedelta
 
@@ -83,20 +84,22 @@ class TestBusinessSimulation:
 
             assert transaction_count > 0
             assert receivable_count >= 0  # May be 0 if no credit transactions
-            assert payable_count >= 0    # May be 0 if no payables
+            assert payable_count >= 0  # May be 0 if no payables
             assert item_count > 0
             assert movement_count > 0
 
             # Verify transactions have reasonable dates
-            latest_transaction = session.query(Transaction).order_by(
-                Transaction.transaction_date.desc()
-            ).first()
+            latest_transaction = (
+                session.query(Transaction).order_by(Transaction.transaction_date.desc()).first()
+            )
             assert latest_transaction.transaction_date <= datetime.now().date()
 
-            earliest_transaction = session.query(Transaction).order_by(
-                Transaction.transaction_date.asc()
-            ).first()
-            assert earliest_transaction.transaction_date >= (datetime.now().date() - timedelta(days=6))
+            earliest_transaction = (
+                session.query(Transaction).order_by(Transaction.transaction_date.asc()).first()
+            )
+            assert earliest_transaction.transaction_date >= (
+                datetime.now().date() - timedelta(days=6)
+            )
 
         finally:
             session.close()
@@ -110,9 +113,7 @@ class TestBusinessSimulation:
         message_queue = asyncio.Queue()
 
         # Start simulation for a short time
-        simulation_task = asyncio.create_task(
-            simulator.start_real_time_simulation(message_queue)
-        )
+        simulation_task = asyncio.create_task(simulator.start_real_time_simulation(message_queue))
 
         # Let it run for a few cycles
         await asyncio.sleep(3)
@@ -137,7 +138,12 @@ class TestBusinessSimulation:
         for message in messages:
             assert isinstance(message, dict)
             assert "type" in message
-            assert message["type"] in ["new_transaction", "cash_flow_check", "daily_analysis", "aging_analysis"]
+            assert message["type"] in [
+                "new_transaction",
+                "cash_flow_check",
+                "daily_analysis",
+                "aging_analysis",
+            ]
 
     @pytest.mark.asyncio
     async def test_real_time_simulation_with_duration(self, test_config, temp_db):
@@ -220,7 +226,7 @@ class TestBusinessSimulation:
             assert len(movements) > 0
 
             # Verify movement types
-            movement_types = set(m.movement_type for m in movements)
+            movement_types = {m.movement_type for m in movements}
             expected_types = {"consumption", "delivery", "adjustment"}
 
             # Should have at least some of these movement types
@@ -316,7 +322,12 @@ class TestBusinessSimulation:
 
         # Check for specific scenarios
         scenario_names = [s["name"] for s in scenarios]
-        expected_scenarios = ["Cash Flow Crisis", "Seasonal Rush", "Equipment Failure", "New Competitor"]
+        expected_scenarios = [
+            "Cash Flow Crisis",
+            "Seasonal Rush",
+            "Equipment Failure",
+            "New Competitor",
+        ]
 
         for expected in expected_scenarios:
             assert expected in scenario_names
@@ -347,9 +358,7 @@ class TestSimulationErrorHandling:
         message_queue = asyncio.Queue()
 
         # Start simulation
-        simulation_task = asyncio.create_task(
-            simulator.start_real_time_simulation(message_queue)
-        )
+        simulation_task = asyncio.create_task(simulator.start_real_time_simulation(message_queue))
 
         # Let it run briefly
         await asyncio.sleep(1)

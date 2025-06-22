@@ -1,6 +1,7 @@
 """
 Unit tests for HRAgent class
 """
+
 import os
 import sys
 from datetime import date, datetime, time, timedelta
@@ -26,7 +27,7 @@ class TestHRAgent:
     @pytest.fixture
     def mock_anthropic(self):
         """Mock Anthropic client"""
-        with patch('agents.base_agent.Anthropic') as mock_client:
+        with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [Mock(text="HR analysis: Schedule adjustment recommended")]
             mock_client.return_value.messages.create.return_value = mock_response
@@ -35,8 +36,9 @@ class TestHRAgent:
     @pytest.fixture
     def mock_db_session(self):
         """Mock database session"""
-        with patch('agents.base_agent.create_engine'), \
-             patch('agents.base_agent.sessionmaker') as mock_sessionmaker:
+        with patch("agents.base_agent.create_engine"), patch(
+            "agents.base_agent.sessionmaker"
+        ) as mock_sessionmaker:
             mock_session = Mock()
             mock_sessionmaker.return_value = mock_session
             yield mock_session
@@ -48,7 +50,7 @@ class TestHRAgent:
             "check_interval": 300,
             "overtime_threshold": 40,
             "max_labor_cost_percentage": 0.30,
-            "scheduling_buffer_hours": 2
+            "scheduling_buffer_hours": 2,
         }
 
     @pytest.fixture
@@ -58,7 +60,7 @@ class TestHRAgent:
             agent_id="hr_agent",
             api_key="test_api_key",
             config=agent_config,
-            db_url="sqlite:///:memory:"
+            db_url="sqlite:///:memory:",
         )
 
     @pytest.fixture
@@ -71,7 +73,7 @@ class TestHRAgent:
             position="Server",
             department="Restaurant",
             hourly_rate=Decimal("15.00"),
-            status=EmployeeStatus.ACTIVE
+            status=EmployeeStatus.ACTIVE,
         )
 
     def test_initialization(self, hr_agent, agent_config):
@@ -92,22 +94,23 @@ class TestHRAgent:
         assert "compliance" in prompt
 
     @pytest.mark.asyncio
-    async def test_process_data_time_record_unusual_clock_in(self, hr_agent, mock_db_session, sample_employee):
+    async def test_process_data_time_record_unusual_clock_in(
+        self, hr_agent, mock_db_session, sample_employee
+    ):
         """Test time record processing for unusual clock-in time"""
         record_data = {
             "employee_id": 1,
             "record_type": TimeRecordType.CLOCK_IN,
-            "timestamp": "2024-01-01T02:30:00"  # 2:30 AM - unusual time
+            "timestamp": "2024-01-01T02:30:00",  # 2:30 AM - unusual time
         }
 
-        data = {
-            "type": "time_record",
-            "record": record_data
-        }
+        data = {"type": "time_record", "record": record_data}
 
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
-        mock_session_instance.query.return_value.filter.return_value.first.return_value = sample_employee
+        mock_session_instance.query.return_value.filter.return_value.first.return_value = (
+            sample_employee
+        )
 
         decision = await hr_agent.process_data(data)
 
@@ -118,44 +121,46 @@ class TestHRAgent:
         assert decision.confidence == 0.75
 
     @pytest.mark.asyncio
-    async def test_process_data_time_record_normal_clock_in(self, hr_agent, mock_db_session, sample_employee):
+    async def test_process_data_time_record_normal_clock_in(
+        self, hr_agent, mock_db_session, sample_employee
+    ):
         """Test time record processing for normal clock-in time"""
         record_data = {
             "employee_id": 1,
             "record_type": TimeRecordType.CLOCK_IN,
-            "timestamp": "2024-01-01T09:00:00"  # 9:00 AM - normal time
+            "timestamp": "2024-01-01T09:00:00",  # 9:00 AM - normal time
         }
 
-        data = {
-            "type": "time_record",
-            "record": record_data
-        }
+        data = {"type": "time_record", "record": record_data}
 
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
-        mock_session_instance.query.return_value.filter.return_value.first.return_value = sample_employee
+        mock_session_instance.query.return_value.filter.return_value.first.return_value = (
+            sample_employee
+        )
 
         decision = await hr_agent.process_data(data)
 
         assert decision is None  # No alert for normal hours
 
     @pytest.mark.asyncio
-    async def test_process_data_time_record_overtime_clock_out(self, hr_agent, mock_db_session, sample_employee):
+    async def test_process_data_time_record_overtime_clock_out(
+        self, hr_agent, mock_db_session, sample_employee
+    ):
         """Test time record processing for overtime clock-out"""
         record_data = {
             "employee_id": 1,
             "record_type": TimeRecordType.CLOCK_OUT,
-            "timestamp": "2024-01-01T19:00:00"  # 7:00 PM
+            "timestamp": "2024-01-01T19:00:00",  # 7:00 PM
         }
 
-        data = {
-            "type": "time_record",
-            "record": record_data
-        }
+        data = {"type": "time_record", "record": record_data}
 
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
-        mock_session_instance.query.return_value.filter.return_value.first.return_value = sample_employee
+        mock_session_instance.query.return_value.filter.return_value.first.return_value = (
+            sample_employee
+        )
 
         # Mock today's time records (showing a long day)
         # Need to use Mock objects that have both timestamp and record_type as attributes
@@ -172,7 +177,9 @@ class TestHRAgent:
         clock_in_afternoon.record_type = TimeRecordType.CLOCK_IN
 
         today_records = [clock_in_morning, clock_out_lunch, clock_in_afternoon]
-        mock_session_instance.query.return_value.filter.return_value.order_by.return_value.all.return_value = today_records
+        mock_session_instance.query.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            today_records
+        )
 
         decision = await hr_agent.process_data(data)
 
@@ -187,13 +194,10 @@ class TestHRAgent:
         record_data = {
             "employee_id": 999,
             "record_type": TimeRecordType.CLOCK_IN,
-            "timestamp": "2024-01-01T09:00:00"
+            "timestamp": "2024-01-01T09:00:00",
         }
 
-        data = {
-            "type": "time_record",
-            "record": record_data
-        }
+        data = {"type": "time_record", "record": record_data}
 
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
@@ -213,24 +217,55 @@ class TestHRAgent:
 
         # Mock yesterday's time records
         yesterday_records = [
-            Mock(employee_id=1, timestamp=datetime(2024, 1, 1, 8, 0), record_type=TimeRecordType.CLOCK_IN),
-            Mock(employee_id=1, timestamp=datetime(2024, 1, 1, 17, 0), record_type=TimeRecordType.CLOCK_OUT),
-            Mock(employee_id=2, timestamp=datetime(2024, 1, 1, 9, 0), record_type=TimeRecordType.CLOCK_IN),
-            Mock(employee_id=2, timestamp=datetime(2024, 1, 1, 18, 0), record_type=TimeRecordType.CLOCK_OUT)
+            Mock(
+                employee_id=1,
+                timestamp=datetime(2024, 1, 1, 8, 0),
+                record_type=TimeRecordType.CLOCK_IN,
+            ),
+            Mock(
+                employee_id=1,
+                timestamp=datetime(2024, 1, 1, 17, 0),
+                record_type=TimeRecordType.CLOCK_OUT,
+            ),
+            Mock(
+                employee_id=2,
+                timestamp=datetime(2024, 1, 1, 9, 0),
+                record_type=TimeRecordType.CLOCK_IN,
+            ),
+            Mock(
+                employee_id=2,
+                timestamp=datetime(2024, 1, 1, 18, 0),
+                record_type=TimeRecordType.CLOCK_OUT,
+            ),
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = yesterday_records
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            yesterday_records
+        )
 
         # Mock employee queries
         employees = {
-            1: Mock(id=1, first_name="John", last_name="Doe", position="Server", hourly_rate=Decimal("15.00")),
-            2: Mock(id=2, first_name="Jane", last_name="Smith", position="Cook", hourly_rate=Decimal("18.00"))
+            1: Mock(
+                id=1,
+                first_name="John",
+                last_name="Doe",
+                position="Server",
+                hourly_rate=Decimal("15.00"),
+            ),
+            2: Mock(
+                id=2,
+                first_name="Jane",
+                last_name="Smith",
+                position="Cook",
+                hourly_rate=Decimal("18.00"),
+            ),
         }
 
         def mock_employee_query(employee_id):
             return employees.get(employee_id)
 
-        mock_session_instance.query.return_value.filter.return_value.first.side_effect = \
+        mock_session_instance.query.return_value.filter.return_value.first.side_effect = (
             lambda: mock_employee_query(1)
+        )
 
         decision = await hr_agent.process_data(data)
 
@@ -249,17 +284,32 @@ class TestHRAgent:
 
         # Mock high labor cost scenario
         yesterday_records = [
-            Mock(employee_id=1, timestamp=datetime(2024, 1, 1, 8, 0), record_type=TimeRecordType.CLOCK_IN),
-            Mock(employee_id=1, timestamp=datetime(2024, 1, 1, 20, 0), record_type=TimeRecordType.CLOCK_OUT),  # 12 hours
+            Mock(
+                employee_id=1,
+                timestamp=datetime(2024, 1, 1, 8, 0),
+                record_type=TimeRecordType.CLOCK_IN,
+            ),
+            Mock(
+                employee_id=1,
+                timestamp=datetime(2024, 1, 1, 20, 0),
+                record_type=TimeRecordType.CLOCK_OUT,
+            ),  # 12 hours
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = yesterday_records
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            yesterday_records
+        )
 
         # Mock high-paid employee
         expensive_employee = Mock(
-            id=1, first_name="Senior", last_name="Manager",
-            position="Manager", hourly_rate=Decimal("25.00")
+            id=1,
+            first_name="Senior",
+            last_name="Manager",
+            position="Manager",
+            hourly_rate=Decimal("25.00"),
         )
-        mock_session_instance.query.return_value.filter.return_value.first.return_value = expensive_employee
+        mock_session_instance.query.return_value.filter.return_value.first.return_value = (
+            expensive_employee
+        )
 
         decision = await hr_agent.process_data(data)
 
@@ -281,17 +331,30 @@ class TestHRAgent:
         week_records = []
         for day in range(5):  # 5 days
             day_date = date.today() - timedelta(days=day)
-            week_records.extend([
-                Mock(employee_id=1, timestamp=datetime.combine(day_date, time(8, 0)), record_type=TimeRecordType.CLOCK_IN),
-                Mock(employee_id=1, timestamp=datetime.combine(day_date, time(19, 0)), record_type=TimeRecordType.CLOCK_OUT)  # 11 hours
-            ])
+            week_records.extend(
+                [
+                    Mock(
+                        employee_id=1,
+                        timestamp=datetime.combine(day_date, time(8, 0)),
+                        record_type=TimeRecordType.CLOCK_IN,
+                    ),
+                    Mock(
+                        employee_id=1,
+                        timestamp=datetime.combine(day_date, time(19, 0)),
+                        record_type=TimeRecordType.CLOCK_OUT,
+                    ),  # 11 hours
+                ]
+            )
 
         mock_session_instance.query.return_value.filter.return_value.all.return_value = week_records
 
         # Mock employee
         employee = Mock(
-            id=1, first_name="Overtime", last_name="Worker",
-            position="Server", hourly_rate=Decimal("15.00")
+            id=1,
+            first_name="Overtime",
+            last_name="Worker",
+            position="Server",
+            hourly_rate=Decimal("15.00"),
         )
         mock_session_instance.query.return_value.filter.return_value.first.return_value = employee
 
@@ -312,12 +375,20 @@ class TestHRAgent:
 
         # Mock schedules for next 7 days (understaffed scenario)
         upcoming_schedules = [
-            Mock(work_date=date.today() + timedelta(days=1),
-                 start_time=time(9, 0), end_time=time(17, 0)),  # 8 hours, but need more
-            Mock(work_date=date.today() + timedelta(days=1),
-                 start_time=time(10, 0), end_time=time(18, 0))   # Another 8 hours
+            Mock(
+                work_date=date.today() + timedelta(days=1),
+                start_time=time(9, 0),
+                end_time=time(17, 0),
+            ),  # 8 hours, but need more
+            Mock(
+                work_date=date.today() + timedelta(days=1),
+                start_time=time(10, 0),
+                end_time=time(18, 0),
+            ),  # Another 8 hours
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = upcoming_schedules
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            upcoming_schedules
+        )
 
         decision = await hr_agent.process_data(data)
 
@@ -327,23 +398,24 @@ class TestHRAgent:
         assert decision.confidence == 0.82
 
     @pytest.mark.asyncio
-    async def test_process_data_leave_request_sick_leave(self, hr_agent, mock_db_session, sample_employee):
+    async def test_process_data_leave_request_sick_leave(
+        self, hr_agent, mock_db_session, sample_employee
+    ):
         """Test leave request analysis for sick leave"""
         request_data = {
             "employee_id": 1,
             "start_date": "2024-02-01",
             "end_date": "2024-02-01",
-            "leave_type": LeaveType.SICK
+            "leave_type": LeaveType.SICK,
         }
 
-        data = {
-            "type": "leave_request",
-            "request": request_data
-        }
+        data = {"type": "leave_request", "request": request_data}
 
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
-        mock_session_instance.query.return_value.filter.return_value.first.return_value = sample_employee
+        mock_session_instance.query.return_value.filter.return_value.first.return_value = (
+            sample_employee
+        )
 
         # Mock conflicting schedules and other employees
         mock_session_instance.query.return_value.filter.return_value.all.return_value = []
@@ -357,31 +429,34 @@ class TestHRAgent:
         assert decision.confidence == 0.85
 
     @pytest.mark.asyncio
-    async def test_process_data_leave_request_vacation(self, hr_agent, mock_db_session, sample_employee):
+    async def test_process_data_leave_request_vacation(
+        self, hr_agent, mock_db_session, sample_employee
+    ):
         """Test leave request analysis for vacation"""
         request_data = {
             "employee_id": 1,
             "start_date": "2024-02-01",
             "end_date": "2024-02-05",
-            "leave_type": LeaveType.VACATION
+            "leave_type": LeaveType.VACATION,
         }
 
-        data = {
-            "type": "leave_request",
-            "request": request_data
-        }
+        data = {"type": "leave_request", "request": request_data}
 
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
-        mock_session_instance.query.return_value.filter.return_value.first.return_value = sample_employee
+        mock_session_instance.query.return_value.filter.return_value.first.return_value = (
+            sample_employee
+        )
 
         # Mock conflicting schedules
         conflicting_schedules = [
             Mock(work_date=date(2024, 2, 1)),
             Mock(work_date=date(2024, 2, 2)),
-            Mock(work_date=date(2024, 2, 3))
+            Mock(work_date=date(2024, 2, 3)),
         ]
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = conflicting_schedules
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            conflicting_schedules
+        )
 
         # Mock other employees scheduled (low staffing)
         mock_session_instance.query.return_value.filter.return_value.count.return_value = 1
@@ -390,14 +465,17 @@ class TestHRAgent:
 
         assert decision is not None
         assert decision.decision_type == "leave_request_analysis"
-        assert "recommendation: review" in decision.action or "recommendation: approve" in decision.action
+        assert (
+            "recommendation: review" in decision.action
+            or "recommendation: approve" in decision.action
+        )
 
     def test_calculate_daily_hours(self, hr_agent):
         """Test daily hours calculation"""
         # Test with normal work day
         time_records = [
             {"timestamp": "2024-01-01T09:00:00", "record_type": TimeRecordType.CLOCK_IN},
-            {"timestamp": "2024-01-01T17:00:00", "record_type": TimeRecordType.CLOCK_OUT}
+            {"timestamp": "2024-01-01T17:00:00", "record_type": TimeRecordType.CLOCK_OUT},
         ]
 
         hours = hr_agent._calculate_daily_hours(time_records)
@@ -406,7 +484,7 @@ class TestHRAgent:
         # Test with overtime
         overtime_records = [
             {"timestamp": "2024-01-01T08:00:00", "record_type": TimeRecordType.CLOCK_IN},
-            {"timestamp": "2024-01-01T19:00:00", "record_type": TimeRecordType.CLOCK_OUT}
+            {"timestamp": "2024-01-01T19:00:00", "record_type": TimeRecordType.CLOCK_OUT},
         ]
 
         hours = hr_agent._calculate_daily_hours(overtime_records)
@@ -417,7 +495,7 @@ class TestHRAgent:
             {"timestamp": "2024-01-01T09:00:00", "record_type": TimeRecordType.CLOCK_IN},
             {"timestamp": "2024-01-01T12:00:00", "record_type": TimeRecordType.CLOCK_OUT},
             {"timestamp": "2024-01-01T13:00:00", "record_type": TimeRecordType.CLOCK_IN},
-            {"timestamp": "2024-01-01T17:00:00", "record_type": TimeRecordType.CLOCK_OUT}
+            {"timestamp": "2024-01-01T17:00:00", "record_type": TimeRecordType.CLOCK_OUT},
         ]
 
         hours = hr_agent._calculate_daily_hours(break_records)
@@ -428,7 +506,7 @@ class TestHRAgent:
         # Test with TimeRecord objects (not dictionaries)
         time_records = [
             Mock(timestamp=datetime(2024, 1, 1, 9, 0), record_type=TimeRecordType.CLOCK_IN),
-            Mock(timestamp=datetime(2024, 1, 1, 17, 0), record_type=TimeRecordType.CLOCK_OUT)
+            Mock(timestamp=datetime(2024, 1, 1, 17, 0), record_type=TimeRecordType.CLOCK_OUT),
         ]
 
         hours = hr_agent._calculate_daily_hours(time_records)
@@ -446,8 +524,16 @@ class TestHRAgent:
 
         # Mock time records
         time_records = [
-            Mock(employee_id=1, timestamp=datetime(2024, 1, 1, 9, 0), record_type=TimeRecordType.CLOCK_IN),
-            Mock(employee_id=1, timestamp=datetime(2024, 1, 1, 17, 0), record_type=TimeRecordType.CLOCK_OUT)
+            Mock(
+                employee_id=1,
+                timestamp=datetime(2024, 1, 1, 9, 0),
+                record_type=TimeRecordType.CLOCK_IN,
+            ),
+            Mock(
+                employee_id=1,
+                timestamp=datetime(2024, 1, 1, 17, 0),
+                record_type=TimeRecordType.CLOCK_OUT,
+            ),
         ]
         mock_session_instance.query.return_value.filter.return_value.all.return_value = time_records
 
@@ -466,7 +552,7 @@ class TestHRAgent:
                 context={},
                 reasoning="test",
                 action="test",
-                confidence=0.8
+                confidence=0.8,
             )
         ]
 
@@ -484,7 +570,10 @@ class TestHRAgent:
         mock_session_instance = Mock()
 
         # Mock pending leave requests
-        mock_session_instance.query.return_value.filter.return_value.count.side_effect = [3, 100]  # 3 pending requests, 100 time records
+        mock_session_instance.query.return_value.filter.return_value.count.side_effect = [
+            3,
+            100,
+        ]  # 3 pending requests, 100 time records
 
         alerts = await hr_agent._get_current_alerts(mock_session_instance)
 
@@ -496,15 +585,15 @@ class TestHRAgent:
 
     def test_config_defaults(self):
         """Test configuration defaults"""
-        with patch('agents.base_agent.Anthropic'), \
-             patch('agents.base_agent.create_engine'), \
-             patch('agents.base_agent.sessionmaker'):
+        with patch("agents.base_agent.Anthropic"), patch("agents.base_agent.create_engine"), patch(
+            "agents.base_agent.sessionmaker"
+        ):
 
             agent = HRAgent(
                 agent_id="test_agent",
                 api_key="test_key",
                 config={},  # Empty config
-                db_url="sqlite:///:memory:"
+                db_url="sqlite:///:memory:",
             )
 
             assert agent.overtime_threshold == 40
@@ -515,18 +604,23 @@ class TestHRAgent:
     async def test_staffing_business_multipliers(self, hr_agent):
         """Test business multiplier logic for staffing"""
         business_multipliers = {
-            'monday': 0.7, 'tuesday': 0.8, 'wednesday': 0.9,
-            'thursday': 1.0, 'friday': 1.3, 'saturday': 1.4, 'sunday': 1.1
+            "monday": 0.7,
+            "tuesday": 0.8,
+            "wednesday": 0.9,
+            "thursday": 1.0,
+            "friday": 1.3,
+            "saturday": 1.4,
+            "sunday": 1.1,
         }
 
         base_hours = 24
 
         # Test Friday (busy day)
-        friday_hours = base_hours * business_multipliers['friday']
+        friday_hours = base_hours * business_multipliers["friday"]
         assert abs(friday_hours - 31.2) < 0.001
 
         # Test Monday (slower day)
-        monday_hours = base_hours * business_multipliers['monday']
+        monday_hours = base_hours * business_multipliers["monday"]
         assert abs(monday_hours - 16.8) < 0.001
 
     @pytest.mark.asyncio
@@ -631,18 +725,35 @@ class TestHRAgent:
         # Mock very high labor cost scenario - multiple expensive employees working long hours
         yesterday_records = []
         for emp_id in range(1, 6):  # 5 employees
-            yesterday_records.extend([
-                Mock(employee_id=emp_id, timestamp=datetime(2024, 1, 1, 8, 0), record_type=TimeRecordType.CLOCK_IN),
-                Mock(employee_id=emp_id, timestamp=datetime(2024, 1, 1, 22, 0), record_type=TimeRecordType.CLOCK_OUT),  # 14 hours each
-            ])
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = yesterday_records
+            yesterday_records.extend(
+                [
+                    Mock(
+                        employee_id=emp_id,
+                        timestamp=datetime(2024, 1, 1, 8, 0),
+                        record_type=TimeRecordType.CLOCK_IN,
+                    ),
+                    Mock(
+                        employee_id=emp_id,
+                        timestamp=datetime(2024, 1, 1, 22, 0),
+                        record_type=TimeRecordType.CLOCK_OUT,
+                    ),  # 14 hours each
+                ]
+            )
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = (
+            yesterday_records
+        )
 
         # Mock high-paid employees
         expensive_employee = Mock(
-            id=1, first_name="Senior", last_name="Manager",
-            position="Manager", hourly_rate=Decimal("30.00")
+            id=1,
+            first_name="Senior",
+            last_name="Manager",
+            position="Manager",
+            hourly_rate=Decimal("30.00"),
         )
-        mock_session_instance.query.return_value.filter.return_value.first.return_value = expensive_employee
+        mock_session_instance.query.return_value.filter.return_value.first.return_value = (
+            expensive_employee
+        )
 
         decision = await hr_agent.process_data(data)
 
@@ -656,10 +767,9 @@ class TestHRAgent:
         assert hr_agent._calculate_daily_hours([]) == 0.0
 
         # Test with malformed data - should raise ValueError
-        malformed_records = [
-            {"timestamp": "invalid_date", "record_type": TimeRecordType.CLOCK_IN}
-        ]
+        malformed_records = [{"timestamp": "invalid_date", "record_type": TimeRecordType.CLOCK_IN}]
         import pytest
+
         with pytest.raises(ValueError):
             hr_agent._calculate_daily_hours(malformed_records)
 

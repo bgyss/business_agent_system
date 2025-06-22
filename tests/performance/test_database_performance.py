@@ -31,6 +31,7 @@ class TestDatabasePerformance:
     @pytest.mark.database
     def test_transaction_insert_performance(self, benchmark, test_db_session):
         """Benchmark transaction insertion performance."""
+
         def insert_transactions():
             transactions = []
             for i in range(100):
@@ -41,7 +42,7 @@ class TestDatabasePerformance:
                     transaction_date=datetime.now() - timedelta(days=i % 30),
                     description=f"Performance test transaction {i}",
                     account_id="test_checking",
-                    category="performance_test"
+                    category="performance_test",
                 )
                 transactions.append(transaction)
 
@@ -53,41 +54,53 @@ class TestDatabasePerformance:
 
         # Should be able to insert 100 transactions quickly
         assert result == 100
-        assert benchmark.stats['mean'] < 0.5  # Less than 500ms
+        assert benchmark.stats["mean"] < 0.5  # Less than 500ms
 
     @pytest.mark.benchmark
     @pytest.mark.database
     def test_transaction_query_performance(self, benchmark, medium_dataset):
         """Benchmark transaction query performance with medium dataset."""
+
         def query_recent_transactions():
-            return medium_dataset.query(Transaction).filter(
-                Transaction.transaction_date >= datetime.now() - timedelta(days=30)
-            ).order_by(Transaction.transaction_date.desc()).limit(100).all()
+            return (
+                medium_dataset.query(Transaction)
+                .filter(Transaction.transaction_date >= datetime.now() - timedelta(days=30))
+                .order_by(Transaction.transaction_date.desc())
+                .limit(100)
+                .all()
+            )
 
         results = benchmark(query_recent_transactions)
 
         # Query should complete quickly
         assert len(results) > 0
-        assert benchmark.stats['mean'] < 0.1  # Less than 100ms
+        assert benchmark.stats["mean"] < 0.1  # Less than 100ms
 
     @pytest.mark.benchmark
     @pytest.mark.database
     def test_transaction_aggregation_performance(self, benchmark, medium_dataset):
         """Benchmark transaction aggregation queries."""
+
         def aggregate_transactions():
             # Revenue by category
-            revenue_by_category = medium_dataset.query(
-                Transaction.category,
-                func.sum(Transaction.amount).label('total')
-            ).filter(
-                Transaction.transaction_type == TransactionType.INCOME
-            ).group_by(Transaction.category).all()
+            revenue_by_category = (
+                medium_dataset.query(
+                    Transaction.category, func.sum(Transaction.amount).label("total")
+                )
+                .filter(Transaction.transaction_type == TransactionType.INCOME)
+                .group_by(Transaction.category)
+                .all()
+            )
 
             # Monthly totals
-            monthly_totals = medium_dataset.query(
-                func.strftime('%Y-%m', Transaction.transaction_date).label('month'),
-                func.sum(Transaction.amount).label('total')
-            ).group_by(func.strftime('%Y-%m', Transaction.transaction_date)).all()
+            monthly_totals = (
+                medium_dataset.query(
+                    func.strftime("%Y-%m", Transaction.transaction_date).label("month"),
+                    func.sum(Transaction.amount).label("total"),
+                )
+                .group_by(func.strftime("%Y-%m", Transaction.transaction_date))
+                .all()
+            )
 
             return len(revenue_by_category), len(monthly_totals)
 
@@ -96,23 +109,27 @@ class TestDatabasePerformance:
         # Aggregation should complete reasonably fast
         assert result[0] > 0  # Should have categories
         assert result[1] > 0  # Should have months
-        assert benchmark.stats['mean'] < 0.2  # Less than 200ms
+        assert benchmark.stats["mean"] < 0.2  # Less than 200ms
 
     @pytest.mark.benchmark
     @pytest.mark.database
     def test_inventory_query_performance(self, benchmark, medium_dataset):
         """Benchmark inventory-related query performance."""
+
         def inventory_queries():
             # Low stock items
-            low_stock = medium_dataset.query(Item).filter(
-                Item.current_stock <= Item.reorder_point
-            ).all()
+            low_stock = (
+                medium_dataset.query(Item).filter(Item.current_stock <= Item.reorder_point).all()
+            )
 
             # Stock movements in last week
             week_ago = datetime.now() - timedelta(days=7)
-            recent_movements = medium_dataset.query(StockMovement).filter(
-                StockMovement.movement_date >= week_ago
-            ).order_by(StockMovement.movement_date.desc()).all()
+            recent_movements = (
+                medium_dataset.query(StockMovement)
+                .filter(StockMovement.movement_date >= week_ago)
+                .order_by(StockMovement.movement_date.desc())
+                .all()
+            )
 
             # Inventory value
             total_value = medium_dataset.query(
@@ -125,28 +142,31 @@ class TestDatabasePerformance:
 
         # Inventory queries should be fast
         assert result[2] >= 0  # Total value should be non-negative
-        assert benchmark.stats['mean'] < 0.15  # Less than 150ms
+        assert benchmark.stats["mean"] < 0.15  # Less than 150ms
 
     @pytest.mark.benchmark
     @pytest.mark.database
     def test_employee_query_performance(self, benchmark, medium_dataset):
         """Benchmark employee and HR-related query performance."""
+
         def employee_queries():
             # Active employees
-            active_employees = medium_dataset.query(Employee).filter(
-                Employee.status == "active"
-            ).all()
+            active_employees = (
+                medium_dataset.query(Employee).filter(Employee.status == "active").all()
+            )
 
             # Recent time records
             week_ago = datetime.now() - timedelta(days=7)
-            recent_time_records = medium_dataset.query(TimeRecord).filter(
-                TimeRecord.timestamp >= week_ago
-            ).all()
+            recent_time_records = (
+                medium_dataset.query(TimeRecord).filter(TimeRecord.timestamp >= week_ago).all()
+            )
 
             # Payroll calculations
-            payroll_total = medium_dataset.query(
-                func.sum(Employee.hourly_rate * 40)  # Assuming 40 hours
-            ).filter(Employee.is_full_time == True).scalar()
+            payroll_total = (
+                medium_dataset.query(func.sum(Employee.hourly_rate * 40))  # Assuming 40 hours
+                .filter(Employee.is_full_time)
+                .scalar()
+            )
 
             return len(active_employees), len(recent_time_records), payroll_total or 0
 
@@ -154,7 +174,7 @@ class TestDatabasePerformance:
 
         # HR queries should be fast
         assert result[2] >= 0  # Payroll total should be non-negative
-        assert benchmark.stats['mean'] < 0.1  # Less than 100ms
+        assert benchmark.stats["mean"] < 0.1  # Less than 100ms
 
     @pytest.mark.benchmark
     @pytest.mark.database
@@ -166,11 +186,11 @@ class TestDatabasePerformance:
             decision = AgentDecisionModel(
                 agent_id=f"test_agent_{i % 3}",
                 decision_type="performance_test",
-                context=f"{{\"test\": {i}}}",
+                context=f'{{"test": {i}}}',
                 reasoning=f"Performance test reasoning {i}",
                 action=f"Test action {i}",
                 confidence=0.8 + (i % 20) / 100,
-                timestamp=datetime.now() - timedelta(minutes=i)
+                timestamp=datetime.now() - timedelta(minutes=i),
             )
             decisions.append(decision)
 
@@ -178,15 +198,18 @@ class TestDatabasePerformance:
         test_db_session.commit()
 
         def query_recent_decisions():
-            return test_db_session.query(AgentDecisionModel).order_by(
-                AgentDecisionModel.timestamp.desc()
-            ).limit(50).all()
+            return (
+                test_db_session.query(AgentDecisionModel)
+                .order_by(AgentDecisionModel.timestamp.desc())
+                .limit(50)
+                .all()
+            )
 
         result = benchmark(query_recent_decisions)
 
         # Decision queries should be fast
         assert len(result) > 0
-        assert benchmark.stats['mean'] < 0.05  # Less than 50ms
+        assert benchmark.stats["mean"] < 0.05  # Less than 50ms
 
     @pytest.mark.database
     @pytest.mark.stress
@@ -195,16 +218,18 @@ class TestDatabasePerformance:
         start_time = time.time()
 
         # Complex query with joins and aggregations
-        results = large_dataset.query(
-            Transaction.category,
-            func.count(Transaction.id).label('count'),
-            func.sum(Transaction.amount).label('total'),
-            func.avg(Transaction.amount).label('average')
-        ).filter(
-            Transaction.transaction_date >= datetime.now() - timedelta(days=365)
-        ).group_by(Transaction.category).order_by(
-            func.sum(Transaction.amount).desc()
-        ).all()
+        results = (
+            large_dataset.query(
+                Transaction.category,
+                func.count(Transaction.id).label("count"),
+                func.sum(Transaction.amount).label("total"),
+                func.avg(Transaction.amount).label("average"),
+            )
+            .filter(Transaction.transaction_date >= datetime.now() - timedelta(days=365))
+            .group_by(Transaction.category)
+            .order_by(func.sum(Transaction.amount).desc())
+            .all()
+        )
 
         end_time = time.time()
         query_time = end_time - start_time
@@ -217,6 +242,7 @@ class TestDatabasePerformance:
     @pytest.mark.database
     def test_batch_insert_performance(self, benchmark, test_db_session):
         """Benchmark batch insert performance."""
+
         def batch_insert():
             # Test batch insert of various record types
             transactions = []
@@ -232,7 +258,7 @@ class TestDatabasePerformance:
                     transaction_date=datetime.now() - timedelta(days=i),
                     description=f"Batch test transaction {i}",
                     account_id="test_checking",
-                    category="batch_test"
+                    category="batch_test",
                 )
                 transactions.append(transaction)
 
@@ -245,7 +271,7 @@ class TestDatabasePerformance:
                     selling_price=20.0 + i,
                     current_stock=100,
                     reorder_point=20,
-                    reorder_quantity=50
+                    reorder_quantity=50,
                 )
                 items.append(item)
 
@@ -260,7 +286,7 @@ class TestDatabasePerformance:
                         position="Test Position",
                         department="Test Department",
                         hourly_rate=15.0,
-                        is_full_time=True
+                        is_full_time=True,
                     )
                     employees.append(employee)
 
@@ -276,26 +302,27 @@ class TestDatabasePerformance:
 
         # Batch insert should be efficient
         assert result == 110  # 50 + 50 + 10
-        assert benchmark.stats['mean'] < 1.0  # Less than 1 second
+        assert benchmark.stats["mean"] < 1.0  # Less than 1 second
 
     @pytest.mark.benchmark
     @pytest.mark.database
     def test_update_performance(self, benchmark, small_dataset):
         """Benchmark update operation performance."""
+
         def update_records():
             # Update transaction amounts
-            updated_count = small_dataset.query(Transaction).filter(
-                Transaction.category == "test_category"
-            ).update({
-                Transaction.amount: Transaction.amount * 1.1
-            }, synchronize_session=False)
+            updated_count = (
+                small_dataset.query(Transaction)
+                .filter(Transaction.category == "test_category")
+                .update({Transaction.amount: Transaction.amount * 1.1}, synchronize_session=False)
+            )
 
             # Update item stock levels
-            updated_items = small_dataset.query(Item).filter(
-                Item.category == "test_category"
-            ).update({
-                Item.current_stock: Item.current_stock - 1
-            }, synchronize_session=False)
+            updated_items = (
+                small_dataset.query(Item)
+                .filter(Item.category == "test_category")
+                .update({Item.current_stock: Item.current_stock - 1}, synchronize_session=False)
+            )
 
             small_dataset.commit()
 
@@ -305,7 +332,7 @@ class TestDatabasePerformance:
 
         # Updates should be fast
         assert result[0] > 0  # Should have updated some transactions
-        assert benchmark.stats['mean'] < 0.1  # Less than 100ms
+        assert benchmark.stats["mean"] < 0.1  # Less than 100ms
 
     @pytest.mark.database
     @pytest.mark.stress
@@ -335,32 +362,29 @@ class TestDatabasePerformance:
                         transaction_date=datetime.now(),
                         description=f"Concurrent test {worker_id}_{i}",
                         account_id="test_checking",
-                        category="concurrent_test"
+                        category="concurrent_test",
                     )
                     session.add(transaction)
 
                     # Query existing transactions
                     if i % 5 == 0:
-                        recent = session.query(Transaction).filter(
-                            Transaction.category == "concurrent_test"
-                        ).count()
+                        (
+                            session.query(Transaction)
+                            .filter(Transaction.category == "concurrent_test")
+                            .count()
+                        )
 
                 session.commit()
                 end_time = time.time()
 
-                results_queue.put({
-                    'worker_id': worker_id,
-                    'duration': end_time - start_time,
-                    'operations': 20
-                })
+                results_queue.put(
+                    {"worker_id": worker_id, "duration": end_time - start_time, "operations": 20}
+                )
 
                 session.close()
 
             except Exception as e:
-                error_queue.put({
-                    'worker_id': worker_id,
-                    'error': str(e)
-                })
+                error_queue.put({"worker_id": worker_id, "error": str(e)})
 
         # Start multiple worker threads
         threads = []
@@ -395,7 +419,7 @@ class TestDatabasePerformance:
         assert total_duration < 15, f"Concurrent operations took too long: {total_duration:.2f}s"
 
         # Calculate throughput
-        total_operations = sum(r['operations'] for r in results)
+        total_operations = sum(r["operations"] for r in results)
         throughput = total_operations / total_duration
         assert throughput > 5, f"Low concurrent throughput: {throughput:.2f} ops/sec"
 
@@ -419,7 +443,7 @@ class TestDatabasePerformance:
                 transaction_date=datetime.now() - timedelta(days=i % 100),
                 description=f"Index test transaction {i}",
                 account_id="test_checking",
-                category=f"category_{i % 20}"
+                category=f"category_{i % 20}",
             )
             transactions.append(transaction)
 
@@ -428,15 +452,17 @@ class TestDatabasePerformance:
 
         def query_with_date_filter():
             # This should benefit from date index if it exists
-            return session.query(Transaction).filter(
-                Transaction.transaction_date >= datetime.now() - timedelta(days=30)
-            ).count()
+            return (
+                session.query(Transaction)
+                .filter(Transaction.transaction_date >= datetime.now() - timedelta(days=30))
+                .count()
+            )
 
         result = benchmark(query_with_date_filter)
 
         # Date-filtered queries should be fast
         assert result > 0
-        assert benchmark.stats['mean'] < 0.1  # Less than 100ms
+        assert benchmark.stats["mean"] < 0.1  # Less than 100ms
 
         session.close()
 
@@ -456,14 +482,18 @@ class TestDatabasePerformance:
         all_transactions = large_dataset.query(Transaction).all()
 
         # Complex aggregation
-        category_stats = large_dataset.query(
-            Transaction.category,
-            func.count(Transaction.id).label('count'),
-            func.sum(Transaction.amount).label('total'),
-            func.min(Transaction.amount).label('min_amount'),
-            func.max(Transaction.amount).label('max_amount'),
-            func.avg(Transaction.amount).label('avg_amount')
-        ).group_by(Transaction.category).all()
+        category_stats = (
+            large_dataset.query(
+                Transaction.category,
+                func.count(Transaction.id).label("count"),
+                func.sum(Transaction.amount).label("total"),
+                func.min(Transaction.amount).label("min_amount"),
+                func.max(Transaction.amount).label("max_amount"),
+                func.avg(Transaction.amount).label("avg_amount"),
+            )
+            .group_by(Transaction.category)
+            .all()
+        )
 
         end_time = time.time()
         final_memory = process.memory_info().rss / 1024 / 1024  # MB

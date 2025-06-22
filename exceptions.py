@@ -26,28 +26,32 @@ class BusinessAgentException(Exception):
             "error_code": self.error_code,
             "message": self.message,
             "context": self.context,
-            "timestamp": self.timestamp.isoformat()
+            "timestamp": self.timestamp.isoformat(),
         }
 
 
 # Agent-related exceptions
 class AgentError(BusinessAgentException):
     """Base class for agent-related errors."""
+
     pass
 
 
 class AgentInitializationError(AgentError):
     """Raised when an agent fails to initialize properly."""
+
     pass
 
 
 class AgentDecisionError(AgentError):
     """Raised when an agent fails to make a decision."""
+
     pass
 
 
 class AgentCommunicationError(AgentError):
     """Raised when agents fail to communicate with each other."""
+
     pass
 
 
@@ -66,11 +70,13 @@ class ClaudeAPIError(AgentError):
 # Database-related exceptions
 class DatabaseError(BusinessAgentException):
     """Base class for database-related errors."""
+
     pass
 
 
 class DatabaseConnectionError(DatabaseError):
     """Raised when database connection fails."""
+
     pass
 
 
@@ -89,6 +95,7 @@ class DatabaseTransactionError(DatabaseError):
 
 class DatabaseIntegrityError(DatabaseError):
     """Raised when database integrity constraints are violated."""
+
     pass
 
 
@@ -108,11 +115,13 @@ class DataValidationError(DatabaseError):
 # Configuration-related exceptions
 class ConfigurationError(BusinessAgentException):
     """Base class for configuration-related errors."""
+
     pass
 
 
 class ConfigFileNotFoundError(ConfigurationError):
     """Raised when configuration file is not found."""
+
     pass
 
 
@@ -142,11 +151,13 @@ class EnvironmentVariableError(ConfigurationError):
 # Simulation-related exceptions
 class SimulationError(BusinessAgentException):
     """Base class for simulation-related errors."""
+
     pass
 
 
 class SimulationInitializationError(SimulationError):
     """Raised when simulation fails to initialize."""
+
     pass
 
 
@@ -165,12 +176,14 @@ class DataGenerationError(SimulationError):
 
 class BusinessProfileError(SimulationError):
     """Raised when business profile configuration is invalid."""
+
     pass
 
 
 # API and external service exceptions
 class ExternalServiceError(BusinessAgentException):
     """Base class for external service errors."""
+
     pass
 
 
@@ -203,13 +216,20 @@ class ServiceUnavailableError(ExternalServiceError):
 # Business logic exceptions
 class BusinessLogicError(BusinessAgentException):
     """Base class for business logic errors."""
+
     pass
 
 
 class InsufficientDataError(BusinessLogicError):
     """Raised when there's insufficient data to make a decision."""
 
-    def __init__(self, message: str, data_type: str = None, required_count: int = None, actual_count: int = None):
+    def __init__(
+        self,
+        message: str,
+        data_type: str = None,
+        required_count: int = None,
+        actual_count: int = None,
+    ):
         super().__init__(message, "INSUFFICIENT_DATA_ERROR")
         self.data_type = data_type
         self.required_count = required_count
@@ -251,6 +271,7 @@ class InventoryError(BusinessLogicError):
 # Financial exceptions
 class FinancialError(BusinessLogicError):
     """Base class for financial-related errors."""
+
     pass
 
 
@@ -269,6 +290,7 @@ class InsufficientFundsError(FinancialError):
 
 class CashFlowError(FinancialError):
     """Raised for cash flow related issues."""
+
     pass
 
 
@@ -288,6 +310,7 @@ class AccountingAnomalyError(FinancialError):
 # Dashboard and UI exceptions
 class DashboardError(BusinessAgentException):
     """Base class for dashboard-related errors."""
+
     pass
 
 
@@ -306,19 +329,27 @@ class DataVisualizationError(DashboardError):
 
 class ReportGenerationError(DashboardError):
     """Raised when report generation fails."""
+
     pass
 
 
 # System-level exceptions
 class SystemError(BusinessAgentException):
     """Base class for system-level errors."""
+
     pass
 
 
 class ResourceExhaustionError(SystemError):
     """Raised when system resources are exhausted."""
 
-    def __init__(self, message: str, resource_type: str = None, current_usage: float = None, limit: float = None):
+    def __init__(
+        self,
+        message: str,
+        resource_type: str = None,
+        current_usage: float = None,
+        limit: float = None,
+    ):
         super().__init__(message, "RESOURCE_EXHAUSTION_ERROR")
         self.resource_type = resource_type
         self.current_usage = current_usage
@@ -352,14 +383,12 @@ class RecoverableError(BusinessAgentException):
         super().__init__(message)
         self.max_retries = max_retries
         self.backoff_seconds = backoff_seconds
-        self.context.update({
-            "max_retries": max_retries,
-            "backoff_seconds": backoff_seconds
-        })
+        self.context.update({"max_retries": max_retries, "backoff_seconds": backoff_seconds})
 
 
 class NonRecoverableError(BusinessAgentException):
     """Base class for errors that cannot be recovered from."""
+
     pass
 
 
@@ -372,19 +401,19 @@ ERROR_TYPE_MAPPING = {
     "external_service": ExternalServiceError,
     "business_logic": BusinessLogicError,
     "dashboard": DashboardError,
-    "system": SystemError
+    "system": SystemError,
 }
 
 
 def create_exception(error_type: str, message: str, **kwargs) -> BusinessAgentException:
     """
     Factory function to create appropriate exception based on error type.
-    
+
     Args:
         error_type: Type of error (database, agent, configuration, etc.)
         message: Error message
         **kwargs: Additional context for the exception
-    
+
     Returns:
         Appropriate exception instance
     """

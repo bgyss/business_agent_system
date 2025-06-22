@@ -53,11 +53,11 @@ class TestStressScenarios:
                     "amount": 100.0 + (i % 1000),
                     "transaction_type": "expense" if i % 3 == 0 else "income",
                     "description": f"Stress test transaction {i}",
-                    "category": f"stress_category_{i % 20}"
+                    "category": f"stress_category_{i % 20}",
                 }
 
                 # Mock Claude API to avoid costs
-                with patch.object(test_accounting_agent, 'analyze_with_claude') as mock_claude:
+                with patch.object(test_accounting_agent, "analyze_with_claude") as mock_claude:
                     mock_claude.return_value = f"Stress test analysis {i}"
                     result = asyncio.run(test_accounting_agent.process_data(test_data))
 
@@ -73,7 +73,9 @@ class TestStressScenarios:
 
                     # Clear decision log periodically to prevent excessive memory usage
                     if len(test_accounting_agent.decisions_log) > 100:
-                        test_accounting_agent.decisions_log = test_accounting_agent.decisions_log[-50:]
+                        test_accounting_agent.decisions_log = test_accounting_agent.decisions_log[
+                            -50:
+                        ]
 
             except Exception:
                 failed_decisions += 1
@@ -118,6 +120,7 @@ class TestStressScenarios:
             """Worker function for database stress testing."""
             try:
                 from sqlalchemy.orm import sessionmaker
+
                 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_db_engine)
 
                 session = SessionLocal()
@@ -133,18 +136,22 @@ class TestStressScenarios:
                             transaction = Transaction(
                                 id=f"stress_worker_{worker_id}_tx_{i}",
                                 amount=100.0 + i,
-                                transaction_type=TransactionType.INCOME if i % 2 else TransactionType.EXPENSE,
+                                transaction_type=(
+                                    TransactionType.INCOME if i % 2 else TransactionType.EXPENSE
+                                ),
                                 transaction_date=datetime.now(),
                                 description=f"Stress test worker {worker_id} transaction {i}",
                                 account_id="test_checking",
-                                category="stress_test"
+                                category="stress_test",
                             )
                             session.add(transaction)
 
                         elif operation_type == 1:  # Query transactions
-                            count = session.query(Transaction).filter(
-                                Transaction.category == "stress_test"
-                            ).count()
+                            (
+                                session.query(Transaction)
+                                .filter(Transaction.category == "stress_test")
+                                .count()
+                            )
 
                         elif operation_type == 2:  # Insert item
                             item = Item(
@@ -155,14 +162,14 @@ class TestStressScenarios:
                                 selling_price=20.0,
                                 current_stock=100,
                                 reorder_point=20,
-                                reorder_quantity=50
+                                reorder_quantity=50,
                             )
                             session.add(item)
 
                         else:  # Query items
-                            count = session.query(Item).filter(
-                                Item.category == "stress_test"
-                            ).count()
+                            (
+                                session.query(Item).filter(Item.category == "stress_test").count()
+                            )
 
                         # Commit every 10 operations
                         if i % 10 == 0:
@@ -181,18 +188,17 @@ class TestStressScenarios:
 
                 end_time = time.time()
 
-                results_queue.put({
-                    'worker_id': worker_id,
-                    'operations': operations,
-                    'duration': end_time - start_time,
-                    'ops_per_second': operations / (end_time - start_time)
-                })
+                results_queue.put(
+                    {
+                        "worker_id": worker_id,
+                        "operations": operations,
+                        "duration": end_time - start_time,
+                        "ops_per_second": operations / (end_time - start_time),
+                    }
+                )
 
             except Exception as e:
-                error_queue.put({
-                    'worker_id': worker_id,
-                    'error': str(e)
-                })
+                error_queue.put({"worker_id": worker_id, "error": str(e)})
 
         # Start all workers
         threads = []
@@ -221,12 +227,16 @@ class TestStressScenarios:
 
         # Assertions
         assert len(errors) == 0, f"Database stress test errors: {errors}"
-        assert len(results) == num_workers, f"Not all workers completed: {len(results)}/{num_workers}"
+        assert (
+            len(results) == num_workers
+        ), f"Not all workers completed: {len(results)}/{num_workers}"
 
-        total_operations = sum(r['operations'] for r in results)
-        avg_throughput = sum(r['ops_per_second'] for r in results) / len(results)
+        total_operations = sum(r["operations"] for r in results)
+        avg_throughput = sum(r["ops_per_second"] for r in results) / len(results)
 
-        assert total_operations >= num_workers * operations_per_worker * 0.9, "Too many failed operations"
+        assert (
+            total_operations >= num_workers * operations_per_worker * 0.9
+        ), "Too many failed operations"
         assert total_duration < 180, f"Stress test took too long: {total_duration:.2f}s"
         assert avg_throughput > 5, f"Average throughput too low: {avg_throughput:.2f} ops/sec"
 
@@ -271,7 +281,9 @@ class TestStressScenarios:
         max_generation_time = max(generation_times)
         final_memory = memory_samples[-1]
 
-        assert avg_generation_time < 10, f"Average generation time too slow: {avg_generation_time:.2f}s"
+        assert (
+            avg_generation_time < 10
+        ), f"Average generation time too slow: {avg_generation_time:.2f}s"
         assert max_generation_time < 30, f"Max generation time too slow: {max_generation_time:.2f}s"
         assert final_memory < 500, f"Memory usage too high: {final_memory:.2f}MB"
 
@@ -295,17 +307,17 @@ class TestStressScenarios:
                 agent_id=f"stress_accounting_agent_{i}",
                 api_key=os.getenv("ANTHROPIC_API_KEY", "test_key"),
                 config=performance_config["agents"]["accounting"],
-                db_url=db_url
+                db_url=db_url,
             )
-            agents.append(('accounting', accounting_agent))
+            agents.append(("accounting", accounting_agent))
 
             inventory_agent = InventoryAgent(
                 agent_id=f"stress_inventory_agent_{i}",
                 api_key=os.getenv("ANTHROPIC_API_KEY", "test_key"),
                 config=performance_config["agents"]["inventory"],
-                db_url=db_url
+                db_url=db_url,
             )
-            agents.append(('inventory', inventory_agent))
+            agents.append(("inventory", inventory_agent))
 
         async def stress_agent_worker(agent_type: str, agent, worker_id: int):
             """Worker function for agent stress testing."""
@@ -313,13 +325,13 @@ class TestStressScenarios:
 
             for i in range(100):
                 try:
-                    if agent_type == 'accounting':
+                    if agent_type == "accounting":
                         test_data = {
                             "transaction_id": f"multi_stress_{worker_id}_{i}",
                             "amount": 50.0 + i,
                             "transaction_type": "expense" if i % 2 else "income",
                             "description": f"Multi-agent stress test {worker_id} {i}",
-                            "category": "multi_stress"
+                            "category": "multi_stress",
                         }
                     else:  # inventory
                         test_data = {
@@ -327,11 +339,11 @@ class TestStressScenarios:
                             "current_stock": 10 + (i % 50),
                             "reorder_point": 20,
                             "item_name": f"Stress Item {worker_id} {i}",
-                            "supplier": "Stress Supplier"
+                            "supplier": "Stress Supplier",
                         }
 
                     # Mock Claude API
-                    with patch.object(agent, 'analyze_with_claude') as mock_claude:
+                    with patch.object(agent, "analyze_with_claude") as mock_claude:
                         mock_claude.return_value = f"Multi-agent stress analysis {worker_id} {i}"
                         result = await agent.process_data(test_data)
 
@@ -365,8 +377,12 @@ class TestStressScenarios:
         total_successful = sum(successful_results)
 
         # Assertions
-        assert len(successful_results) == len(agents), f"Some agents failed: {len(successful_results)}/{len(agents)}"
-        assert total_successful >= len(agents) * 80, f"Too few successful operations: {total_successful}"
+        assert len(successful_results) == len(
+            agents
+        ), f"Some agents failed: {len(successful_results)}/{len(agents)}"
+        assert (
+            total_successful >= len(agents) * 80
+        ), f"Too few successful operations: {total_successful}"
         assert duration < 120, f"Multi-agent stress took too long: {duration:.2f}s"
 
         # Check individual agent performance
@@ -398,10 +414,10 @@ class TestStressScenarios:
                     "amount": 75.0 + i,
                     "transaction_type": "expense",
                     "description": f"Memory leak detection {iteration} {i}",
-                    "category": "leak_detection"
+                    "category": "leak_detection",
                 }
 
-                with patch.object(test_accounting_agent, 'analyze_with_claude') as mock_claude:
+                with patch.object(test_accounting_agent, "analyze_with_claude") as mock_claude:
                     mock_claude.return_value = f"Leak detection analysis {iteration} {i}"
                     asyncio.run(test_accounting_agent.process_data(test_data))
 
@@ -438,11 +454,15 @@ class TestStressScenarios:
 
         # No single iteration should use excessive memory
         max_memory_increase = max(memory_samples)
-        assert max_memory_increase < 50, f"Single iteration used too much memory: {max_memory_increase:.2f}MB"
+        assert (
+            max_memory_increase < 50
+        ), f"Single iteration used too much memory: {max_memory_increase:.2f}MB"
 
         # Average memory increase should be reasonable
         avg_memory_increase = sum(memory_samples) / len(memory_samples)
-        assert avg_memory_increase < 10, f"Average memory increase too high: {avg_memory_increase:.2f}MB"
+        assert (
+            avg_memory_increase < 10
+        ), f"Average memory increase too high: {avg_memory_increase:.2f}MB"
 
     @pytest.mark.stress
     @pytest.mark.agent
@@ -463,7 +483,7 @@ class TestStressScenarios:
                         "amount": "invalid_amount",  # This should cause an error
                         "transaction_type": "invalid_type",
                         "description": f"Error stress test {i}",
-                        "category": "error_stress"
+                        "category": "error_stress",
                     }
                 else:
                     # Normal operation
@@ -472,10 +492,10 @@ class TestStressScenarios:
                         "amount": 100.0 + i,
                         "transaction_type": "expense" if i % 2 else "income",
                         "description": f"Normal stress test {i}",
-                        "category": "normal_stress"
+                        "category": "normal_stress",
                     }
 
-                with patch.object(test_accounting_agent, 'analyze_with_claude') as mock_claude:
+                with patch.object(test_accounting_agent, "analyze_with_claude") as mock_claude:
                     mock_claude.return_value = f"Error recovery stress analysis {i}"
                     result = await test_accounting_agent.process_data(test_data)
 
@@ -493,9 +513,15 @@ class TestStressScenarios:
                 max_consecutive_errors = max(max_consecutive_errors, consecutive_errors)
 
         # Assertions for error recovery
-        assert successful_operations >= 900, f"Too few successful operations: {successful_operations}"
-        assert error_recoveries >= 15, f"Agent should recover from errors: {error_recoveries} recoveries"
-        assert max_consecutive_errors <= 10, f"Too many consecutive errors: {max_consecutive_errors}"
+        assert (
+            successful_operations >= 900
+        ), f"Too few successful operations: {successful_operations}"
+        assert (
+            error_recoveries >= 15
+        ), f"Agent should recover from errors: {error_recoveries} recoveries"
+        assert (
+            max_consecutive_errors <= 10
+        ), f"Too many consecutive errors: {max_consecutive_errors}"
 
         # Agent should still be operational
         health_status = asyncio.run(test_accounting_agent.health_check())
@@ -522,8 +548,12 @@ class TestStressScenarios:
         status = simulator.get_simulation_status()
 
         # Assertions
-        assert status['transaction_count'] > 50000, f"Should generate substantial data: {status['transaction_count']}"
-        assert generation_time < 180, f"Large data generation took too long: {generation_time:.2f}s"  # 3 minutes max
+        assert (
+            status["transaction_count"] > 50000
+        ), f"Should generate substantial data: {status['transaction_count']}"
+        assert (
+            generation_time < 180
+        ), f"Large data generation took too long: {generation_time:.2f}s"  # 3 minutes max
 
         # Test querying the large dataset
         query_start = time.time()
@@ -531,17 +561,24 @@ class TestStressScenarios:
         session = simulator.SessionLocal()
         try:
             # Complex query on large dataset
-            recent_transactions = session.query(Transaction).filter(
-                Transaction.transaction_date >= datetime.now() - timedelta(days=30)
-            ).order_by(Transaction.transaction_date.desc()).limit(100).all()
+            recent_transactions = (
+                session.query(Transaction)
+                .filter(Transaction.transaction_date >= datetime.now() - timedelta(days=30))
+                .order_by(Transaction.transaction_date.desc())
+                .limit(100)
+                .all()
+            )
 
             # Aggregation query
-            monthly_revenue = session.query(
-                func.strftime('%Y-%m', Transaction.transaction_date).label('month'),
-                func.sum(Transaction.amount).label('revenue')
-            ).filter(
-                Transaction.transaction_type == TransactionType.INCOME
-            ).group_by(func.strftime('%Y-%m', Transaction.transaction_date)).all()
+            monthly_revenue = (
+                session.query(
+                    func.strftime("%Y-%m", Transaction.transaction_date).label("month"),
+                    func.sum(Transaction.amount).label("revenue"),
+                )
+                .filter(Transaction.transaction_type == TransactionType.INCOME)
+                .group_by(func.strftime("%Y-%m", Transaction.transaction_date))
+                .all()
+            )
 
         finally:
             session.close()

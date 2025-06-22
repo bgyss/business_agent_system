@@ -1,6 +1,7 @@
 """
 Integration tests for error scenarios and failure recovery.
 """
+
 import asyncio
 import os
 import tempfile
@@ -30,11 +31,11 @@ class TestConfigurationErrors:
                 "business": {"name": "Test", "type": "restaurant"},
                 "agents": {"accounting": {"enabled": True}},
                 "simulation": {"enabled": False},
-                **invalid_config
+                **invalid_config,
             }
 
-            config_fd, config_path = tempfile.mkstemp(suffix='.yaml')
-            with os.fdopen(config_fd, 'w') as f:
+            config_fd, config_path = tempfile.mkstemp(suffix=".yaml")
+            with os.fdopen(config_fd, "w") as f:
                 yaml.dump(config, f)
 
             try:
@@ -55,14 +56,14 @@ class TestConfigurationErrors:
             {"database": {"url": temp_db}},  # Missing business info
             {
                 "business": {"name": "Test", "type": "restaurant"},
-                "database": {"url": temp_db}
+                "database": {"url": temp_db},
                 # Missing agents section
-            }
+            },
         ]
 
         for config in incomplete_configs:
-            config_fd, config_path = tempfile.mkstemp(suffix='.yaml')
-            with os.fdopen(config_fd, 'w') as f:
+            config_fd, config_path = tempfile.mkstemp(suffix=".yaml")
+            with os.fdopen(config_fd, "w") as f:
                 yaml.dump(config, f)
 
             try:
@@ -89,14 +90,14 @@ class TestConfigurationErrors:
                 "accounting": {
                     "enabled": True,
                     "check_interval": "invalid_number",  # Should be numeric
-                    "anomaly_threshold": -0.5  # Invalid threshold
+                    "anomaly_threshold": -0.5,  # Invalid threshold
                 }
             },
-            "simulation": {"enabled": False}
+            "simulation": {"enabled": False},
         }
 
-        config_fd, config_path = tempfile.mkstemp(suffix='.yaml')
-        with os.fdopen(config_fd, 'w') as f:
+        config_fd, config_path = tempfile.mkstemp(suffix=".yaml")
+        with os.fdopen(config_fd, "w") as f:
             yaml.dump(config_with_bad_agent, f)
 
         try:
@@ -109,7 +110,7 @@ class TestConfigurationErrors:
                 if "accounting" in system.agents:
                     agent = system.agents["accounting"]
                     # Should have some default or handled the bad config
-                    assert hasattr(agent, 'config')
+                    assert hasattr(agent, "config")
             except (ValueError, TypeError):
                 # Expected for invalid configuration values
                 pass
@@ -162,10 +163,7 @@ class TestDatabaseErrors:
             pass  # Expected for integrity constraint violation
 
         # Try to use the corrupted database
-        config = {
-            "simulation_interval": 1,
-            "speed_multiplier": 1.0
-        }
+        config = {"simulation_interval": 1, "speed_multiplier": 1.0}
 
         simulator = BusinessSimulator(config, temp_db)
 
@@ -174,13 +172,15 @@ class TestDatabaseErrors:
             simulator.initialize_business("restaurant")
         except Exception as e:
             # Should be a database-related error, not a crash
-            assert any(keyword in str(e).lower() for keyword in
-                      ["constraint", "integrity", "database", "sql"])
+            assert any(
+                keyword in str(e).lower()
+                for keyword in ["constraint", "integrity", "database", "sql"]
+            )
 
     def test_database_disk_full_scenario(self, temp_db):
         """Test handling of disk space issues."""
         # This is difficult to simulate reliably, so we'll mock it
-        with patch('sqlalchemy.create_engine') as mock_engine:
+        with patch("sqlalchemy.create_engine") as mock_engine:
             mock_session = Mock()
             mock_session.commit.side_effect = OperationalError("disk full", None, None)
 
@@ -207,14 +207,11 @@ class TestAgentErrors:
         accounting_agent = system.agents["accounting"]
 
         # Mock API failure
-        with patch.object(accounting_agent.client.messages, 'create') as mock_create:
+        with patch.object(accounting_agent.client.messages, "create") as mock_create:
             mock_create.side_effect = Exception("API rate limit exceeded")
 
             # Send message that would normally trigger API call
-            test_message = {
-                "type": "cash_flow_check",
-                "cycle": 1
-            }
+            test_message = {"type": "cash_flow_check", "cycle": 1}
 
             await integration_helper.send_test_message(system, test_message)
             await asyncio.sleep(2)
@@ -248,7 +245,7 @@ class TestAgentErrors:
                 reasoning="Test reasoning with large context",
                 confidence=0.8,
                 context=large_context,
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
             accounting_agent.decisions_log.append(decision)
 
@@ -267,11 +264,7 @@ class TestAgentErrors:
 
         # Send many rapid messages that could cause infinite processing
         for i in range(100):
-            message = {
-                "type": "rapid_message",
-                "data": f"message_{i}",
-                "cycle": i
-            }
+            message = {"type": "rapid_message", "data": f"message_{i}", "cycle": i}
             await system.message_queue.put(message)
 
         # Let system try to process all messages
@@ -295,7 +288,7 @@ class TestAgentErrors:
         hr_agent = system.agents["hr"]
 
         # Force an exception in accounting agent
-        with patch.object(accounting_agent, 'periodic_check') as mock_check:
+        with patch.object(accounting_agent, "periodic_check") as mock_check:
             mock_check.side_effect = Exception("Simulated accounting error")
 
             # Let agents run their periodic checks
@@ -378,7 +371,6 @@ class TestNetworkAndCommunicationErrors:
         system = running_system
 
         # Simulate message router failure
-        original_router = system.message_router
 
         async def failing_router():
             await asyncio.sleep(0.1)
@@ -415,21 +407,16 @@ class TestNetworkAndCommunicationErrors:
 
         # Send message that requires response
         from agents.base_agent import AgentMessage
+
         test_message = AgentMessage(
-            sender="test",
-            recipient="accounting_agent",
-            message_type="report_request",
-            content={}
+            sender="test", recipient="accounting_agent", message_type="report_request", content={}
         )
 
         # Should handle timeout gracefully
         start_time = asyncio.get_event_loop().time()
 
         try:
-            await asyncio.wait_for(
-                accounting_agent.handle_message(test_message),
-                timeout=2.0
-            )
+            await asyncio.wait_for(accounting_agent.handle_message(test_message), timeout=2.0)
         except asyncio.TimeoutError:
             # Expected timeout
             pass
@@ -466,7 +453,9 @@ class TestRecoveryMechanisms:
         assert status["agents"]["accounting"]["running"] is False
 
     @pytest.mark.asyncio
-    async def test_automatic_restart_mechanisms(self, temp_config_file, mock_anthropic_client, mock_env_vars):
+    async def test_automatic_restart_mechanisms(
+        self, temp_config_file, mock_anthropic_client, mock_env_vars
+    ):
         """Test automatic restart mechanisms for failed components."""
         system = BusinessAgentSystem(temp_config_file)
         system.initialize_agents()
@@ -477,7 +466,6 @@ class TestRecoveryMechanisms:
         try:
             # Simulate agent failure and recovery
             accounting_agent = system.agents["accounting"]
-            original_running = accounting_agent.is_running
 
             # Stop agent (simulate failure)
             await accounting_agent.stop()
@@ -507,9 +495,8 @@ class TestRecoveryMechanisms:
 
         # Record initial state
         initial_status = system.get_system_status()
-        initial_decision_counts = {
-            name: len(agent.decisions_log)
-            for name, agent in system.agents.items()
+        {
+            name: len(agent.decisions_log) for name, agent in system.agents.items()
         }
 
         # Cause some errors

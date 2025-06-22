@@ -1,6 +1,7 @@
 """
 Unit tests for AgentDecision and AgentDecisionModel classes
 """
+
 import os
 import sys
 from datetime import datetime
@@ -28,7 +29,7 @@ class TestAgentDecision:
             decision_type="test_decision",
             action="Take test action",
             reasoning="This is test reasoning",
-            confidence=0.85
+            confidence=0.85,
         )
 
         assert decision.agent_id == "test_agent"
@@ -45,7 +46,7 @@ class TestAgentDecision:
             "item_id": 123,
             "amount": 150.75,
             "category": "sales",
-            "metadata": {"source": "api", "version": "1.0"}
+            "metadata": {"source": "api", "version": "1.0"},
         }
 
         decision = AgentDecision(
@@ -54,7 +55,7 @@ class TestAgentDecision:
             action="Flag transaction for review",
             reasoning="Transaction amount exceeds normal variance",
             confidence=0.92,
-            context=context
+            context=context,
         )
 
         assert decision.context == context
@@ -70,7 +71,7 @@ class TestAgentDecision:
                 decision_type="test",
                 action="test",
                 reasoning="test",
-                confidence=confidence
+                confidence=confidence,
             )
             assert decision.confidence == confidence
 
@@ -81,7 +82,7 @@ class TestAgentDecision:
                 decision_type="test",
                 action="test",
                 reasoning="test",
-                confidence=-0.1  # Below 0
+                confidence=-0.1,  # Below 0
             )
 
         with pytest.raises(ValueError):
@@ -90,54 +91,35 @@ class TestAgentDecision:
                 decision_type="test",
                 action="test",
                 reasoning="test",
-                confidence=1.1  # Above 1
+                confidence=1.1,  # Above 1
             )
 
     def test_agent_decision_required_fields(self):
         """Test that all required fields are validated"""
         # Missing agent_id
         with pytest.raises(ValueError):
-            AgentDecision(
-                decision_type="test",
-                action="test",
-                reasoning="test",
-                confidence=0.8
-            )
+            AgentDecision(decision_type="test", action="test", reasoning="test", confidence=0.8)
 
         # Missing decision_type
         with pytest.raises(ValueError):
-            AgentDecision(
-                agent_id="test_agent",
-                action="test",
-                reasoning="test",
-                confidence=0.8
-            )
+            AgentDecision(agent_id="test_agent", action="test", reasoning="test", confidence=0.8)
 
         # Missing action
         with pytest.raises(ValueError):
             AgentDecision(
-                agent_id="test_agent",
-                decision_type="test",
-                reasoning="test",
-                confidence=0.8
+                agent_id="test_agent", decision_type="test", reasoning="test", confidence=0.8
             )
 
         # Missing reasoning
         with pytest.raises(ValueError):
             AgentDecision(
-                agent_id="test_agent",
-                decision_type="test",
-                action="test",
-                confidence=0.8
+                agent_id="test_agent", decision_type="test", action="test", confidence=0.8
             )
 
         # Missing confidence
         with pytest.raises(ValueError):
             AgentDecision(
-                agent_id="test_agent",
-                decision_type="test",
-                action="test",
-                reasoning="test"
+                agent_id="test_agent", decision_type="test", action="test", reasoning="test"
             )
 
     def test_agent_decision_to_dict(self):
@@ -152,7 +134,7 @@ class TestAgentDecision:
             reasoning="test_reasoning",
             confidence=0.8,
             context=context,
-            timestamp=timestamp
+            timestamp=timestamp,
         )
 
         result_dict = decision.to_dict()
@@ -177,7 +159,7 @@ class TestAgentDecision:
             reasoning="test_reasoning",
             confidence=0.8,
             context=context,
-            timestamp=timestamp
+            timestamp=timestamp,
         )
 
         db_model = decision.to_db_model()
@@ -207,7 +189,7 @@ class TestAgentDecision:
             confidence=0.8,
             context=context,
             timestamp=timestamp,
-            created_at=timestamp
+            created_at=timestamp,
         )
 
         decision = AgentDecision.from_db_model(db_model)
@@ -239,7 +221,7 @@ class TestSerializeContext:
         context = {
             "amount": Decimal("150.75"),
             "cost": Decimal("99.99"),
-            "percentage": Decimal("0.25")
+            "percentage": Decimal("0.25"),
         }
 
         result = serialize_context(context)
@@ -252,10 +234,7 @@ class TestSerializeContext:
     def test_serialize_datetime_values(self):
         """Test serializing context with datetime values"""
         timestamp = datetime(2024, 1, 1, 12, 0, 0)
-        context = {
-            "created_at": timestamp,
-            "updated_at": timestamp
-        }
+        context = {"created_at": timestamp, "updated_at": timestamp}
 
         result = serialize_context(context)
 
@@ -268,14 +247,9 @@ class TestSerializeContext:
             "metadata": {
                 "amounts": [Decimal("10.00"), Decimal("20.00")],
                 "timestamp": datetime(2024, 1, 1, 12, 0, 0),
-                "nested": {
-                    "value": Decimal("5.50")
-                }
+                "nested": {"value": Decimal("5.50")},
             },
-            "list_data": [
-                {"amount": Decimal("100.00")},
-                {"amount": Decimal("200.00")}
-            ]
+            "list_data": [{"amount": Decimal("100.00")}, {"amount": Decimal("200.00")}],
         }
 
         result = serialize_context(context)
@@ -296,7 +270,7 @@ class TestSerializeContext:
             "decimal_value": Decimal("123.45"),
             "datetime_value": datetime(2024, 1, 1),
             "none_value": None,
-            "list_value": [1, 2, Decimal("3.0")]
+            "list_value": [1, 2, Decimal("3.0")],
         }
 
         result = serialize_context(context)
@@ -325,7 +299,7 @@ class TestAgentDecisionSummary:
             recent_decisions=3,
             last_decision_time=timestamp,
             confidence_avg=0.85,
-            decision_types=decision_types
+            decision_types=decision_types,
         )
 
         assert summary.agent_id == "accounting_agent"
@@ -343,7 +317,7 @@ class TestAgentDecisionSummary:
             recent_decisions=0,
             last_decision_time=None,
             confidence_avg=0.0,
-            decision_types={}
+            decision_types={},
         )
 
         assert summary.last_decision_time is None
@@ -365,7 +339,7 @@ class TestAgentDecisionModel:
             reasoning="test_reasoning",
             confidence=0.8,
             context=context,
-            timestamp=timestamp
+            timestamp=timestamp,
         )
 
         assert model.agent_id == "test_agent"
@@ -390,12 +364,9 @@ class TestIntegration:
             "transaction": {
                 "id": 123,
                 "amount": Decimal("150.75"),
-                "timestamp": datetime(2024, 1, 1, 10, 0, 0)
+                "timestamp": datetime(2024, 1, 1, 10, 0, 0),
             },
-            "analysis": {
-                "variance": Decimal("0.25"),
-                "threshold": 0.2
-            }
+            "analysis": {"variance": Decimal("0.25"), "threshold": 0.2},
         }
 
         # Create AgentDecision
@@ -406,7 +377,7 @@ class TestIntegration:
             reasoning="Transaction exceeds variance threshold",
             confidence=0.9,
             context=original_context,
-            timestamp=datetime(2024, 1, 1, 12, 0, 0)
+            timestamp=datetime(2024, 1, 1, 12, 0, 0),
         )
 
         # Convert to database model
@@ -442,7 +413,7 @@ class TestIntegration:
             decision_type="test",
             action="test",
             reasoning=long_reasoning,
-            confidence=0.5
+            confidence=0.5,
         )
         assert len(decision.reasoning) == 10000
 
@@ -452,7 +423,7 @@ class TestIntegration:
                 "level2": {
                     "level3": {
                         "amounts": [Decimal(str(i)) for i in range(100)],
-                        "dates": [datetime.now() for _ in range(10)]
+                        "dates": [datetime.now() for _ in range(10)],
                     }
                 }
             }
@@ -464,7 +435,7 @@ class TestIntegration:
             action="test",
             reasoning="test",
             confidence=0.7,
-            context=complex_context
+            context=complex_context,
         )
 
         # Should serialize without errors

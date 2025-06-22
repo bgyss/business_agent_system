@@ -1,6 +1,7 @@
 """
 Pytest configuration and fixtures for web testing
 """
+
 import os
 import signal
 import socket
@@ -19,9 +20,11 @@ try:
     from selenium.webdriver.support import expected_conditions as EC
     from selenium.webdriver.support.ui import WebDriverWait
     from webdriver_manager.chrome import ChromeDriverManager
+
     SELENIUM_AVAILABLE = True
 except ImportError:
     SELENIUM_AVAILABLE = False
+
     # Create dummy classes/modules for when selenium is not available
     class webdriver:
         class Chrome:
@@ -31,7 +34,7 @@ except ImportError:
 def is_port_in_use(port: int) -> bool:
     """Check if a port is already in use"""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('localhost', port)) == 0
+        return s.connect_ex(("localhost", port)) == 0
 
 
 @pytest.fixture(scope="session")
@@ -49,12 +52,17 @@ def streamlit_server() -> Generator[str, None, None]:
 
     # Start Streamlit server in background
     cmd = [
-        "streamlit", "run",
+        "streamlit",
+        "run",
         "dashboard/app.py",
-        "--server.port", str(port),
-        "--server.headless", "true",
-        "--browser.gatherUsageStats", "false",
-        "--server.enableXsrfProtection", "false"
+        "--server.port",
+        str(port),
+        "--server.headless",
+        "true",
+        "--browser.gatherUsageStats",
+        "false",
+        "--server.enableXsrfProtection",
+        "false",
     ]
 
     try:
@@ -62,7 +70,7 @@ def streamlit_server() -> Generator[str, None, None]:
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            preexec_fn=os.setsid  # Create new process group
+            preexec_fn=os.setsid,  # Create new process group
         )
 
         # Wait for server to start
@@ -133,9 +141,7 @@ def dashboard_page(browser: webdriver.Chrome, streamlit_server: str):
 
     # Wait for Streamlit to load (look for the main title)
     wait = WebDriverWait(browser, 30)
-    wait.until(
-        EC.presence_of_element_located((By.TAG_NAME, "h1"))
-    )
+    wait.until(EC.presence_of_element_located((By.TAG_NAME, "h1")))
 
     # Additional wait for dynamic content to load
     time.sleep(3)
@@ -150,6 +156,7 @@ def sample_config_path() -> str:
 
 
 if SELENIUM_AVAILABLE:
+
     class StreamlitTestHelper:
         """Helper class for interacting with Streamlit elements"""
 
@@ -169,18 +176,14 @@ if SELENIUM_AVAILABLE:
 
         def click_sidebar_button(self, button_text: str):
             """Click a button in the Streamlit sidebar"""
-            button = self.wait_for_element(
-                By.XPATH,
-                f"//button[contains(text(), '{button_text}')]"
-            )
+            button = self.wait_for_element(By.XPATH, f"//button[contains(text(), '{button_text}')]")
             button.click()
             time.sleep(1)  # Wait for UI to update
 
         def select_sidebar_radio(self, option_text: str):
             """Select a radio button option in the sidebar"""
             radio_option = self.wait_for_element(
-                By.XPATH,
-                f"//label[contains(text(), '{option_text}')]"
+                By.XPATH, f"//label[contains(text(), '{option_text}')]"
             )
             radio_option.click()
             time.sleep(2)  # Wait for view to change
@@ -191,8 +194,7 @@ if SELENIUM_AVAILABLE:
             dropdown.click()
 
             option = self.wait_for_element(
-                By.XPATH,
-                f"//option[contains(text(), '{dropdown_value}')]"
+                By.XPATH, f"//option[contains(text(), '{dropdown_value}')]"
             )
             option.click()
             time.sleep(2)  # Wait for data to load
@@ -201,7 +203,7 @@ if SELENIUM_AVAILABLE:
             """Get the value of a Streamlit metric"""
             metric_element = self.wait_for_element(
                 By.XPATH,
-                f"//div[contains(@data-testid, 'metric')]//div[contains(text(), '{metric_label}')]/following-sibling::div"
+                f"//div[contains(@data-testid, 'metric')]//div[contains(text(), '{metric_label}')]/following-sibling::div",
             )
             return metric_element.text
 
@@ -209,9 +211,7 @@ if SELENIUM_AVAILABLE:
             """Check if a chart with the given title exists"""
             try:
                 self.wait_for_element(
-                    By.XPATH,
-                    f"//div[contains(text(), '{chart_title}')]",
-                    timeout=10
+                    By.XPATH, f"//div[contains(text(), '{chart_title}')]", timeout=10
                 )
                 return True
             except:
@@ -229,6 +229,7 @@ if SELENIUM_AVAILABLE:
                     data.append([cell.text for cell in cells])
 
             return data
+
 else:
     # Provide dummy class when selenium is not available
     class StreamlitTestHelper:

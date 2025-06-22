@@ -22,5 +22,6 @@ def main():
     except KeyboardInterrupt:
         print("\nDashboard stopped by user")
 
+
 if __name__ == "__main__":
     main()

@@ -13,24 +13,26 @@ class EnhancedAccountingAgent(BaseAgent):
         super().__init__(agent_id, api_key, config, db_url)
         # Remove duplicate engine and session creation since BaseAgent now handles this
         self.anomaly_threshold = config.get("anomaly_threshold", 0.2)  # 20% variance
-        self.alert_thresholds = config.get("alert_thresholds", {
-            "cash_low": 1000,
-            "receivables_overdue": 30,  # days
-            "payables_overdue": 7  # days
-        })
+        self.alert_thresholds = config.get(
+            "alert_thresholds",
+            {"cash_low": 1000, "receivables_overdue": 30, "payables_overdue": 7},  # days  # days
+        )
 
         # Enhanced configuration for advanced analytics
-        self.forecasting_config = config.get("forecasting", {
-            "prediction_days": 30,
-            "seasonal_analysis_days": 365,
-            "trend_analysis_periods": 7,
-            "confidence_factors": {
-                "data_volume": 0.3,
-                "historical_accuracy": 0.25,
-                "trend_stability": 0.25,
-                "seasonal_consistency": 0.2
-            }
-        })
+        self.forecasting_config = config.get(
+            "forecasting",
+            {
+                "prediction_days": 30,
+                "seasonal_analysis_days": 365,
+                "trend_analysis_periods": 7,
+                "confidence_factors": {
+                    "data_volume": 0.3,
+                    "historical_accuracy": 0.25,
+                    "trend_stability": 0.25,
+                    "seasonal_consistency": 0.2,
+                },
+            },
+        )
 
         # Decision outcome tracking for learning
         self.decision_outcomes = {}  # Track decision outcomes for learning
@@ -39,7 +41,7 @@ class EnhancedAccountingAgent(BaseAgent):
     @property
     def system_prompt(self) -> str:
         return """You are an advanced AI Accounting Agent with sophisticated financial analysis capabilities.
-        
+
         Your enhanced responsibilities include:
         1. Advanced anomaly detection using multiple statistical methods (Z-score, IQR, variance analysis, time patterns)
         2. Predictive cash flow forecasting using ensemble methods and trend analysis
@@ -47,20 +49,20 @@ class EnhancedAccountingAgent(BaseAgent):
         4. Dynamic confidence calculation based on data quality and historical accuracy
         5. Decision outcome tracking and continuous learning from feedback
         6. Traditional accounting monitoring (receivables, payables, cash flow alerts)
-        
+
         Advanced capabilities:
         - Multi-algorithm anomaly detection combining statistical, time-based, and pattern analysis
         - Cash flow forecasting using moving averages, trend projection, and seasonal adjustments
         - Trend analysis across weekly, monthly, and quarterly periods
         - Confidence scoring based on data volume, historical accuracy, and analysis consistency
         - Learning from decision outcomes to improve future accuracy
-        
+
         You should provide clear, actionable recommendations with confidence levels based on:
         - Quality and volume of available data
         - Historical accuracy of similar decisions
         - Consistency across multiple analysis methods
         - Seasonal and temporal patterns
-        
+
         When analyzing financial data, consider:
         - Statistical significance of patterns and anomalies
         - Predictive indicators for cash flow challenges
@@ -98,17 +100,23 @@ class EnhancedAccountingAgent(BaseAgent):
 
         return None
 
-    async def _analyze_transaction(self, session, transaction_data: Dict[str, Any]) -> Optional[AgentDecision]:
+    async def _analyze_transaction(
+        self, session, transaction_data: Dict[str, Any]
+    ) -> Optional[AgentDecision]:
         transaction = TransactionModel(**transaction_data)
 
         # Get recent similar transactions for comparison
-        similar_transactions = session.query(Transaction).filter(
-            and_(
-                Transaction.transaction_type == transaction.transaction_type,
-                Transaction.category == transaction.category,
-                Transaction.transaction_date >= datetime.now() - timedelta(days=30)
+        similar_transactions = (
+            session.query(Transaction)
+            .filter(
+                and_(
+                    Transaction.transaction_type == transaction.transaction_type,
+                    Transaction.category == transaction.category,
+                    Transaction.transaction_date >= datetime.now() - timedelta(days=30),
+                )
             )
-        ).all()
+            .all()
+        )
 
         if not similar_transactions:
             return None
@@ -128,14 +136,14 @@ class EnhancedAccountingAgent(BaseAgent):
                 "transaction": transaction.model_dump(),
                 "similar_count": len(similar_transactions),
                 "anomaly_details": anomaly_results,
-                "confidence_factors": confidence["factors"]
+                "confidence_factors": confidence["factors"],
             }
 
             reasoning = await self.analyze_with_claude(
                 f"Advanced anomaly analysis: {anomaly_results['description']}. "
                 f"Multiple detection algorithms flagged this transaction. "
                 f"Confidence: {confidence['score']:.2%}. Should this be flagged?",
-                context
+                context,
             )
 
             return AgentDecision(
@@ -144,25 +152,22 @@ class EnhancedAccountingAgent(BaseAgent):
                 context=context,
                 reasoning=reasoning,
                 action=f"Flag transaction {transaction.id} for review",
-                confidence=confidence["score"]
+                confidence=confidence["score"],
             )
 
         return None
 
     async def _detect_transaction_anomalies(
-        self,
-        session,
-        transaction: TransactionModel,
-        similar_transactions: List[Transaction]
+        self, session, transaction: TransactionModel, similar_transactions: List[Transaction]
     ) -> Dict[str, Any]:
         """
         Enhanced anomaly detection using multiple algorithms.
-        
+
         Args:
             session: Database session
             transaction: Transaction to analyze
             similar_transactions: List of similar historical transactions
-            
+
         Returns:
             Dict with anomaly detection results and details
         """
@@ -174,7 +179,9 @@ class EnhancedAccountingAgent(BaseAgent):
             if len(amounts) >= 3:
                 mean_amount = statistics.mean(amounts)
                 std_amount = statistics.stdev(amounts) if len(amounts) > 1 else 0
-                z_score = abs(transaction_amount - mean_amount) / std_amount if std_amount > 0 else 0
+                z_score = (
+                    abs(transaction_amount - mean_amount) / std_amount if std_amount > 0 else 0
+                )
                 is_statistical_outlier = z_score > 2.5  # 99.4% confidence
             else:
                 is_statistical_outlier = False
@@ -189,27 +196,30 @@ class EnhancedAccountingAgent(BaseAgent):
                 iqr = q3 - q1
                 lower_bound = q1 - 1.5 * iqr
                 upper_bound = q3 + 1.5 * iqr
-                is_iqr_outlier = transaction_amount < lower_bound or transaction_amount > upper_bound
+                is_iqr_outlier = (
+                    transaction_amount < lower_bound or transaction_amount > upper_bound
+                )
             else:
                 is_iqr_outlier = False
                 lower_bound = upper_bound = 0
 
             # 3. Percentage variance from median
             median_amount = statistics.median(amounts) if amounts else 0
-            median_variance = abs(transaction_amount - median_amount) / median_amount if median_amount > 0 else 0
+            median_variance = (
+                abs(transaction_amount - median_amount) / median_amount if median_amount > 0 else 0
+            )
             is_variance_outlier = median_variance > self.anomaly_threshold
 
             # 4. Time-based anomaly (unusual hour/day patterns)
-            time_patterns = await self._analyze_time_patterns(session, transaction, similar_transactions)
+            time_patterns = await self._analyze_time_patterns(
+                session, transaction, similar_transactions
+            )
             is_time_anomaly = time_patterns["is_anomaly"]
 
             # Combine detection methods
-            anomaly_count = sum([
-                is_statistical_outlier,
-                is_iqr_outlier,
-                is_variance_outlier,
-                is_time_anomaly
-            ])
+            anomaly_count = sum(
+                [is_statistical_outlier, is_iqr_outlier, is_variance_outlier, is_time_anomaly]
+            )
 
             is_anomaly = anomaly_count >= 2  # Require at least 2 methods to flag
 
@@ -227,16 +237,18 @@ class EnhancedAccountingAgent(BaseAgent):
                     "mean": mean_amount,
                     "median": median_amount,
                     "std_dev": std_amount,
-                    "sample_size": len(amounts)
+                    "sample_size": len(amounts),
                 },
-                "description": f"Transaction amount ${transaction_amount:.2f} analyzed against {len(amounts)} similar transactions"
+                "description": f"Transaction amount ${transaction_amount:.2f} analyzed against {len(amounts)} similar transactions",
             }
 
         except Exception as e:
             self.logger.error(f"Error in anomaly detection: {e}")
             return {"is_anomaly": False, "error": str(e)}
 
-    async def _analyze_time_patterns(self, session, transaction: TransactionModel, similar_transactions: List[Transaction]) -> Dict[str, Any]:
+    async def _analyze_time_patterns(
+        self, session, transaction: TransactionModel, similar_transactions: List[Transaction]
+    ) -> Dict[str, Any]:
         """Analyze time-based patterns for anomaly detection."""
         try:
             transaction_hour = transaction.transaction_date.hour
@@ -254,8 +266,16 @@ class EnhancedAccountingAgent(BaseAgent):
 
             # Check if transaction time is unusual
             total_transactions = len(similar_transactions)
-            hour_frequency = hour_counts.get(transaction_hour, 0) / total_transactions if total_transactions > 0 else 0
-            weekday_frequency = weekday_counts.get(transaction_weekday, 0) / total_transactions if total_transactions > 0 else 0
+            hour_frequency = (
+                hour_counts.get(transaction_hour, 0) / total_transactions
+                if total_transactions > 0
+                else 0
+            )
+            weekday_frequency = (
+                weekday_counts.get(transaction_weekday, 0) / total_transactions
+                if total_transactions > 0
+                else 0
+            )
 
             # Flag as anomaly if time patterns are very unusual (< 5% of transactions)
             is_time_anomaly = hour_frequency < 0.05 or weekday_frequency < 0.05
@@ -265,7 +285,7 @@ class EnhancedAccountingAgent(BaseAgent):
                 "hour_frequency": hour_frequency,
                 "weekday_frequency": weekday_frequency,
                 "transaction_hour": transaction_hour,
-                "transaction_weekday": transaction_weekday
+                "transaction_weekday": transaction_weekday,
             }
 
         except Exception as e:
@@ -273,10 +293,7 @@ class EnhancedAccountingAgent(BaseAgent):
             return {"is_anomaly": False, "error": str(e)}
 
     async def _calculate_dynamic_confidence(
-        self,
-        session,
-        decision_type: str,
-        analysis_data: Dict[str, Any]
+        self, session, decision_type: str, analysis_data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Calculate dynamic confidence score based on multiple factors."""
         try:
@@ -309,7 +326,7 @@ class EnhancedAccountingAgent(BaseAgent):
 
             return {
                 "score": min(0.95, max(0.1, confidence_score)),  # Cap between 10% and 95%
-                "factors": factor_details
+                "factors": factor_details,
             }
 
         except Exception as e:
@@ -321,7 +338,8 @@ class EnhancedAccountingAgent(BaseAgent):
         try:
             # Get recent decisions of this type with outcomes
             type_outcomes = [
-                outcome for decision_id, outcome in self.decision_outcomes.items()
+                outcome
+                for decision_id, outcome in self.decision_outcomes.items()
                 if outcome.get("decision_type") == decision_type
             ]
 
@@ -329,7 +347,9 @@ class EnhancedAccountingAgent(BaseAgent):
                 return 0.7  # Default moderate confidence
 
             # Calculate accuracy rate
-            correct_decisions = sum(1 for outcome in type_outcomes if outcome.get("was_correct", False))
+            correct_decisions = sum(
+                1 for outcome in type_outcomes if outcome.get("was_correct", False)
+            )
             accuracy = correct_decisions / len(type_outcomes)
 
             return accuracy
@@ -338,7 +358,9 @@ class EnhancedAccountingAgent(BaseAgent):
             self.logger.error(f"Error getting historical accuracy: {e}")
             return 0.5
 
-    async def _calculate_seasonal_consistency(self, session, analysis_data: Dict[str, Any]) -> float:
+    async def _calculate_seasonal_consistency(
+        self, session, analysis_data: Dict[str, Any]
+    ) -> float:
         """Calculate seasonal consistency factor."""
         try:
             # For now, return a moderate factor
@@ -350,19 +372,22 @@ class EnhancedAccountingAgent(BaseAgent):
             return 0.5
 
     async def _forecast_cash_flow(
-        self,
-        session,
-        forecast_days: int = 30
+        self, session, forecast_days: int = 30
     ) -> Optional[AgentDecision]:
         """Advanced cash flow forecasting with predictive analytics."""
         try:
             # Get historical transaction data
             end_date = datetime.now()
-            start_date = end_date - timedelta(days=self.forecasting_config["seasonal_analysis_days"])
+            start_date = end_date - timedelta(
+                days=self.forecasting_config["seasonal_analysis_days"]
+            )
 
-            transactions = session.query(Transaction).filter(
-                Transaction.transaction_date >= start_date
-            ).order_by(Transaction.transaction_date).all()
+            transactions = (
+                session.query(Transaction)
+                .filter(Transaction.transaction_date >= start_date)
+                .order_by(Transaction.transaction_date)
+                .all()
+            )
 
             if len(transactions) < 7:  # Need at least a week of data
                 return None
@@ -374,7 +399,9 @@ class EnhancedAccountingAgent(BaseAgent):
             forecasts = await self._generate_cash_flow_forecasts(daily_flows, forecast_days)
 
             # Identify potential issues
-            forecast_analysis = await self._analyze_forecast_results(session, forecasts, forecast_days)
+            forecast_analysis = await self._analyze_forecast_results(
+                session, forecasts, forecast_days
+            )
 
             # Calculate confidence for forecast
             confidence = await self._calculate_forecast_confidence(daily_flows, forecasts)
@@ -384,7 +411,7 @@ class EnhancedAccountingAgent(BaseAgent):
                 "historical_data_days": len(daily_flows),
                 "forecasts": forecasts,
                 "analysis": forecast_analysis,
-                "confidence_score": confidence
+                "confidence_score": confidence,
             }
 
             # Generate detailed analysis with Claude
@@ -392,7 +419,7 @@ class EnhancedAccountingAgent(BaseAgent):
                 f"Cash flow forecast analysis for next {forecast_days} days. "
                 f"Forecast shows: {forecast_analysis['summary']}. "
                 f"Confidence: {confidence:.2%}. Provide strategic recommendations.",
-                context
+                context,
             )
 
             return AgentDecision(
@@ -401,7 +428,7 @@ class EnhancedAccountingAgent(BaseAgent):
                 context=context,
                 reasoning=reasoning,
                 action=forecast_analysis["recommended_action"],
-                confidence=confidence
+                confidence=confidence,
             )
 
         except Exception as e:
@@ -424,9 +451,7 @@ class EnhancedAccountingAgent(BaseAgent):
         return daily_flows
 
     async def _generate_cash_flow_forecasts(
-        self,
-        daily_flows: Dict[str, float],
-        forecast_days: int
+        self, daily_flows: Dict[str, float], forecast_days: int
     ) -> Dict[str, Any]:
         """Generate cash flow forecasts using multiple methods."""
         try:
@@ -439,7 +464,9 @@ class EnhancedAccountingAgent(BaseAgent):
 
             # Method 2: Weighted moving average (more weight to recent data)
             weights = [i + 1 for i in range(len(recent_flows))]
-            weighted_avg = sum(flow * weight for flow, weight in zip(recent_flows, weights)) / sum(weights)
+            weighted_avg = sum(flow * weight for flow, weight in zip(recent_flows, weights)) / sum(
+                weights
+            )
 
             # Method 3: Trend-based projection
             if len(flow_values) >= 14:
@@ -455,10 +482,10 @@ class EnhancedAccountingAgent(BaseAgent):
 
             # Combine forecasts with weights
             ensemble_forecast = (
-                simple_avg * 0.25 +
-                weighted_avg * 0.35 +
-                trend_forecast * 0.25 +
-                seasonal_forecast * 0.15
+                simple_avg * 0.25
+                + weighted_avg * 0.35
+                + trend_forecast * 0.25
+                + seasonal_forecast * 0.15
             )
 
             return {
@@ -468,7 +495,7 @@ class EnhancedAccountingAgent(BaseAgent):
                 "seasonal_adjusted": seasonal_forecast,
                 "ensemble": ensemble_forecast,
                 "daily_forecast": ensemble_forecast,
-                "total_forecast": ensemble_forecast * forecast_days
+                "total_forecast": ensemble_forecast * forecast_days,
             }
 
         except Exception as e:
@@ -495,10 +522,7 @@ class EnhancedAccountingAgent(BaseAgent):
             return 0
 
     async def _apply_seasonal_adjustment(
-        self,
-        daily_flows: Dict[str, float],
-        base_forecast: float,
-        forecast_days: int
+        self, daily_flows: Dict[str, float], base_forecast: float, forecast_days: int
     ) -> float:
         """Apply seasonal adjustments to forecasts."""
         try:
@@ -511,10 +535,7 @@ class EnhancedAccountingAgent(BaseAgent):
             return base_forecast
 
     async def _analyze_forecast_results(
-        self,
-        session,
-        forecasts: Dict[str, Any],
-        forecast_days: int
+        self, session, forecasts: Dict[str, Any], forecast_days: int
     ) -> Dict[str, Any]:
         """Analyze forecast results and identify potential issues."""
         try:
@@ -527,7 +548,9 @@ class EnhancedAccountingAgent(BaseAgent):
 
             # Analyze results
             is_shortage_predicted = projected_cash < self.alert_thresholds["cash_low"]
-            shortage_severity = "high" if projected_cash < 0 else "medium" if is_shortage_predicted else "low"
+            shortage_severity = (
+                "high" if projected_cash < 0 else "medium" if is_shortage_predicted else "low"
+            )
 
             # Generate summary and recommendations
             if is_shortage_predicted:
@@ -537,7 +560,9 @@ class EnhancedAccountingAgent(BaseAgent):
                 summary = f"Negative daily cash flow predicted: ${daily_forecast:.2f}/day"
                 recommended_action = "Monitor cash flow closely and optimize expenses"
             else:
-                summary = f"Positive cash flow predicted: ${total_forecast:.2f} over {forecast_days} days"
+                summary = (
+                    f"Positive cash flow predicted: ${total_forecast:.2f} over {forecast_days} days"
+                )
                 recommended_action = "Continue current financial management approach"
 
             return {
@@ -547,19 +572,24 @@ class EnhancedAccountingAgent(BaseAgent):
                 "is_shortage_predicted": is_shortage_predicted,
                 "shortage_severity": shortage_severity,
                 "recommended_action": recommended_action,
-                "daily_forecast": daily_forecast
+                "daily_forecast": daily_forecast,
             }
 
         except Exception as e:
             self.logger.error(f"Error analyzing forecast results: {e}")
-            return {"summary": "Error in forecast analysis", "recommended_action": "Review forecast data"}
+            return {
+                "summary": "Error in forecast analysis",
+                "recommended_action": "Review forecast data",
+            }
 
     async def _get_current_cash_balance(self, session) -> float:
         """Get current total cash balance."""
         try:
-            cash_accounts = session.query(Account).filter(
-                Account.account_type.in_([AccountType.CHECKING, AccountType.SAVINGS])
-            ).all()
+            cash_accounts = (
+                session.query(Account)
+                .filter(Account.account_type.in_([AccountType.CHECKING, AccountType.SAVINGS]))
+                .all()
+            )
 
             return float(sum(account.balance for account in cash_accounts))
 
@@ -568,9 +598,7 @@ class EnhancedAccountingAgent(BaseAgent):
             return 0.0
 
     async def _calculate_forecast_confidence(
-        self,
-        daily_flows: Dict[str, float],
-        forecasts: Dict[str, Any]
+        self, daily_flows: Dict[str, float], forecasts: Dict[str, Any]
     ) -> float:
         """Calculate confidence in the forecast based on data quality and consistency."""
         try:
@@ -579,7 +607,9 @@ class EnhancedAccountingAgent(BaseAgent):
             if len(flow_values) > 1:
                 variance = statistics.variance(flow_values)
                 mean_abs_flow = statistics.mean([abs(f) for f in flow_values])
-                consistency_factor = max(0.1, 1 - (variance / (mean_abs_flow ** 2)) if mean_abs_flow > 0 else 0.1)
+                consistency_factor = max(
+                    0.1, 1 - (variance / (mean_abs_flow**2)) if mean_abs_flow > 0 else 0.1
+                )
             else:
                 consistency_factor = 0.3
 
@@ -591,22 +621,20 @@ class EnhancedAccountingAgent(BaseAgent):
                 forecasts["simple_moving_average"],
                 forecasts["weighted_moving_average"],
                 forecasts["trend_based"],
-                forecasts["seasonal_adjusted"]
+                forecasts["seasonal_adjusted"],
             ]
 
             if len(forecast_values) > 1:
                 forecast_variance = statistics.variance(forecast_values)
                 forecast_mean = statistics.mean([abs(f) for f in forecast_values])
-                agreement_factor = max(0.1, 1 - (forecast_variance / (forecast_mean ** 2)) if forecast_mean > 0 else 0.1)
+                agreement_factor = max(
+                    0.1, 1 - (forecast_variance / (forecast_mean**2)) if forecast_mean > 0 else 0.1
+                )
             else:
                 agreement_factor = 0.5
 
             # Combine factors
-            confidence = (
-                consistency_factor * 0.4 +
-                volume_factor * 0.3 +
-                agreement_factor * 0.3
-            )
+            confidence = consistency_factor * 0.4 + volume_factor * 0.3 + agreement_factor * 0.3
 
             return min(0.9, max(0.2, confidence))
 
@@ -623,76 +651,102 @@ class EnhancedAccountingAgent(BaseAgent):
             # Analyze trends over different periods
             periods = [7, 30, 90]  # days
             trend_analysis = {}
-            
+
             for period in periods:
                 # Get transactions for this period
                 start_date = datetime.now() - timedelta(days=period)
-                transactions = session.query(Transaction).filter(
-                    Transaction.transaction_date >= start_date
-                ).all()
-                
+                transactions = (
+                    session.query(Transaction)
+                    .filter(Transaction.transaction_date >= start_date)
+                    .all()
+                )
+
                 if transactions:
                     # Separate income and expenses
-                    income_transactions = [t for t in transactions if t.transaction_type == TransactionType.INCOME]
-                    expense_transactions = [t for t in transactions if t.transaction_type == TransactionType.EXPENSE]
-                    
+                    income_transactions = [
+                        t for t in transactions if t.transaction_type == TransactionType.INCOME
+                    ]
+                    expense_transactions = [
+                        t for t in transactions if t.transaction_type == TransactionType.EXPENSE
+                    ]
+
                     # Calculate daily averages and trends
                     total_income = sum(float(t.amount) for t in income_transactions)
                     total_expenses = sum(float(t.amount) for t in expense_transactions)
-                    
+
                     # Calculate trend by comparing first half vs second half of period
                     mid_point = period // 2
-                    first_half_income = sum(float(t.amount) for t in income_transactions[:mid_point]) / mid_point if mid_point > 0 else 0
-                    second_half_income = sum(float(t.amount) for t in income_transactions[mid_point:]) / (period - mid_point) if (period - mid_point) > 0 else 0
-                    first_half_expenses = sum(float(t.amount) for t in expense_transactions[:mid_point]) / mid_point if mid_point > 0 else 0
-                    second_half_expenses = sum(float(t.amount) for t in expense_transactions[mid_point:]) / (period - mid_point) if (period - mid_point) > 0 else 0
-                    
+                    first_half_income = (
+                        sum(float(t.amount) for t in income_transactions[:mid_point]) / mid_point
+                        if mid_point > 0
+                        else 0
+                    )
+                    second_half_income = (
+                        sum(float(t.amount) for t in income_transactions[mid_point:])
+                        / (period - mid_point)
+                        if (period - mid_point) > 0
+                        else 0
+                    )
+                    first_half_expenses = (
+                        sum(float(t.amount) for t in expense_transactions[:mid_point]) / mid_point
+                        if mid_point > 0
+                        else 0
+                    )
+                    second_half_expenses = (
+                        sum(float(t.amount) for t in expense_transactions[mid_point:])
+                        / (period - mid_point)
+                        if (period - mid_point) > 0
+                        else 0
+                    )
+
                     income_trend = second_half_income - first_half_income  # Positive = increasing
-                    expense_trend = second_half_expenses - first_half_expenses  # Positive = increasing
+                    expense_trend = (
+                        second_half_expenses - first_half_expenses
+                    )  # Positive = increasing
                     daily_net = (total_income - total_expenses) / period if period > 0 else 0
-                    
+
                     trend_analysis[f"{period}_days"] = {
                         "income_trend": income_trend,
                         "expense_trend": expense_trend,
                         "daily_net": daily_net,
                         "total_income": total_income,
-                        "total_expenses": total_expenses
+                        "total_expenses": total_expenses,
                     }
-            
+
             if not trend_analysis:
                 return None
-                
+
             # Identify significant trends
             significant_trends = await self._identify_significant_trends(trend_analysis)
-            
+
             # Return None if no significant trends found
             if not significant_trends:
                 return None
-                
+
             # Calculate confidence based on data availability
             confidence = min(0.9, len(trend_analysis) * 0.3)
-            
+
             context = {
                 "trend_analysis": trend_analysis,
                 "significant_trends": significant_trends,
-                "analysis_periods": periods
+                "analysis_periods": periods,
             }
-            
+
             reasoning = await self.analyze_with_claude(
                 f"Financial trend analysis across {len(periods)} periods shows "
                 f"{len(significant_trends)} significant trends requiring attention.",
-                context
+                context,
             )
-            
+
             return AgentDecision(
                 agent_id=self.agent_id,
                 decision_type="financial_trend_analysis",
                 context=context,
                 reasoning=reasoning,
                 action="Review financial trends and implement corrective measures",
-                confidence=confidence
+                confidence=confidence,
             )
-            
+
         except Exception as e:
             self.logger.error(f"Error in financial trend analysis: {e}")
             return None
@@ -701,25 +755,31 @@ class EnhancedAccountingAgent(BaseAgent):
         """Identify significant trends that require attention."""
         try:
             significant_trends = []
-            
+
             # Check for declining income trends
             for period, data in trend_analysis.items():
                 income_trend = data.get("income_trend", 0)
                 expense_trend = data.get("expense_trend", 0)
                 daily_net = data.get("daily_net", 0)
-                
+
                 # Flag significant negative trends
                 if income_trend < 0 and abs(income_trend) > 50:  # Losing more than $50/day
-                    significant_trends.append(f"Declining income trend in {period} period: ${income_trend:.2f}/day")
-                
+                    significant_trends.append(
+                        f"Declining income trend in {period} period: ${income_trend:.2f}/day"
+                    )
+
                 if expense_trend > 50:  # Rising expenses > $50/day (lowered threshold)
-                    significant_trends.append(f"Rising expense trend in {period} period: ${expense_trend:.2f}/day")
-                
+                    significant_trends.append(
+                        f"Rising expense trend in {period} period: ${expense_trend:.2f}/day"
+                    )
+
                 if daily_net < -100:  # Negative cash flow > $100/day
-                    significant_trends.append(f"Negative cash flow trend in {period} period: ${daily_net:.2f}/day")
-                    
+                    significant_trends.append(
+                        f"Negative cash flow trend in {period} period: ${daily_net:.2f}/day"
+                    )
+
             return significant_trends
-            
+
         except Exception as e:
             self.logger.error(f"Error identifying significant trends: {e}")
             return []
@@ -730,42 +790,42 @@ class EnhancedAccountingAgent(BaseAgent):
             decision_id = data.get("decision_id")
             was_correct = data.get("was_correct", False)
             decision_type = data.get("decision_type", "unknown")
-            
+
             if decision_id:
                 # Store the outcome
                 self.decision_outcomes[decision_id] = {
                     "decision_type": decision_type,
                     "was_correct": was_correct,
-                    "timestamp": datetime.now()
+                    "timestamp": datetime.now(),
                 }
-                
+
                 # Analyze patterns to see if adjustments are needed
                 pattern_analysis = await self._analyze_decision_patterns()
-                
+
                 context = {
                     "decision_id": decision_id,
                     "outcome": was_correct,
-                    "pattern_analysis": pattern_analysis
+                    "pattern_analysis": pattern_analysis,
                 }
-                
+
                 reasoning = await self.analyze_with_claude(
                     f"Decision outcome processed: {'Correct' if was_correct else 'Incorrect'}. "
                     f"Pattern analysis shows: {pattern_analysis.get('summary', 'No significant patterns')}",
-                    context
+                    context,
                 )
-                
+
                 return AgentDecision(
                     agent_id=self.agent_id,
                     decision_type="decision_learning",
                     context=context,
                     reasoning=reasoning,
                     action="Update decision models based on feedback",
-                    confidence=0.8
+                    confidence=0.8,
                 )
-                
+
         except Exception as e:
             self.logger.error(f"Error processing decision outcome: {e}")
-            
+
         return None
 
     async def _analyze_decision_patterns(self) -> Dict[str, Any]:
@@ -773,42 +833,46 @@ class EnhancedAccountingAgent(BaseAgent):
         try:
             if not self.decision_outcomes:
                 return {"needs_adjustment": False, "total_decisions": 0}
-                
+
             # Analyze by decision type
             type_accuracy = {}
-            for decision_id, outcome in self.decision_outcomes.items():
+            for _decision_id, outcome in self.decision_outcomes.items():
                 decision_type = outcome.get("decision_type", "unknown")
                 was_correct = outcome.get("was_correct", False)
-                
+
                 if decision_type not in type_accuracy:
                     type_accuracy[decision_type] = {"correct": 0, "total": 0}
-                    
+
                 type_accuracy[decision_type]["total"] += 1
                 if was_correct:
                     type_accuracy[decision_type]["correct"] += 1
-            
+
             # Identify low-accuracy types
             low_accuracy_types = []
             for decision_type, stats in type_accuracy.items():
                 accuracy = stats["correct"] / stats["total"] if stats["total"] > 0 else 0
-                if accuracy < 0.7 and stats["total"] >= 3:  # Less than 70% accuracy with at least 3 decisions
+                if (
+                    accuracy < 0.7 and stats["total"] >= 3
+                ):  # Less than 70% accuracy with at least 3 decisions
                     low_accuracy_types.append(decision_type)
-            
+
             needs_adjustment = len(low_accuracy_types) > 0
-            
+
             recommendation = ""
             if needs_adjustment:
-                recommendation = f"Adjust thresholds and algorithms for: {', '.join(low_accuracy_types)}"
-            
+                recommendation = (
+                    f"Adjust thresholds and algorithms for: {', '.join(low_accuracy_types)}"
+                )
+
             return {
                 "needs_adjustment": needs_adjustment,
                 "low_accuracy_types": low_accuracy_types,
                 "type_accuracy": type_accuracy,
                 "total_decisions": len(self.decision_outcomes),
                 "recommendation": recommendation,
-                "summary": f"Analyzed {len(self.decision_outcomes)} decisions, {len(low_accuracy_types)} types need adjustment"
+                "summary": f"Analyzed {len(self.decision_outcomes)} decisions, {len(low_accuracy_types)} types need adjustment",
             }
-            
+
         except Exception as e:
             self.logger.error(f"Error analyzing decision patterns: {e}")
             return {"needs_adjustment": False, "error": str(e)}

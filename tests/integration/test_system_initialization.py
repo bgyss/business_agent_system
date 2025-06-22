@@ -1,6 +1,7 @@
 """
 Integration tests for system initialization and configuration.
 """
+
 import os
 import tempfile
 
@@ -30,8 +31,8 @@ class TestSystemInitialization:
     def test_config_loading_invalid_yaml(self, mock_env_vars):
         """Test error handling for invalid YAML configuration."""
         # Create invalid YAML file
-        config_fd, config_path = tempfile.mkstemp(suffix='.yaml')
-        with os.fdopen(config_fd, 'w') as f:
+        config_fd, config_path = tempfile.mkstemp(suffix=".yaml")
+        with os.fdopen(config_fd, "w") as f:
             f.write("invalid: yaml: content: [")
 
         try:
@@ -66,7 +67,7 @@ class TestSystemInitialization:
         config["agents"]["inventory"]["enabled"] = False
         config["agents"]["hr"]["enabled"] = False
 
-        with open(temp_config_file, 'w') as f:
+        with open(temp_config_file, "w") as f:
             yaml.dump(config, f)
 
         system = BusinessAgentSystem(temp_config_file)
@@ -93,7 +94,7 @@ class TestSystemInitialization:
 
         config["simulation"]["enabled"] = False
 
-        with open(temp_config_file, 'w') as f:
+        with open(temp_config_file, "w") as f:
             yaml.dump(config, f)
 
         system = BusinessAgentSystem(temp_config_file)
@@ -136,7 +137,7 @@ class TestSystemInitialization:
         assert status["business_config"]["type"] == "restaurant"
 
         # All agents should be not running initially
-        for agent_name, agent_status in status["agents"].items():
+        for _agent_name, agent_status in status["agents"].items():
             assert agent_status["running"] is False
             assert agent_status["decisions"] == 0
 
@@ -149,14 +150,12 @@ class TestConfigurationValidation:
         minimal_config = {
             "business": {"name": "Test", "type": "restaurant"},
             "database": {"url": temp_db},
-            "agents": {
-                "accounting": {"enabled": True, "check_interval": 300}
-            },
-            "simulation": {"enabled": False}
+            "agents": {"accounting": {"enabled": True, "check_interval": 300}},
+            "simulation": {"enabled": False},
         }
 
-        config_fd, config_path = tempfile.mkstemp(suffix='.yaml')
-        with os.fdopen(config_fd, 'w') as f:
+        config_fd, config_path = tempfile.mkstemp(suffix=".yaml")
+        with os.fdopen(config_fd, "w") as f:
             yaml.dump(minimal_config, f)
 
         try:
@@ -173,11 +172,11 @@ class TestConfigurationValidation:
         incomplete_config = {
             "business": {"name": "Test", "type": "restaurant"},
             "database": {"url": temp_db},
-            "agents": {}  # Empty agents section
+            "agents": {},  # Empty agents section
         }
 
-        config_fd, config_path = tempfile.mkstemp(suffix='.yaml')
-        with os.fdopen(config_fd, 'w') as f:
+        config_fd, config_path = tempfile.mkstemp(suffix=".yaml")
+        with os.fdopen(config_fd, "w") as f:
             yaml.dump(incomplete_config, f)
 
         try:
@@ -195,11 +194,11 @@ class TestConfigurationValidation:
             "business": {"name": "Test", "type": "invalid_type"},
             "database": {"url": temp_db},
             "agents": {"accounting": {"enabled": True}},
-            "simulation": {"enabled": True}
+            "simulation": {"enabled": True},
         }
 
-        config_fd, config_path = tempfile.mkstemp(suffix='.yaml')
-        with os.fdopen(config_fd, 'w') as f:
+        config_fd, config_path = tempfile.mkstemp(suffix=".yaml")
+        with os.fdopen(config_fd, "w") as f:
             yaml.dump(invalid_config, f)
 
         try:
@@ -218,11 +217,11 @@ class TestConfigurationValidation:
             "business": {"name": "Test", "type": "restaurant"},
             "database": {"url": "invalid://database/url"},
             "agents": {"accounting": {"enabled": True}},
-            "simulation": {"enabled": False}
+            "simulation": {"enabled": False},
         }
 
-        config_fd, config_path = tempfile.mkstemp(suffix='.yaml')
-        with os.fdopen(config_fd, 'w') as f:
+        config_fd, config_path = tempfile.mkstemp(suffix=".yaml")
+        with os.fdopen(config_fd, "w") as f:
             yaml.dump(config_with_invalid_db, f)
 
         try:

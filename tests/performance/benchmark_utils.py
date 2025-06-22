@@ -20,6 +20,7 @@ import psutil
 @dataclass
 class PerformanceMetric:
     """Represents a single performance metric measurement."""
+
     name: str
     value: float
     unit: str
@@ -30,19 +31,20 @@ class PerformanceMetric:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         data = asdict(self)
-        data['timestamp'] = self.timestamp.isoformat()
+        data["timestamp"] = self.timestamp.isoformat()
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PerformanceMetric':
+    def from_dict(cls, data: Dict[str, Any]) -> "PerformanceMetric":
         """Create from dictionary."""
-        data['timestamp'] = datetime.fromisoformat(data['timestamp'])
+        data["timestamp"] = datetime.fromisoformat(data["timestamp"])
         return cls(**data)
 
 
 @dataclass
 class BenchmarkResult:
     """Represents the result of a benchmark run."""
+
     test_name: str
     metrics: List[PerformanceMetric]
     system_info: Dict[str, Any]
@@ -54,20 +56,20 @@ class BenchmarkResult:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
-            'test_name': self.test_name,
-            'metrics': [m.to_dict() for m in self.metrics],
-            'system_info': self.system_info,
-            'execution_time': self.execution_time,
-            'timestamp': self.timestamp.isoformat(),
-            'status': self.status,
-            'notes': self.notes
+            "test_name": self.test_name,
+            "metrics": [m.to_dict() for m in self.metrics],
+            "system_info": self.system_info,
+            "execution_time": self.execution_time,
+            "timestamp": self.timestamp.isoformat(),
+            "status": self.status,
+            "notes": self.notes,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'BenchmarkResult':
+    def from_dict(cls, data: Dict[str, Any]) -> "BenchmarkResult":
         """Create from dictionary."""
-        data['timestamp'] = datetime.fromisoformat(data['timestamp'])
-        data['metrics'] = [PerformanceMetric.from_dict(m) for m in data['metrics']]
+        data["timestamp"] = datetime.fromisoformat(data["timestamp"])
+        data["metrics"] = [PerformanceMetric.from_dict(m) for m in data["metrics"]]
         return cls(**data)
 
 
@@ -82,22 +84,22 @@ class SystemProfiler:
             import socket
 
             return {
-                'platform': platform.platform(),
-                'system': platform.system(),
-                'release': platform.release(),
-                'version': platform.version(),
-                'machine': platform.machine(),
-                'processor': platform.processor(),
-                'hostname': socket.gethostname(),
-                'python_version': platform.python_version(),
-                'cpu_count': psutil.cpu_count(),
-                'cpu_count_logical': psutil.cpu_count(logical=True),
-                'memory_total': psutil.virtual_memory().total,
-                'disk_total': psutil.disk_usage('/').total if os.path.exists('/') else None,
-                'timestamp': datetime.now().isoformat()
+                "platform": platform.platform(),
+                "system": platform.system(),
+                "release": platform.release(),
+                "version": platform.version(),
+                "machine": platform.machine(),
+                "processor": platform.processor(),
+                "hostname": socket.gethostname(),
+                "python_version": platform.python_version(),
+                "cpu_count": psutil.cpu_count(),
+                "cpu_count_logical": psutil.cpu_count(logical=True),
+                "memory_total": psutil.virtual_memory().total,
+                "disk_total": psutil.disk_usage("/").total if os.path.exists("/") else None,
+                "timestamp": datetime.now().isoformat(),
             }
         except Exception as e:
-            return {'error': str(e), 'timestamp': datetime.now().isoformat()}
+            return {"error": str(e), "timestamp": datetime.now().isoformat()}
 
     @staticmethod
     def get_resource_usage() -> Dict[str, Any]:
@@ -106,17 +108,19 @@ class SystemProfiler:
             process = psutil.Process()
 
             return {
-                'cpu_percent': psutil.cpu_percent(interval=0.1),
-                'memory_percent': psutil.virtual_memory().percent,
-                'memory_used': psutil.virtual_memory().used,
-                'memory_available': psutil.virtual_memory().available,
-                'process_memory': process.memory_info().rss,
-                'process_cpu_percent': process.cpu_percent(),
-                'disk_usage_percent': psutil.disk_usage('/').percent if os.path.exists('/') else None,
-                'timestamp': datetime.now().isoformat()
+                "cpu_percent": psutil.cpu_percent(interval=0.1),
+                "memory_percent": psutil.virtual_memory().percent,
+                "memory_used": psutil.virtual_memory().used,
+                "memory_available": psutil.virtual_memory().available,
+                "process_memory": process.memory_info().rss,
+                "process_cpu_percent": process.cpu_percent(),
+                "disk_usage_percent": (
+                    psutil.disk_usage("/").percent if os.path.exists("/") else None
+                ),
+                "timestamp": datetime.now().isoformat(),
             }
         except Exception as e:
-            return {'error': str(e), 'timestamp': datetime.now().isoformat()}
+            return {"error": str(e), "timestamp": datetime.now().isoformat()}
 
 
 class PerformanceTracker:
@@ -142,7 +146,7 @@ class PerformanceTracker:
         """Save metrics history to storage."""
         try:
             os.makedirs(os.path.dirname(self.storage_path), exist_ok=True)
-            with open(self.storage_path, 'w') as f:
+            with open(self.storage_path, "w") as f:
                 data = [result.to_dict() for result in self.metrics_history]
                 json.dump(data, f, indent=2)
         except Exception as e:
@@ -161,7 +165,7 @@ class PerformanceTracker:
             return None
 
         # Use the last 10 successful runs to establish baseline
-        successful_results = [r for r in test_results if r.status == 'success'][-10:]
+        successful_results = [r for r in test_results if r.status == "success"][-10:]
 
         if not successful_results:
             return None
@@ -169,7 +173,7 @@ class PerformanceTracker:
         baseline = {}
 
         # Calculate baseline for each metric
-        for metric_name in set(m.name for result in successful_results for m in result.metrics):
+        for metric_name in {m.name for result in successful_results for m in result.metrics}:
             values = []
             for result in successful_results:
                 for metric in result.metrics:
@@ -178,12 +182,12 @@ class PerformanceTracker:
 
             if values:
                 baseline[metric_name] = {
-                    'mean': statistics.mean(values),
-                    'median': statistics.median(values),
-                    'std': statistics.stdev(values) if len(values) > 1 else 0,
-                    'min': min(values),
-                    'max': max(values),
-                    'count': len(values)
+                    "mean": statistics.mean(values),
+                    "median": statistics.median(values),
+                    "std": statistics.stdev(values) if len(values) > 1 else 0,
+                    "min": min(values),
+                    "max": max(values),
+                    "count": len(values),
                 }
 
         return baseline
@@ -195,7 +199,9 @@ class PerformanceTracker:
             return []
 
         # Get the most recent result
-        recent_results = [r for r in self.metrics_history if r.test_name == test_name and r.status == 'success']
+        recent_results = [
+            r for r in self.metrics_history if r.test_name == test_name and r.status == "success"
+        ]
         if not recent_results:
             return []
 
@@ -204,30 +210,39 @@ class PerformanceTracker:
 
         for metric in latest_result.metrics:
             if metric.name in baseline:
-                baseline_mean = baseline[metric.name]['mean']
+                baseline_mean = baseline[metric.name]["mean"]
                 current_value = metric.value
 
                 # Check for significant increase (regression)
                 if baseline_mean > 0:
                     regression_ratio = (current_value - baseline_mean) / baseline_mean
                     if regression_ratio > threshold:
-                        regressions.append({
-                            'metric_name': metric.name,
-                            'baseline_value': baseline_mean,
-                            'current_value': current_value,
-                            'regression_ratio': regression_ratio,
-                            'unit': metric.unit,
-                            'severity': 'high' if regression_ratio > 0.5 else 'medium' if regression_ratio > 0.25 else 'low'
-                        })
+                        regressions.append(
+                            {
+                                "metric_name": metric.name,
+                                "baseline_value": baseline_mean,
+                                "current_value": current_value,
+                                "regression_ratio": regression_ratio,
+                                "unit": metric.unit,
+                                "severity": (
+                                    "high"
+                                    if regression_ratio > 0.5
+                                    else "medium" if regression_ratio > 0.25 else "low"
+                                ),
+                            }
+                        )
 
         return regressions
 
-    def get_performance_trends(self, test_name: str, days: int = 30) -> Dict[str, List[Tuple[datetime, float]]]:
+    def get_performance_trends(
+        self, test_name: str, days: int = 30
+    ) -> Dict[str, List[Tuple[datetime, float]]]:
         """Get performance trends for a test over time."""
         cutoff_date = datetime.now() - timedelta(days=days)
         recent_results = [
-            r for r in self.metrics_history
-            if r.test_name == test_name and r.timestamp >= cutoff_date and r.status == 'success'
+            r
+            for r in self.metrics_history
+            if r.test_name == test_name and r.timestamp >= cutoff_date and r.status == "success"
         ]
 
         trends = {}
@@ -259,12 +274,11 @@ class BenchmarkRunner:
 
         try:
             # Run the test function
-            result = test_function(*args, **kwargs)
-            status = 'success'
+            test_function(*args, **kwargs)
+            status = "success"
             notes = ""
         except Exception as e:
-            result = None
-            status = 'failure'
+            status = "failure"
             notes = str(e)
 
         end_time = time.time()
@@ -279,31 +293,33 @@ class BenchmarkRunner:
                 unit="seconds",
                 timestamp=datetime.now(),
                 category="timing",
-                tags={"test": test_name}
+                tags={"test": test_name},
             )
         ]
 
         # Add resource usage metrics if available
-        if 'error' not in start_resources and 'error' not in end_resources:
-            memory_delta = end_resources['process_memory'] - start_resources['process_memory']
-            metrics.extend([
-                PerformanceMetric(
-                    name="memory_delta",
-                    value=memory_delta / 1024 / 1024,  # Convert to MB
-                    unit="MB",
-                    timestamp=datetime.now(),
-                    category="memory",
-                    tags={"test": test_name}
-                ),
-                PerformanceMetric(
-                    name="cpu_usage",
-                    value=end_resources['process_cpu_percent'],
-                    unit="percent",
-                    timestamp=datetime.now(),
-                    category="cpu",
-                    tags={"test": test_name}
-                )
-            ])
+        if "error" not in start_resources and "error" not in end_resources:
+            memory_delta = end_resources["process_memory"] - start_resources["process_memory"]
+            metrics.extend(
+                [
+                    PerformanceMetric(
+                        name="memory_delta",
+                        value=memory_delta / 1024 / 1024,  # Convert to MB
+                        unit="MB",
+                        timestamp=datetime.now(),
+                        category="memory",
+                        tags={"test": test_name},
+                    ),
+                    PerformanceMetric(
+                        name="cpu_usage",
+                        value=end_resources["process_cpu_percent"],
+                        unit="percent",
+                        timestamp=datetime.now(),
+                        category="cpu",
+                        tags={"test": test_name},
+                    ),
+                ]
+            )
 
         # Create benchmark result
         benchmark_result = BenchmarkResult(
@@ -313,7 +329,7 @@ class BenchmarkRunner:
             execution_time=execution_time,
             timestamp=datetime.now(),
             status=status,
-            notes=notes
+            notes=notes,
         )
 
         # Record the result
@@ -331,13 +347,13 @@ class BenchmarkRunner:
         latest_result = recent_results[-1] if recent_results else None
 
         return {
-            'test_name': test_name,
-            'has_baseline': baseline is not None,
-            'baseline_metrics': baseline,
-            'latest_result': latest_result.to_dict() if latest_result else None,
-            'regressions': regressions,
-            'regression_count': len(regressions),
-            'status': 'pass' if not regressions else 'regression_detected'
+            "test_name": test_name,
+            "has_baseline": baseline is not None,
+            "baseline_metrics": baseline,
+            "latest_result": latest_result.to_dict() if latest_result else None,
+            "regressions": regressions,
+            "regression_count": len(regressions),
+            "status": "pass" if not regressions else "regression_detected",
         }
 
 
@@ -347,7 +363,9 @@ class PerformanceReporter:
     def __init__(self, tracker: PerformanceTracker):
         self.tracker = tracker
 
-    def generate_summary_report(self, output_path: str = "tests/performance/performance_report.html") -> None:
+    def generate_summary_report(
+        self, output_path: str = "tests/performance/performance_report.html"
+    ) -> None:
         """Generate a comprehensive performance summary report."""
         # Group results by test name
         test_groups = {}
@@ -361,7 +379,7 @@ class PerformanceReporter:
 
         # Save report
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             f.write(html_content)
 
         print(f"Performance report generated: {output_path}")
@@ -396,7 +414,7 @@ class PerformanceReporter:
         """.format(
             timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             total_runs=len(self.tracker.metrics_history),
-            test_count=len(test_groups)
+            test_count=len(test_groups),
         )
 
         # Add summary table
@@ -413,7 +431,7 @@ class PerformanceReporter:
         """
 
         for test_name, results in test_groups.items():
-            recent_results = [r for r in results if r.status == 'success'][-10:]
+            recent_results = [r for r in results if r.status == "success"][-10:]
             if recent_results:
                 avg_time = sum(r.execution_time for r in recent_results) / len(recent_results)
                 latest_result = results[-1]
@@ -434,16 +452,16 @@ class PerformanceReporter:
         # Add detailed sections for each test
         for test_name, results in test_groups.items():
             html_content += '<div class="test-section">'
-            html_content += f'<h3>{test_name}</h3>'
+            html_content += f"<h3>{test_name}</h3>"
 
             # Get baseline and trends
             baseline = self.tracker.get_baseline_metrics(test_name)
             regressions = self.tracker.detect_regressions(test_name)
-            trends = self.tracker.get_performance_trends(test_name, days=30)
+            self.tracker.get_performance_trends(test_name, days=30)
 
             if baseline:
-                html_content += '<h4>Baseline Metrics</h4>'
-                html_content += '<table><tr><th>Metric</th><th>Mean</th><th>Std Dev</th><th>Min</th><th>Max</th></tr>'
+                html_content += "<h4>Baseline Metrics</h4>"
+                html_content += "<table><tr><th>Metric</th><th>Mean</th><th>Std Dev</th><th>Min</th><th>Max</th></tr>"
                 for metric_name, stats in baseline.items():
                     html_content += f"""
                         <tr>
@@ -454,24 +472,26 @@ class PerformanceReporter:
                             <td>{stats['max']:.3f}</td>
                         </tr>
                     """
-                html_content += '</table>'
+                html_content += "</table>"
 
             if regressions:
-                html_content += '<h4>Performance Regressions</h4>'
+                html_content += "<h4>Performance Regressions</h4>"
                 for regression in regressions:
                     html_content += f"""
                         <div class="regression">
-                            {regression['metric_name']}: {regression['regression_ratio']:.1%} slower 
+                            {regression['metric_name']}: {regression['regression_ratio']:.1%} slower
                             ({regression['baseline_value']:.3f} → {regression['current_value']:.3f} {regression['unit']})
                         </div>
                     """
 
-            html_content += '</div>'
+            html_content += "</div>"
 
         html_content += "</body></html>"
         return html_content
 
-    def create_trend_charts(self, test_name: str, output_dir: str = "tests/performance/charts") -> List[str]:
+    def create_trend_charts(
+        self, test_name: str, output_dir: str = "tests/performance/charts"
+    ) -> List[str]:
         """Create trend charts for a specific test."""
         trends = self.tracker.get_performance_trends(test_name, days=30)
 
@@ -481,7 +501,7 @@ class PerformanceReporter:
         os.makedirs(output_dir, exist_ok=True)
         chart_files = []
 
-        plt.style.use('seaborn-v0_8')
+        plt.style.use("seaborn-v0_8")
 
         for metric_name, data_points in trends.items():
             if len(data_points) < 2:
@@ -490,23 +510,27 @@ class PerformanceReporter:
             timestamps, values = zip(*data_points)
 
             plt.figure(figsize=(12, 6))
-            plt.plot(timestamps, values, marker='o', linewidth=2, markersize=4)
-            plt.title(f'{test_name} - {metric_name} Trend')
-            plt.xlabel('Time')
-            plt.ylabel(f'{metric_name}')
+            plt.plot(timestamps, values, marker="o", linewidth=2, markersize=4)
+            plt.title(f"{test_name} - {metric_name} Trend")
+            plt.xlabel("Time")
+            plt.ylabel(f"{metric_name}")
             plt.xticks(rotation=45)
             plt.tight_layout()
 
-            chart_file = os.path.join(output_dir, f'{test_name}_{metric_name}_trend.png')
-            plt.savefig(chart_file, dpi=150, bbox_inches='tight')
+            chart_file = os.path.join(output_dir, f"{test_name}_{metric_name}_trend.png")
+            plt.savefig(chart_file, dpi=150, bbox_inches="tight")
             plt.close()
 
             chart_files.append(chart_file)
 
         return chart_files
 
-    def create_comparison_chart(self, test_names: List[str], metric_name: str = "execution_time",
-                              output_path: str = "tests/performance/charts/comparison.png") -> str:
+    def create_comparison_chart(
+        self,
+        test_names: List[str],
+        metric_name: str = "execution_time",
+        output_path: str = "tests/performance/charts/comparison.png",
+    ) -> str:
         """Create a comparison chart for multiple tests."""
         plt.figure(figsize=(14, 8))
 
@@ -516,25 +540,29 @@ class PerformanceReporter:
             trends = self.tracker.get_performance_trends(test_name, days=30)
             if metric_name in trends:
                 timestamps, values = zip(*trends[metric_name])
-                test_data.append({
-                    'test_name': test_name,
-                    'timestamps': timestamps,
-                    'values': values
-                })
+                test_data.append(
+                    {"test_name": test_name, "timestamps": timestamps, "values": values}
+                )
 
         for data in test_data:
-            plt.plot(data['timestamps'], data['values'],
-                    marker='o', label=data['test_name'], linewidth=2, markersize=3)
+            plt.plot(
+                data["timestamps"],
+                data["values"],
+                marker="o",
+                label=data["test_name"],
+                linewidth=2,
+                markersize=3,
+            )
 
-        plt.title(f'Performance Comparison - {metric_name}')
-        plt.xlabel('Time')
+        plt.title(f"Performance Comparison - {metric_name}")
+        plt.xlabel("Time")
         plt.ylabel(metric_name)
         plt.legend()
         plt.xticks(rotation=45)
         plt.tight_layout()
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
+        plt.savefig(output_path, dpi=150, bbox_inches="tight")
         plt.close()
 
         return output_path

@@ -35,6 +35,7 @@ class TestSimulationPerformance:
     @pytest.mark.simulation
     def test_business_simulator_initialization(self, benchmark, performance_config, temp_db_path):
         """Benchmark business simulator initialization time."""
+
         def create_and_initialize_simulator():
             db_url = f"sqlite:///{temp_db_path}"
             simulator = BusinessSimulator(performance_config, db_url)
@@ -45,7 +46,7 @@ class TestSimulationPerformance:
 
         # Initialization should be fast
         assert simulator is not None
-        assert benchmark.stats['mean'] < 2.0  # Less than 2 seconds
+        assert benchmark.stats["mean"] < 2.0  # Less than 2 seconds
 
     @pytest.mark.benchmark
     @pytest.mark.simulation
@@ -64,8 +65,8 @@ class TestSimulationPerformance:
 
         # Data generation should be fast
         assert result is not None
-        assert len(result['transactions']) > 0
-        assert benchmark.stats['mean'] < 1.0  # Less than 1 second for 30 days
+        assert len(result["transactions"]) > 0
+        assert benchmark.stats["mean"] < 1.0  # Less than 1 second for 30 days
 
     @pytest.mark.benchmark
     @pytest.mark.simulation
@@ -82,7 +83,7 @@ class TestSimulationPerformance:
         # Daily generation should be very fast
         assert result is not None
         assert len(result) > 0
-        assert benchmark.stats['mean'] < 0.1  # Less than 100ms
+        assert benchmark.stats["mean"] < 0.1  # Less than 100ms
 
     @pytest.mark.benchmark
     @pytest.mark.simulation
@@ -107,7 +108,7 @@ class TestSimulationPerformance:
 
         # Inventory simulation should be fast
         assert result[0] > 0  # Should generate items
-        assert benchmark.stats['mean'] < 0.5  # Less than 500ms
+        assert benchmark.stats["mean"] < 0.5  # Less than 500ms
 
     @pytest.mark.simulation
     @pytest.mark.stress
@@ -126,7 +127,7 @@ class TestSimulationPerformance:
 
         # Verify data was generated
         status = test_business_simulator.get_simulation_status()
-        assert status['transaction_count'] > 1000  # Should have substantial data
+        assert status["transaction_count"] > 1000  # Should have substantial data
 
     @pytest.mark.benchmark
     @pytest.mark.simulation
@@ -145,7 +146,7 @@ class TestSimulationPerformance:
 
         # Anomaly generation should be fast
         assert result is not None
-        assert benchmark.stats['mean'] < 0.05  # Less than 50ms
+        assert benchmark.stats["mean"] < 0.05  # Less than 50ms
 
     @pytest.mark.simulation
     @pytest.mark.memory
@@ -178,18 +179,22 @@ class TestSimulationPerformance:
     @pytest.mark.simulation
     def test_real_time_simulation_cycle_performance(self, benchmark, test_business_simulator):
         """Benchmark real-time simulation cycle performance."""
+
         async def single_simulation_cycle():
             # Simulate a single cycle of real-time data generation
             today = datetime.now()
 
             # Generate transactions
-            daily_transactions = test_business_simulator.financial_generator.generate_daily_transactions(today)
+            daily_transactions = (
+                test_business_simulator.financial_generator.generate_daily_transactions(today)
+            )
 
             # Simulate database insertion (limited to avoid overhead)
             session = test_business_simulator.SessionLocal()
             try:
                 for tx_data in daily_transactions[:5]:  # Limit to 5 transactions
                     from models.financial import Transaction
+
                     transaction = Transaction(**tx_data)
                     session.add(transaction)
                 session.commit()
@@ -205,7 +210,7 @@ class TestSimulationPerformance:
 
         # Real-time simulation cycles should be very fast
         assert result > 0
-        assert benchmark.stats['mean'] < 0.2  # Less than 200ms per cycle
+        assert benchmark.stats["mean"] < 0.2  # Less than 200ms per cycle
 
     @pytest.mark.simulation
     @pytest.mark.stress
@@ -232,17 +237,16 @@ class TestSimulationPerformance:
                 end_time = time.time()
 
                 status = simulator.get_simulation_status()
-                results_queue.put({
-                    'worker_id': worker_id,
-                    'duration': end_time - start_time,
-                    'transaction_count': status['transaction_count']
-                })
+                results_queue.put(
+                    {
+                        "worker_id": worker_id,
+                        "duration": end_time - start_time,
+                        "transaction_count": status["transaction_count"],
+                    }
+                )
 
             except Exception as e:
-                error_queue.put({
-                    'worker_id': worker_id,
-                    'error': str(e)
-                })
+                error_queue.put({"worker_id": worker_id, "error": str(e)})
 
         # Start multiple worker threads
         threads = []
@@ -278,12 +282,15 @@ class TestSimulationPerformance:
 
         # Verify all workers generated data
         for result in results:
-            assert result['transaction_count'] > 0, f"Worker {result['worker_id']} generated no data"
+            assert (
+                result["transaction_count"] > 0
+            ), f"Worker {result['worker_id']} generated no data"
 
     @pytest.mark.benchmark
     @pytest.mark.simulation
     def test_different_business_type_performance(self, benchmark, performance_config, temp_db_path):
         """Compare simulation performance between different business types."""
+
         def simulate_restaurant():
             db_url = f"sqlite:///{temp_db_path}_restaurant"
             simulator = BusinessSimulator(performance_config, db_url)
@@ -302,9 +309,9 @@ class TestSimulationPerformance:
         retail_result = benchmark(simulate_retail)
 
         # Both business types should perform similarly
-        assert restaurant_result['transaction_count'] > 0
-        assert retail_result['transaction_count'] > 0
-        assert benchmark.stats['mean'] < 5.0  # Less than 5 seconds
+        assert restaurant_result["transaction_count"] > 0
+        assert retail_result["transaction_count"] > 0
+        assert benchmark.stats["mean"] < 5.0  # Less than 5 seconds
 
     @pytest.mark.benchmark
     @pytest.mark.simulation
@@ -342,7 +349,7 @@ class TestSimulationPerformance:
 
         # Data persistence should be efficient
         assert result is True
-        assert benchmark.stats['mean'] < 0.5  # Less than 500ms
+        assert benchmark.stats["mean"] < 0.5  # Less than 500ms
 
     @pytest.mark.simulation
     @pytest.mark.stress
@@ -368,23 +375,25 @@ class TestSimulationPerformance:
             cycle_end = time.time()
             current_memory = process.memory_info().rss / 1024 / 1024  # MB
 
-            memory_samples.append({
-                'cycle': cycle,
-                'memory_usage': current_memory - initial_memory,
-                'cycle_time': cycle_end - cycle_start
-            })
+            memory_samples.append(
+                {
+                    "cycle": cycle,
+                    "memory_usage": current_memory - initial_memory,
+                    "cycle_time": cycle_end - cycle_start,
+                }
+            )
 
             # Check for memory leaks
             if len(memory_samples) > 3:
-                recent_memory = memory_samples[-1]['memory_usage']
-                early_memory = memory_samples[0]['memory_usage']
+                recent_memory = memory_samples[-1]["memory_usage"]
+                early_memory = memory_samples[0]["memory_usage"]
 
                 # Memory should not continuously grow
                 memory_growth = recent_memory - early_memory
                 assert memory_growth < 100, f"Potential memory leak: {memory_growth:.2f}MB growth"
 
         # Performance should remain stable
-        cycle_times = [s['cycle_time'] for s in memory_samples]
+        cycle_times = [s["cycle_time"] for s in memory_samples]
         avg_cycle_time = sum(cycle_times) / len(cycle_times)
         max_cycle_time = max(cycle_times)
 
@@ -395,7 +404,7 @@ class TestSimulationPerformance:
     @pytest.mark.simulation
     def test_scenario_application_performance(self, benchmark, test_business_simulator):
         """Benchmark scenario application performance."""
-        scenarios = test_business_simulator.generate_sample_scenarios()
+        test_business_simulator.generate_sample_scenarios()
 
         def apply_scenario():
             # Apply a test scenario
@@ -406,7 +415,7 @@ class TestSimulationPerformance:
 
         # Scenario application should be fast
         assert result is True
-        assert benchmark.stats['mean'] < 0.1  # Less than 100ms
+        assert benchmark.stats["mean"] < 0.1  # Less than 100ms
 
     @pytest.mark.simulation
     @pytest.mark.memory
@@ -427,6 +436,7 @@ class TestSimulationPerformance:
 
             # Force garbage collection
             import gc
+
             gc.collect()
 
         final_memory = process.memory_info().rss / 1024 / 1024  # MB

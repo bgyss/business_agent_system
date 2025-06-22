@@ -1,26 +1,28 @@
 """
 Test suite for utils.logging_config module
 """
+
 import json
 import logging
 import logging.handlers
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch
+
 import pytest
 
+from utils.exceptions import BusinessAgentError
 from utils.logging_config import (
-    StructuredFormatter,
     BusinessAgentAdapter,
-    setup_logging,
-    get_logger,
-    get_agent_logger,
-    get_simulation_logger,
-    get_dashboard_logger,
     LogContext,
     PerformanceContext,
+    StructuredFormatter,
+    get_agent_logger,
+    get_dashboard_logger,
+    get_logger,
+    get_simulation_logger,
+    setup_logging,
 )
-from utils.exceptions import BusinessAgentError
 
 
 class TestStructuredFormatter:
@@ -39,7 +41,7 @@ class TestStructuredFormatter:
             lineno=123,
             msg="Test message",
             args=(),
-            exc_info=None
+            exc_info=None,
         )
         record.funcName = "test_function"
         record.module = "test_module"
@@ -64,7 +66,7 @@ class TestStructuredFormatter:
             lineno=123,
             msg="Agent message",
             args=(),
-            exc_info=None
+            exc_info=None,
         )
         record.funcName = "test_function"
         record.module = "test_module"
@@ -86,7 +88,7 @@ class TestStructuredFormatter:
             lineno=123,
             msg="Decision message",
             args=(),
-            exc_info=None
+            exc_info=None,
         )
         record.funcName = "test_function"
         record.module = "test_module"
@@ -106,7 +108,7 @@ class TestStructuredFormatter:
             lineno=123,
             msg="Performance message",
             args=(),
-            exc_info=None
+            exc_info=None,
         )
         record.funcName = "test_function"
         record.module = "test_module"
@@ -128,7 +130,7 @@ class TestStructuredFormatter:
             lineno=123,
             msg="Error message",
             args=(),
-            exc_info=None
+            exc_info=None,
         )
         record.funcName = "test_function"
         record.module = "test_module"
@@ -155,7 +157,7 @@ class TestStructuredFormatter:
             lineno=123,
             msg="Error with exception",
             args=(),
-            exc_info=exc_info
+            exc_info=exc_info,
         )
         record.funcName = "test_function"
         record.module = "test_module"
@@ -177,7 +179,7 @@ class TestStructuredFormatter:
             lineno=123,
             msg="Error without exception",
             args=(),
-            exc_info=None
+            exc_info=None,
         )
         record.funcName = "test_function"
         record.module = "test_module"
@@ -226,7 +228,7 @@ class TestBusinessAgentAdapter:
 
     def test_log_decision(self):
         """Test log_decision method"""
-        with patch.object(self.adapter, 'log') as mock_log:
+        with patch.object(self.adapter, "log") as mock_log:
             self.adapter.log_decision(logging.INFO, "dec_123", "Decision made")
 
             mock_log.assert_called_once()
@@ -237,7 +239,7 @@ class TestBusinessAgentAdapter:
 
     def test_log_performance(self):
         """Test log_performance method"""
-        with patch.object(self.adapter, 'info') as mock_info:
+        with patch.object(self.adapter, "info") as mock_info:
             self.adapter.log_performance("operation_time", 123.45, "ms")
 
             mock_info.assert_called_once()
@@ -249,7 +251,7 @@ class TestBusinessAgentAdapter:
 
     def test_log_performance_default_unit(self):
         """Test log_performance with default unit"""
-        with patch.object(self.adapter, 'info') as mock_info:
+        with patch.object(self.adapter, "info") as mock_info:
             self.adapter.log_performance("operation_time", 123.45)
 
             args, kwargs = mock_info.call_args
@@ -258,12 +260,10 @@ class TestBusinessAgentAdapter:
     def test_log_error_with_business_agent_error(self):
         """Test log_error with BusinessAgentError"""
         error = BusinessAgentError(
-            "Test error",
-            error_code="E001",
-            context={"operation": "test_op"}
+            "Test error", error_code="E001", context={"operation": "test_op"}
         )
 
-        with patch.object(self.adapter, 'error') as mock_error:
+        with patch.object(self.adapter, "error") as mock_error:
             self.adapter.log_error(error, "Custom error message")
 
             mock_error.assert_called_once()
@@ -277,7 +277,7 @@ class TestBusinessAgentAdapter:
         """Test log_error with regular exception"""
         error = ValueError("Regular error")
 
-        with patch.object(self.adapter, 'error') as mock_error:
+        with patch.object(self.adapter, "error") as mock_error:
             self.adapter.log_error(error)
 
             mock_error.assert_called_once()
@@ -289,7 +289,7 @@ class TestBusinessAgentAdapter:
         """Test log_error with custom context"""
         error = ValueError("Test error")
 
-        with patch.object(self.adapter, 'error') as mock_error:
+        with patch.object(self.adapter, "error") as mock_error:
             self.adapter.log_error(error, extra={"custom": "value"})
 
             args, kwargs = mock_error.call_args
@@ -301,7 +301,7 @@ class TestLoggingSetup:
 
     def test_setup_logging_defaults(self):
         """Test setup_logging with default parameters"""
-        with patch('logging.config.dictConfig') as mock_dict_config:
+        with patch("logging.config.dictConfig") as mock_dict_config:
             setup_logging()
 
             mock_dict_config.assert_called_once()
@@ -317,7 +317,7 @@ class TestLoggingSetup:
         with tempfile.TemporaryDirectory() as temp_dir:
             log_file = Path(temp_dir) / "test.log"
 
-            with patch('logging.config.dictConfig') as mock_dict_config:
+            with patch("logging.config.dictConfig") as mock_dict_config:
                 setup_logging(log_file=str(log_file))
 
                 config = mock_dict_config.call_args[0][0]
@@ -326,7 +326,7 @@ class TestLoggingSetup:
 
     def test_setup_logging_no_console(self):
         """Test setup_logging without console output"""
-        with patch('logging.config.dictConfig') as mock_dict_config:
+        with patch("logging.config.dictConfig") as mock_dict_config:
             setup_logging(console_output=False)
 
             config = mock_dict_config.call_args[0][0]
@@ -334,7 +334,7 @@ class TestLoggingSetup:
 
     def test_setup_logging_unstructured(self):
         """Test setup_logging with unstructured logging"""
-        with patch('logging.config.dictConfig') as mock_dict_config:
+        with patch("logging.config.dictConfig") as mock_dict_config:
             setup_logging(structured=False)
 
             config = mock_dict_config.call_args[0][0]
@@ -343,7 +343,7 @@ class TestLoggingSetup:
 
     def test_setup_logging_custom_level(self):
         """Test setup_logging with custom log level"""
-        with patch('logging.config.dictConfig') as mock_dict_config:
+        with patch("logging.config.dictConfig") as mock_dict_config:
             setup_logging(log_level="DEBUG")
 
             config = mock_dict_config.call_args[0][0]
@@ -395,7 +395,7 @@ class TestLogContext:
     def test_log_context_adds_context(self):
         """Test LogContext adds context during execution"""
         logger = get_logger("test_logger", initial="value")
-        
+
         assert logger.extra["initial"] == "value"
         assert "temp" not in logger.extra
 
@@ -411,7 +411,7 @@ class TestLogContext:
         """Test LogContext logs exceptions"""
         logger = get_logger("test_logger")
 
-        with patch.object(logger, 'log_error') as mock_log_error:
+        with patch.object(logger, "log_error") as mock_log_error:
             try:
                 with LogContext(logger, operation="test"):
                     raise ValueError("Test exception")
@@ -427,7 +427,7 @@ class TestLogContext:
         """Test LogContext doesn't log non-Exception types"""
         logger = get_logger("test_logger")
 
-        with patch.object(logger, 'log_error') as mock_log_error:
+        with patch.object(logger, "log_error") as mock_log_error:
             try:
                 with LogContext(logger, operation="test"):
                     raise SystemExit(0)  # Not a subclass of Exception
@@ -444,8 +444,9 @@ class TestPerformanceContext:
         """Test PerformanceContext for successful operation"""
         logger = get_logger("test_logger")
 
-        with patch.object(logger, 'debug') as mock_debug, \
-             patch.object(logger, 'log_performance') as mock_log_perf:
+        with patch.object(logger, "debug") as mock_debug, patch.object(
+            logger, "log_performance"
+        ) as mock_log_perf:
 
             with PerformanceContext(logger, "test_operation"):
                 pass
@@ -465,9 +466,9 @@ class TestPerformanceContext:
         """Test PerformanceContext with exception"""
         logger = get_logger("test_logger")
 
-        with patch.object(logger, 'debug') as mock_debug, \
-             patch.object(logger, 'log_performance') as mock_log_perf, \
-             patch.object(logger, 'error') as mock_error:
+        with patch.object(logger, "debug"), patch.object(
+            logger, "log_performance"
+        ) as mock_log_perf, patch.object(logger, "error") as mock_error:
 
             try:
                 with PerformanceContext(logger, "test_operation"):
@@ -483,14 +484,14 @@ class TestPerformanceContext:
             error_msg = mock_error.call_args[0][0]
             assert "Operation failed: test_operation" in error_msg
 
-    @patch('time.perf_counter')
+    @patch("time.perf_counter")
     def test_performance_context_timing(self, mock_perf_counter):
         """Test PerformanceContext timing calculation"""
         mock_perf_counter.side_effect = [100.0, 100.123]  # 123ms duration
 
         logger = get_logger("test_logger")
 
-        with patch.object(logger, 'log_performance') as mock_log_perf:
+        with patch.object(logger, "log_performance") as mock_log_perf:
             with PerformanceContext(logger, "test_operation"):
                 pass
 
@@ -508,10 +509,7 @@ class TestIntegration:
 
             # Setup logging
             setup_logging(
-                log_level="DEBUG",
-                log_file=str(log_file),
-                structured=True,
-                console_output=False
+                log_level="DEBUG", log_file=str(log_file), structured=True, console_output=False
             )
 
             # Get logger and log various types of messages
@@ -527,7 +525,7 @@ class TestIntegration:
             # Verify file was created and contains structured data
             assert log_file.exists()
 
-            with open(log_file, 'r') as f:
+            with open(log_file) as f:
                 lines = f.readlines()
 
             assert len(lines) >= 4  # At least 4 log entries
@@ -544,7 +542,7 @@ class TestIntegration:
         """Test using LogContext and PerformanceContext together"""
         logger = get_logger("test_logger")
 
-        with patch.object(logger, 'log_performance') as mock_log_perf:
+        with patch.object(logger, "log_performance") as mock_log_perf:
             with LogContext(logger, operation="complex_operation"):
                 with PerformanceContext(logger, "complex_operation"):
                     # Simulate work

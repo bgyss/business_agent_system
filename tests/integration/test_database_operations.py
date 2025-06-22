@@ -1,6 +1,7 @@
 """
 Integration tests for database operations and data persistence.
 """
+
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -26,10 +27,19 @@ class TestDatabaseSchema:
 
         # Verify specific important tables
         expected_tables = [
-            'accounts', 'transactions', 'accounts_receivable', 'accounts_payable',
-            'items', 'stock_movements', 'suppliers', 'purchase_orders', 'purchase_order_items',
-            'employees', 'time_records', 'schedules',
-            'agent_decisions'
+            "accounts",
+            "transactions",
+            "accounts_receivable",
+            "accounts_payable",
+            "items",
+            "stock_movements",
+            "suppliers",
+            "purchase_orders",
+            "purchase_order_items",
+            "employees",
+            "time_records",
+            "schedules",
+            "agent_decisions",
         ]
 
         for table in expected_tables:
@@ -43,10 +53,7 @@ class TestDatabaseSchema:
         try:
             # Test financial data relationships
             account = Account(
-                id="test_account",
-                name="Test Account",
-                account_type="checking",
-                balance=1000.00
+                id="test_account", name="Test Account", account_type="checking", balance=1000.00
             )
             session.add(account)
             session.flush()
@@ -56,7 +63,7 @@ class TestDatabaseSchema:
                 amount=Decimal("100.00"),
                 transaction_type="credit",
                 description="Test transaction",
-                transaction_date=datetime.now().date()
+                transaction_date=datetime.now().date(),
             )
             session.add(transaction)
 
@@ -67,7 +74,7 @@ class TestDatabaseSchema:
                 email="john@supplier.com",
                 phone="555-0123",
                 lead_time_days=5,
-                payment_terms="Net 30"
+                payment_terms="Net 30",
             )
             session.add(supplier)
             session.flush()
@@ -82,7 +89,7 @@ class TestDatabaseSchema:
                 supplier_id=supplier.id,
                 reorder_point=10,
                 reorder_quantity=50,
-                current_stock=25
+                current_stock=25,
             )
             session.add(item)
             session.flush()
@@ -93,7 +100,7 @@ class TestDatabaseSchema:
                 quantity=5,
                 unit_cost=Decimal("10.00"),
                 timestamp=datetime.now(),
-                reference="Test adjustment"
+                reference="Test adjustment",
             )
             session.add(stock_movement)
 
@@ -107,14 +114,16 @@ class TestDatabaseSchema:
                 position="Test Position",
                 department="Test Dept",
                 hourly_rate=Decimal("15.00"),
-                is_full_time=True
+                is_full_time=True,
             )
             session.add(employee)
 
             session.commit()
 
             # Verify relationships work
-            retrieved_transaction = session.query(Transaction).filter_by(account_id="test_account").first()
+            retrieved_transaction = (
+                session.query(Transaction).filter_by(account_id="test_account").first()
+            )
             assert retrieved_transaction is not None
             assert retrieved_transaction.account.name == "Test Account"
 
@@ -133,10 +142,7 @@ class TestDatabaseSchema:
         try:
             # Test unique constraints
             account1 = Account(
-                id="unique_test",
-                name="First Account",
-                account_type="checking",
-                balance=1000.00
+                id="unique_test", name="First Account", account_type="checking", balance=1000.00
             )
             session.add(account1)
             session.commit()
@@ -146,7 +152,7 @@ class TestDatabaseSchema:
                 id="unique_test",  # Same ID
                 name="Second Account",
                 account_type="savings",
-                balance=2000.00
+                balance=2000.00,
             )
             session.add(account2)
 
@@ -161,7 +167,7 @@ class TestDatabaseSchema:
                 amount=Decimal("100.00"),
                 transaction_type="credit",
                 description="Invalid transaction",
-                transaction_date=datetime.now().date()
+                transaction_date=datetime.now().date(),
             )
             session.add(invalid_transaction)
 
@@ -187,7 +193,7 @@ class TestDataPersistence:
                 name="Persistence Test Account",
                 account_type="checking",
                 balance=5000.00,
-                description="Test account for persistence"
+                description="Test account for persistence",
             )
             session.add(account)
             session.commit()
@@ -201,7 +207,7 @@ class TestDataPersistence:
                     transaction_type="credit" if i % 2 == 0 else "debit",
                     description=f"Test transaction {i}",
                     transaction_date=datetime.now().date() - timedelta(days=i),
-                    reference=f"REF{i:03d}"
+                    reference=f"REF{i:03d}",
                 )
                 transactions.append(tx)
                 session.add(tx)
@@ -214,7 +220,9 @@ class TestDataPersistence:
             assert retrieved_account.name == "Persistence Test Account"
             assert retrieved_account.balance == Decimal("5000.00")
 
-            retrieved_transactions = session.query(Transaction).filter_by(account_id="persistence_test").all()
+            retrieved_transactions = (
+                session.query(Transaction).filter_by(account_id="persistence_test").all()
+            )
             assert len(retrieved_transactions) == 10
 
             # Test update
@@ -247,7 +255,7 @@ class TestDataPersistence:
                 email="jane@supplier.com",
                 phone="555-9876",
                 lead_time_days=7,
-                payment_terms="Net 15"
+                payment_terms="Net 15",
             )
             session.add(supplier)
             session.flush()
@@ -265,7 +273,7 @@ class TestDataPersistence:
                     supplier_id=supplier.id,
                     reorder_point=10 + i,
                     reorder_quantity=50 + i * 10,
-                    current_stock=25 + i * 5
+                    current_stock=25 + i * 5,
                 )
                 items.append(item)
                 session.add(item)
@@ -280,14 +288,14 @@ class TestDataPersistence:
                     quantity=20,
                     unit_cost=item.unit_cost,
                     timestamp=datetime.now(),
-                    reference="Test delivery"
+                    reference="Test delivery",
                 )
                 session.add(movement)
 
             session.commit()
 
             # Verify persistence
-            retrieved_items = session.query(Item).filter(Item.sku.like('INV%')).all()
+            retrieved_items = session.query(Item).filter(Item.sku.like("INV%")).all()
             assert len(retrieved_items) == 5
 
             for item in retrieved_items:
@@ -315,7 +323,7 @@ class TestDataPersistence:
                     reasoning=f"Reason for action {i}",
                     confidence=0.8 + i * 0.02,
                     context={"test_data": f"value_{i}", "number": i},
-                    timestamp=datetime.now() - timedelta(minutes=i)
+                    timestamp=datetime.now() - timedelta(minutes=i),
                 )
                 decisions.append(decision)
 
@@ -326,23 +334,29 @@ class TestDataPersistence:
             session.commit()
 
             # Verify persistence
-            retrieved_decisions = session.query(AgentDecisionModel).filter_by(agent_id="test_agent").all()
+            retrieved_decisions = (
+                session.query(AgentDecisionModel).filter_by(agent_id="test_agent").all()
+            )
             assert len(retrieved_decisions) == 5
 
             # Test ordering by timestamp
-            ordered_decisions = session.query(AgentDecisionModel).filter_by(
-                agent_id="test_agent"
-            ).order_by(AgentDecisionModel.timestamp.desc()).all()
+            ordered_decisions = (
+                session.query(AgentDecisionModel)
+                .filter_by(agent_id="test_agent")
+                .order_by(AgentDecisionModel.timestamp.desc())
+                .all()
+            )
 
             assert len(ordered_decisions) == 5
             # Most recent should be first
             assert ordered_decisions[0].timestamp >= ordered_decisions[-1].timestamp
 
             # Test filtering by decision type
-            type_filtered = session.query(AgentDecisionModel).filter_by(
-                agent_id="test_agent",
-                decision_type="test_decision_0"
-            ).all()
+            type_filtered = (
+                session.query(AgentDecisionModel)
+                .filter_by(agent_id="test_agent", decision_type="test_decision_0")
+                .all()
+            )
 
             assert len(type_filtered) >= 1
 
@@ -371,7 +385,7 @@ class TestDataPersistence:
                 id="query_test",
                 name="Query Test Account",
                 account_type="checking",
-                balance=10000.00
+                balance=10000.00,
             )
             session.add(account)
             session.flush()
@@ -385,7 +399,7 @@ class TestDataPersistence:
                 (75.00, "debit", 3),
                 (300.00, "credit", 7),  # Week later
                 (25.00, "debit", 7),
-                (150.00, "credit", 14), # Two weeks later
+                (150.00, "credit", 14),  # Two weeks later
             ]
 
             for amount, tx_type, days_back in test_transactions:
@@ -394,7 +408,7 @@ class TestDataPersistence:
                     amount=Decimal(str(amount)),
                     transaction_type=tx_type,
                     description=f"Test {tx_type} transaction",
-                    transaction_date=base_date - timedelta(days=days_back)
+                    transaction_date=base_date - timedelta(days=days_back),
                 )
                 session.add(tx)
 
@@ -402,30 +416,40 @@ class TestDataPersistence:
 
             # Test date range queries
             week_ago = base_date - timedelta(days=7)
-            recent_transactions = session.query(Transaction).filter(
-                Transaction.account_id == "query_test",
-                Transaction.transaction_date >= week_ago
-            ).all()
+            recent_transactions = (
+                session.query(Transaction)
+                .filter(
+                    Transaction.account_id == "query_test", Transaction.transaction_date >= week_ago
+                )
+                .all()
+            )
 
             assert len(recent_transactions) >= 4  # Transactions from last week
 
             # Test aggregation queries
             from sqlalchemy import func
-            total_credits = session.query(func.sum(Transaction.amount)).filter(
-                Transaction.account_id == "query_test",
-                Transaction.transaction_type == "credit"
-            ).scalar()
+
+            total_credits = (
+                session.query(func.sum(Transaction.amount))
+                .filter(
+                    Transaction.account_id == "query_test", Transaction.transaction_type == "credit"
+                )
+                .scalar()
+            )
 
             assert total_credits >= Decimal("750.00")  # Sum of credit transactions
 
             # Test grouping by transaction type
-            type_counts = session.query(
-                Transaction.transaction_type,
-                func.count(Transaction.id),
-                func.sum(Transaction.amount)
-            ).filter(
-                Transaction.account_id == "query_test"
-            ).group_by(Transaction.transaction_type).all()
+            type_counts = (
+                session.query(
+                    Transaction.transaction_type,
+                    func.count(Transaction.id),
+                    func.sum(Transaction.amount),
+                )
+                .filter(Transaction.account_id == "query_test")
+                .group_by(Transaction.transaction_type)
+                .all()
+            )
 
             assert len(type_counts) == 2  # Should have both credit and debit
 
@@ -500,7 +524,7 @@ class TestDatabaseIntegrationWithSimulation:
                         id=f"worker_{worker_id}",
                         name=f"Worker {worker_id} Account",
                         account_type="checking",
-                        balance=1000.00 * worker_id
+                        balance=1000.00 * worker_id,
                     )
                     session.add(account)
                     session.commit()
@@ -512,7 +536,7 @@ class TestDatabaseIntegrationWithSimulation:
                             amount=Decimal(f"{10 + i}.00"),
                             transaction_type="credit",
                             description=f"Worker {worker_id} transaction {i}",
-                            transaction_date=datetime.now().date()
+                            transaction_date=datetime.now().date(),
                         )
                         session.add(tx)
 
@@ -543,12 +567,12 @@ class TestDatabaseIntegrationWithSimulation:
         # Verify data was created correctly
         session = SessionLocal()
         try:
-            accounts = session.query(Account).filter(Account.id.like('worker_%')).all()
+            accounts = session.query(Account).filter(Account.id.like("worker_%")).all()
             assert len(accounts) == 5
 
-            transactions = session.query(Transaction).filter(
-                Transaction.account_id.like('worker_%')
-            ).all()
+            transactions = (
+                session.query(Transaction).filter(Transaction.account_id.like("worker_%")).all()
+            )
             assert len(transactions) == 25  # 5 workers * 5 transactions each
 
         finally:
@@ -562,10 +586,7 @@ class TestDatabaseIntegrationWithSimulation:
         try:
             # Test transaction rollback on error
             account = Account(
-                id="error_test",
-                name="Error Test Account",
-                account_type="checking",
-                balance=1000.00
+                id="error_test", name="Error Test Account", account_type="checking", balance=1000.00
             )
             session.add(account)
             session.commit()
@@ -578,7 +599,7 @@ class TestDatabaseIntegrationWithSimulation:
                     amount=Decimal("100.00"),
                     transaction_type="credit",
                     description="Valid transaction",
-                    transaction_date=datetime.now().date()
+                    transaction_date=datetime.now().date(),
                 )
                 session.add(tx1)
 
@@ -589,7 +610,7 @@ class TestDatabaseIntegrationWithSimulation:
                     amount=Decimal("200.00"),
                     transaction_type="credit",
                     description="Invalid transaction",
-                    transaction_date=datetime.now().date()
+                    transaction_date=datetime.now().date(),
                 )
                 session.add(tx2)
 
@@ -608,7 +629,7 @@ class TestDatabaseIntegrationWithSimulation:
                     amount=Decimal("150.00"),
                     transaction_type="credit",
                     description="Transaction after rollback",
-                    transaction_date=datetime.now().date()
+                    transaction_date=datetime.now().date(),
                 )
                 session.add(valid_tx)
                 session.commit()

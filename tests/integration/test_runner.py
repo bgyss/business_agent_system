@@ -1,6 +1,7 @@
 """
 Test runner for integration tests with proper setup and teardown.
 """
+
 import logging
 import os
 import sys
@@ -18,7 +19,7 @@ def setup_test_logging():
     logging.basicConfig(
         level=logging.WARNING,  # Reduce noise during testing
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[logging.StreamHandler()]
+        handlers=[logging.StreamHandler()],
     )
 
     # Suppress some noisy loggers during testing
@@ -89,7 +90,8 @@ def run_quick_smoke_test():
         "-v",
         "--tb=short",
         "--asyncio-mode=auto",
-        "-k", "test_config_loading_valid_file or test_agent_initialization_all_enabled"
+        "-k",
+        "test_config_loading_valid_file or test_agent_initialization_all_enabled",
     ]
 
     print("Running quick smoke test...")
@@ -111,14 +113,10 @@ if __name__ == "__main__":
             "test_agent_coordination.py",
             "test_database_operations.py",
             "test_end_to_end_workflows.py",
-            "test_error_scenarios.py"
-        ]
+            "test_error_scenarios.py",
+        ],
     )
-    parser.add_argument(
-        "--smoke",
-        action="store_true",
-        help="Run quick smoke test only"
-    )
+    parser.add_argument("--smoke", action="store_true", help="Run quick smoke test only")
 
     args = parser.parse_args()
 

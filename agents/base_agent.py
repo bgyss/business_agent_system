@@ -33,7 +33,7 @@ class BaseAgent(ABC):
         api_key: str,
         config: Dict[str, Any],
         db_url: str,
-        message_queue: Optional[asyncio.Queue] = None
+        message_queue: Optional[asyncio.Queue] = None,
     ):
         self.agent_id = agent_id
         self.client = Anthropic(api_key=api_key)
@@ -60,10 +60,7 @@ class BaseAgent(ABC):
         pass
 
     async def analyze_with_claude(
-        self,
-        prompt: str,
-        context: Dict[str, Any],
-        max_tokens: int = 1000
+        self, prompt: str, context: Dict[str, Any], max_tokens: int = 1000
     ) -> str:
         full_prompt = f"{self.system_prompt}\n\nContext: {json.dumps(context, default=str)}\n\nQuery: {prompt}"
 
@@ -71,9 +68,7 @@ class BaseAgent(ABC):
             response = self.client.messages.create(
                 model="claude-3-5-sonnet-20241022",
                 max_tokens=max_tokens,
-                messages=[
-                    {"role": "user", "content": full_prompt}
-                ]
+                messages=[{"role": "user", "content": full_prompt}],
             )
             return response.content[0].text
         except Exception as e:
@@ -82,10 +77,7 @@ class BaseAgent(ABC):
 
     async def send_message(self, recipient: str, message_type: str, content: Dict[str, Any]):
         message = AgentMessage(
-            sender=self.agent_id,
-            recipient=recipient,
-            message_type=message_type,
-            content=content
+            sender=self.agent_id, recipient=recipient, message_type=message_type, content=content
         )
         await self.message_queue.put(message)
         self.logger.info(f"Sent message to {recipient}: {message_type}")
@@ -156,11 +148,7 @@ class BaseAgent(ABC):
                 self.log_decision(decision)
         elif message.message_type == "report_request":
             report = await self.generate_report()
-            await self.send_message(
-                message.sender,
-                "report_response",
-                {"report": report}
-            )
+            await self.send_message(message.sender, "report_response", {"report": report})
 
     def get_decision_history(self, limit: Optional[int] = None) -> List[AgentDecision]:
         if limit:
@@ -173,5 +161,5 @@ class BaseAgent(ABC):
             "status": "running" if self.is_running else "stopped",
             "decisions_count": len(self.decisions_log),
             "last_decision": self.decisions_log[-1].timestamp if self.decisions_log else None,
-            "config": self.config
+            "config": self.config,
         }

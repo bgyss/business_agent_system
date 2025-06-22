@@ -1,6 +1,7 @@
 """
 Smoke tests for dashboard - quick tests to verify basic functionality
 """
+
 import time
 
 import pytest
@@ -45,7 +46,7 @@ class TestDashboardSmoke:
             "[data-testid='stSidebar']",
             "section[data-testid='stSidebar']",
             ".sidebar",
-            "//div[contains(@class, 'sidebar')]"
+            "//div[contains(@class, 'sidebar')]",
         ]
 
         sidebar_found = False
@@ -80,7 +81,7 @@ class TestDashboardSmoke:
             "[data-testid='stMain']",
             ".main",
             "main",
-            "//div[contains(@class, 'main')]"
+            "//div[contains(@class, 'main')]",
         ]
 
         for selector in main_selectors:
@@ -109,7 +110,7 @@ class TestDashboardSmoke:
             "exception",
             "internal server error",
             "500 error",
-            "404 not found"
+            "404 not found",
         ]
 
         for error_text in error_indicators:
@@ -165,7 +166,7 @@ class TestDashboardSmoke:
 
         finally:
             # Restore original size
-            dashboard_page.set_window_size(original_size['width'], original_size['height'])
+            dashboard_page.set_window_size(original_size["width"], original_size["height"])
 
     def test_javascript_loads(self, dashboard_page):
         """Test that JavaScript loads properly"""
@@ -191,6 +192,7 @@ class TestDashboardSmokeWithReporting:
 
         # Ensure test_screenshots directory exists
         import os
+
         os.makedirs("test_screenshots", exist_ok=True)
 
         screenshot_path = reporter.capture_screenshot("dashboard_smoke_test.png")
@@ -213,7 +215,7 @@ class TestDashboardSmokeWithReporting:
             print(f"DOM ready time: {perf_info.get('domReady', 'unknown')}ms")
 
             # Basic performance assertion (page should load within 30 seconds)
-            load_time = perf_info.get('loadTime', 0)
+            load_time = perf_info.get("loadTime", 0)
             if load_time > 0:
                 assert load_time < 30000, f"Page load time too slow: {load_time}ms"
 

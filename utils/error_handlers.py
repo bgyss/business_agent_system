@@ -1,6 +1,7 @@
 """
 Error handling utilities and recovery mechanisms
 """
+
 import asyncio
 import functools
 from contextlib import asynccontextmanager, contextmanager
@@ -30,11 +31,11 @@ class ErrorHandler:
     def handle_error(self, error: Exception, context: Optional[Dict[str, Any]] = None) -> bool:
         """
         Handle an error using registered recovery strategies
-        
+
         Args:
             error: The exception that occurred
             context: Additional context about the error
-        
+
         Returns:
             bool: True if error was recovered, False otherwise
         """
@@ -45,7 +46,11 @@ class ErrorHandler:
         self.error_counts[error_key] = self.error_counts.get(error_key, 0) + 1
 
         # Log the error
-        self.logger.log_error(error, f"Handling error (occurrence #{self.error_counts[error_key]})", extra={"context": context})
+        self.logger.log_error(
+            error,
+            f"Handling error (occurrence #{self.error_counts[error_key]})",
+            extra={"context": context},
+        )
 
         # Try recovery strategies
         for exc_type, strategy in self.recovery_strategies.items():
@@ -72,7 +77,7 @@ class ErrorHandler:
             "total_errors": sum(self.error_counts.values()),
             "unique_errors": len(self.error_counts),
             "error_breakdown": self.error_counts.copy(),
-            "recovery_strategies": list(self.recovery_strategies.keys())
+            "recovery_strategies": list(self.recovery_strategies.keys()),
         }
 
 
@@ -82,9 +87,11 @@ _global_error_handler = ErrorHandler()
 
 def register_recovery_strategy(exception_type: Type[Exception]):
     """Decorator to register a recovery strategy"""
+
     def decorator(func: Callable) -> Callable:
         _global_error_handler.register_recovery_strategy(exception_type, func)
         return func
+
     return decorator
 
 
@@ -100,7 +107,9 @@ def error_handler_context(context: Optional[Dict[str, Any]] = None, reraise: boo
 
 
 @asynccontextmanager
-async def async_error_handler_context(context: Optional[Dict[str, Any]] = None, reraise: bool = True):
+async def async_error_handler_context(
+    context: Optional[Dict[str, Any]] = None, reraise: bool = True
+):
     """Async context manager for error handling"""
     try:
         yield
@@ -112,6 +121,7 @@ async def async_error_handler_context(context: Optional[Dict[str, Any]] = None, 
 
 def graceful_degradation(fallback_value=None, log_error: bool = True):
     """Decorator for graceful degradation on errors"""
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def sync_wrapper(*args, **kwargs):
@@ -120,7 +130,9 @@ def graceful_degradation(fallback_value=None, log_error: bool = True):
             except Exception as e:
                 if log_error:
                     logger = get_logger(f"graceful_degradation.{func.__name__}")
-                    logger.log_error(e, f"Graceful degradation in {func.__name__}, returning fallback value")
+                    logger.log_error(
+                        e, f"Graceful degradation in {func.__name__}, returning fallback value"
+                    )
                 return fallback_value
 
         @functools.wraps(func)
@@ -130,7 +142,9 @@ def graceful_degradation(fallback_value=None, log_error: bool = True):
             except Exception as e:
                 if log_error:
                     logger = get_logger(f"graceful_degradation.{func.__name__}")
-                    logger.log_error(e, f"Graceful degradation in {func.__name__}, returning fallback value")
+                    logger.log_error(
+                        e, f"Graceful degradation in {func.__name__}, returning fallback value"
+                    )
                 return fallback_value
 
         if asyncio.iscoroutinefunction(func):
@@ -144,7 +158,7 @@ def graceful_degradation(fallback_value=None, log_error: bool = True):
 def safe_execute(func: Callable, *args, **kwargs) -> tuple:
     """
     Safely execute a function and return (result, error)
-    
+
     Returns:
         tuple: (result, error) where one is None
     """
@@ -158,7 +172,7 @@ def safe_execute(func: Callable, *args, **kwargs) -> tuple:
 async def async_safe_execute(func: Callable, *args, **kwargs) -> tuple:
     """
     Safely execute an async function and return (result, error)
-    
+
     Returns:
         tuple: (result, error) where one is None
     """
@@ -171,8 +185,11 @@ async def async_safe_execute(func: Callable, *args, **kwargs) -> tuple:
 
 # Recovery strategies for common errors
 
+
 @register_recovery_strategy(DatabaseConnectionError)
-def recover_database_connection(error: DatabaseConnectionError, context: Optional[Dict[str, Any]] = None) -> bool:
+def recover_database_connection(
+    error: DatabaseConnectionError, context: Optional[Dict[str, Any]] = None
+) -> bool:
     """Recovery strategy for database connection errors"""
     logger = get_logger("recovery.database")
 
@@ -192,7 +209,9 @@ def recover_database_connection(error: DatabaseConnectionError, context: Optiona
 
 
 @register_recovery_strategy(ConfigurationError)
-def recover_configuration_error(error: ConfigurationError, context: Optional[Dict[str, Any]] = None) -> bool:
+def recover_configuration_error(
+    error: ConfigurationError, context: Optional[Dict[str, Any]] = None
+) -> bool:
     """Recovery strategy for configuration errors"""
     logger = get_logger("recovery.configuration")
 
@@ -210,7 +229,9 @@ def recover_configuration_error(error: ConfigurationError, context: Optional[Dic
 
 
 @register_recovery_strategy(ExternalServiceError)
-def recover_external_service_error(error: ExternalServiceError, context: Optional[Dict[str, Any]] = None) -> bool:
+def recover_external_service_error(
+    error: ExternalServiceError, context: Optional[Dict[str, Any]] = None
+) -> bool:
     """Recovery strategy for external service errors"""
     logger = get_logger("recovery.external_service")
 
@@ -260,7 +281,9 @@ class AsyncErrorContext:
         self.logger = get_logger(f"error_context.{operation}")
 
     async def __aenter__(self):
-        self.logger.debug(f"Starting async operation: {self.operation}", extra={"context": self.context})
+        self.logger.debug(
+            f"Starting async operation: {self.operation}", extra={"context": self.context}
+        )
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):

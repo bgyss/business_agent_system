@@ -1,6 +1,7 @@
 """
 Retry utilities with exponential backoff and circuit breaker patterns
 """
+
 import asyncio
 import functools
 import logging
@@ -28,18 +29,25 @@ class CircuitBreakerState(Enum):
 @dataclass
 class RetryConfig:
     """Configuration for retry behavior"""
+
     max_attempts: int = 3
     base_delay: float = 1.0  # seconds
     max_delay: float = 60.0  # seconds
     exponential_base: float = 2.0
     jitter: bool = True
-    retryable_exceptions: tuple = (RetryableError, ExternalServiceError, ConnectionError, TimeoutError)
+    retryable_exceptions: tuple = (
+        RetryableError,
+        ExternalServiceError,
+        ConnectionError,
+        TimeoutError,
+    )
     non_retryable_exceptions: tuple = (NonRetryableError, ValueError, TypeError)
 
 
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for circuit breaker"""
+
     failure_threshold: int = 5  # Number of failures before opening
     recovery_timeout: float = 60.0  # Seconds to wait before trying again
     expected_exception: Type[Exception] = Exception
@@ -114,8 +122,10 @@ class CircuitBreaker:
         self.last_failure_time = datetime.now()
         self.success_count = 0
 
-        if (self.state == CircuitBreakerState.CLOSED and
-            self.failure_count >= self.config.failure_threshold):
+        if (
+            self.state == CircuitBreakerState.CLOSED
+            and self.failure_count >= self.config.failure_threshold
+        ):
             self._open_circuit()
         elif self.state == CircuitBreakerState.HALF_OPEN:
             self._open_circuit()
@@ -125,7 +135,9 @@ class CircuitBreaker:
         old_state = self.state
         self.state = CircuitBreakerState.OPEN
         self.stats.record_state_change(old_state, self.state)
-        self.logger.warning(f"Circuit breaker '{self.name}' opened after {self.failure_count} failures")
+        self.logger.warning(
+            f"Circuit breaker '{self.name}' opened after {self.failure_count} failures"
+        )
 
     def _close_circuit(self):
         """Close the circuit breaker"""
@@ -153,7 +165,10 @@ class CircuitBreaker:
                 raise CircuitBreakerOpenError(
                     f"Circuit breaker '{self.name}' is open",
                     error_code="CIRCUIT_BREAKER_OPEN",
-                    context={"failure_count": self.failure_count, "last_failure": self.last_failure_time}
+                    context={
+                        "failure_count": self.failure_count,
+                        "last_failure": self.last_failure_time,
+                    },
                 )
 
         try:
@@ -173,7 +188,10 @@ class CircuitBreaker:
                 raise CircuitBreakerOpenError(
                     f"Circuit breaker '{self.name}' is open",
                     error_code="CIRCUIT_BREAKER_OPEN",
-                    context={"failure_count": self.failure_count, "last_failure": self.last_failure_time}
+                    context={
+                        "failure_count": self.failure_count,
+                        "last_failure": self.last_failure_time,
+                    },
                 )
 
         try:
@@ -221,7 +239,9 @@ def retry(config: Optional[RetryConfig] = None):
                         break
 
                     delay = calculate_delay(attempt, config)
-                    logger.warning(f"Attempt {attempt}/{config.max_attempts} failed for {func.__name__}: {e}. Retrying in {delay:.2f}s")
+                    logger.warning(
+                        f"Attempt {attempt}/{config.max_attempts} failed for {func.__name__}: {e}. Retrying in {delay:.2f}s"
+                    )
                     time.sleep(delay)
                 except Exception as e:
                     logger.error(f"Unexpected error in {func.__name__}: {e}")
@@ -248,7 +268,9 @@ def retry(config: Optional[RetryConfig] = None):
                         break
 
                     delay = calculate_delay(attempt, config)
-                    logger.warning(f"Attempt {attempt}/{config.max_attempts} failed for {func.__name__}: {e}. Retrying in {delay:.2f}s")
+                    logger.warning(
+                        f"Attempt {attempt}/{config.max_attempts} failed for {func.__name__}: {e}. Retrying in {delay:.2f}s"
+                    )
                     await asyncio.sleep(delay)
                 except Exception as e:
                     logger.error(f"Unexpected error in {func.__name__}: {e}")
@@ -272,7 +294,7 @@ def circuit_breaker(config: Optional[CircuitBreakerConfig] = None, name: str = "
         config = CircuitBreakerConfig()
 
     # Global circuit breakers registry
-    if not hasattr(circuit_breaker, '_breakers'):
+    if not hasattr(circuit_breaker, "_breakers"):
         circuit_breaker._breakers = {}
 
     if name not in circuit_breaker._breakers:
@@ -300,7 +322,7 @@ def circuit_breaker(config: Optional[CircuitBreakerConfig] = None, name: str = "
 
 def get_circuit_breaker_stats(name: str = "default") -> Optional[CircuitBreakerStats]:
     """Get statistics for a circuit breaker"""
-    if hasattr(circuit_breaker, '_breakers') and name in circuit_breaker._breakers:
+    if hasattr(circuit_breaker, "_breakers") and name in circuit_breaker._breakers:
         return circuit_breaker._breakers[name].stats
     return None
 
@@ -309,9 +331,10 @@ def get_circuit_breaker_stats(name: str = "default") -> Optional[CircuitBreakerS
 def resilient_call(
     retry_config: Optional[RetryConfig] = None,
     circuit_breaker_config: Optional[CircuitBreakerConfig] = None,
-    circuit_breaker_name: str = "default"
+    circuit_breaker_name: str = "default",
 ):
     """Decorator combining retry and circuit breaker patterns"""
+
     def decorator(func: Callable) -> Callable:
         # Apply circuit breaker first, then retry
         func = circuit_breaker(circuit_breaker_config, circuit_breaker_name)(func)

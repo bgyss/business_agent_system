@@ -1,6 +1,7 @@
 """
 Unit tests for Enhanced Inventory Agent
 """
+
 import os
 import sys
 from datetime import datetime, timedelta
@@ -28,17 +29,22 @@ class TestEnhancedInventoryAgent:
     @pytest.fixture
     def mock_anthropic(self):
         """Mock Anthropic client"""
-        with patch('agents.base_agent.Anthropic') as mock_client:
+        with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
-            mock_response.content = [Mock(text="Enhanced inventory analysis with demand forecast: Optimize reorder points")]
+            mock_response.content = [
+                Mock(
+                    text="Enhanced inventory analysis with demand forecast: Optimize reorder points"
+                )
+            ]
             mock_client.return_value.messages.create.return_value = mock_response
             yield mock_client
 
     @pytest.fixture
     def mock_db_session(self):
         """Mock database session"""
-        with patch('agents.base_agent.create_engine'), \
-             patch('agents.base_agent.sessionmaker') as mock_sessionmaker:
+        with patch("agents.base_agent.create_engine"), patch(
+            "agents.base_agent.sessionmaker"
+        ) as mock_sessionmaker:
             mock_session = Mock()
             mock_sessionmaker.return_value = mock_session
             yield mock_session
@@ -56,11 +62,7 @@ class TestEnhancedInventoryAgent:
             "ordering_cost": 50.0,
             "stockout_cost_multiplier": 3.0,
             "forecast_horizon_days": 30,
-            "bulk_discount_tiers": {
-                "100": 0.02,
-                "250": 0.05,
-                "500": 0.08
-            }
+            "bulk_discount_tiers": {"100": 0.02, "250": 0.05, "500": 0.08},
         }
 
     @pytest.fixture
@@ -70,7 +72,7 @@ class TestEnhancedInventoryAgent:
             agent_id="enhanced_inventory_agent",
             api_key="test_api_key",
             config=enhanced_config,
-            db_url="sqlite:///:memory:"
+            db_url="sqlite:///:memory:",
         )
 
     @pytest.fixture
@@ -86,7 +88,7 @@ class TestEnhancedInventoryAgent:
             maximum_stock=100,
             reorder_point=15,
             reorder_quantity=40,
-            status=ItemStatus.ACTIVE
+            status=ItemStatus.ACTIVE,
         )
 
     @pytest.fixture
@@ -97,13 +99,15 @@ class TestEnhancedInventoryAgent:
 
         for i in range(30):
             movement_date = base_date + timedelta(days=i)
-            movements.append(Mock(
-                item_id="ITEM001",
-                movement_type=StockMovementType.OUT,
-                quantity=5 + (i % 3),  # Varying consumption
-                movement_date=movement_date,
-                unit_cost=Decimal("10.00")
-            ))
+            movements.append(
+                Mock(
+                    item_id="ITEM001",
+                    movement_type=StockMovementType.OUT,
+                    quantity=5 + (i % 3),  # Varying consumption
+                    movement_date=movement_date,
+                    unit_cost=Decimal("10.00"),
+                )
+            )
 
         return movements
 
@@ -125,19 +129,19 @@ class TestEnhancedInventoryAgent:
         assert "service level optimization" in prompt
 
     @pytest.mark.asyncio
-    async def test_demand_forecasting_single_item(self, enhanced_inventory_agent, mock_db_session, sample_movements):
+    async def test_demand_forecasting_single_item(
+        self, enhanced_inventory_agent, mock_db_session, sample_movements
+    ):
         """Test demand forecasting for single item"""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
-        mock_session_instance.query.return_value.filter.return_value.order_by.return_value.all.return_value = sample_movements
+        mock_session_instance.query.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            sample_movements
+        )
 
-        data = {
-            "type": "demand_forecast_request",
-            "item_id": "ITEM001",
-            "forecast_days": 14
-        }
+        data = {"type": "demand_forecast_request", "item_id": "ITEM001", "forecast_days": 14}
 
-        with patch.object(enhanced_inventory_agent, '_forecast_item_demand') as mock_forecast:
+        with patch.object(enhanced_inventory_agent, "_forecast_item_demand") as mock_forecast:
             mock_forecast.return_value = DemandForecast(
                 item_id="ITEM001",
                 predicted_demand=70.0,
@@ -148,7 +152,7 @@ class TestEnhancedInventoryAgent:
                 forecast_accuracy=0.85,
                 historical_patterns={"avg_daily": 5.0, "std_daily": 1.2},
                 revenue_correlation=0.7,
-                method_used="ensemble_with_seasonality"
+                method_used="ensemble_with_seasonality",
             )
 
             decision = await enhanced_inventory_agent.process_data(data)
@@ -159,15 +163,23 @@ class TestEnhancedInventoryAgent:
             assert "forecast" in decision.reasoning.lower()
 
     @pytest.mark.asyncio
-    async def test_forecast_item_demand_comprehensive(self, enhanced_inventory_agent, sample_movements):
+    async def test_forecast_item_demand_comprehensive(
+        self, enhanced_inventory_agent, sample_movements
+    ):
         """Test comprehensive item demand forecasting"""
         mock_session = Mock()
 
         # Mock the query chain for movements
-        mock_session.query.return_value.filter.return_value.order_by.return_value.all.return_value = sample_movements
+        mock_session.query.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            sample_movements
+        )
 
-        with patch.object(enhanced_inventory_agent, '_calculate_revenue_correlation', return_value=0.75):
-            forecast = await enhanced_inventory_agent._forecast_item_demand(mock_session, "ITEM001", 14)
+        with patch.object(
+            enhanced_inventory_agent, "_calculate_revenue_correlation", return_value=0.75
+        ):
+            forecast = await enhanced_inventory_agent._forecast_item_demand(
+                mock_session, "ITEM001", 14
+            )
 
             # Forecast may be None if insufficient data or errors
             if forecast is not None:
@@ -178,7 +190,7 @@ class TestEnhancedInventoryAgent:
                 assert forecast.method_used == "ensemble_with_seasonality"
                 assert len(forecast.historical_patterns) > 0
             # If None, test that it handled insufficient data gracefully
-            assert forecast is None or hasattr(forecast, 'item_id')
+            assert forecast is None or hasattr(forecast, "item_id")
 
     @pytest.mark.asyncio
     async def test_forecast_item_demand_insufficient_data(self, enhanced_inventory_agent):
@@ -186,13 +198,17 @@ class TestEnhancedInventoryAgent:
         mock_session = Mock()
 
         # Return very few movements
-        few_movements = [Mock(
-            item_id="ITEM001",
-            movement_type=StockMovementType.OUT,
-            quantity=5,
-            movement_date=datetime.now().date()
-        )]
-        mock_session.query.return_value.filter.return_value.order_by.return_value.all.return_value = few_movements
+        few_movements = [
+            Mock(
+                item_id="ITEM001",
+                movement_type=StockMovementType.OUT,
+                quantity=5,
+                movement_date=datetime.now().date(),
+            )
+        ]
+        mock_session.query.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            few_movements
+        )
 
         forecast = await enhanced_inventory_agent._forecast_item_demand(mock_session, "ITEM001", 14)
 
@@ -202,7 +218,7 @@ class TestEnhancedInventoryAgent:
         """Test weekly seasonality calculation"""
         # Create consumption data with weekly pattern
         consumption_series = []
-        for week in range(4):
+        for _week in range(4):
             for day in range(7):
                 # Higher consumption on weekends
                 base_consumption = 10 if day in [5, 6] else 5
@@ -242,11 +258,13 @@ class TestEnhancedInventoryAgent:
             forecast_accuracy=0.85,
             historical_patterns={"avg_daily": 5.0, "std_daily": 1.5},
             revenue_correlation=0.7,
-            method_used="ensemble"
+            method_used="ensemble",
         )
 
-        with patch.object(enhanced_inventory_agent, '_forecast_item_demand', return_value=forecast):
-            optimization = await enhanced_inventory_agent._calculate_optimal_reorder_point(mock_session, sample_item)
+        with patch.object(enhanced_inventory_agent, "_forecast_item_demand", return_value=forecast):
+            optimization = await enhanced_inventory_agent._calculate_optimal_reorder_point(
+                mock_session, sample_item
+            )
 
             assert optimization is not None
             assert optimization.item_id == "ITEM001"
@@ -264,39 +282,74 @@ class TestEnhancedInventoryAgent:
         assert enhanced_inventory_agent._get_z_score_for_service_level(0.90) == 1.28
 
     @pytest.mark.asyncio
-    async def test_reorder_optimization_comprehensive(self, enhanced_inventory_agent, mock_db_session):
+    async def test_reorder_optimization_comprehensive(
+        self, enhanced_inventory_agent, mock_db_session
+    ):
         """Test comprehensive reorder point optimization"""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
         # Mock items needing optimization
         items = [
-            Mock(id="ITEM001", name="Item 1", reorder_point=15, unit_cost=Decimal("10.00"),
-                 minimum_stock=5, reorder_quantity=40, status=ItemStatus.ACTIVE),
-            Mock(id="ITEM002", name="Item 2", reorder_point=20, unit_cost=Decimal("15.00"),
-                 minimum_stock=8, reorder_quantity=50, status=ItemStatus.ACTIVE)
+            Mock(
+                id="ITEM001",
+                name="Item 1",
+                reorder_point=15,
+                unit_cost=Decimal("10.00"),
+                minimum_stock=5,
+                reorder_quantity=40,
+                status=ItemStatus.ACTIVE,
+            ),
+            Mock(
+                id="ITEM002",
+                name="Item 2",
+                reorder_point=20,
+                unit_cost=Decimal("15.00"),
+                minimum_stock=8,
+                reorder_quantity=50,
+                status=ItemStatus.ACTIVE,
+            ),
         ]
         mock_session_instance.query.return_value.filter.return_value.all.return_value = items
 
         # Mock optimization results
         optimization1 = OptimalReorderPoint(
-            item_id="ITEM001", optimal_reorder_point=18, optimal_reorder_quantity=45,
-            service_level=0.95, safety_stock=8, lead_time_demand=35.0,
-            demand_variability=5.0, total_cost=500.0, holding_cost=200.0,
-            ordering_cost=150.0, stockout_cost=150.0
+            item_id="ITEM001",
+            optimal_reorder_point=18,
+            optimal_reorder_quantity=45,
+            service_level=0.95,
+            safety_stock=8,
+            lead_time_demand=35.0,
+            demand_variability=5.0,
+            total_cost=500.0,
+            holding_cost=200.0,
+            ordering_cost=150.0,
+            stockout_cost=150.0,
         )
 
         optimization2 = OptimalReorderPoint(
-            item_id="ITEM002", optimal_reorder_point=22, optimal_reorder_quantity=55,
-            service_level=0.95, safety_stock=10, lead_time_demand=42.0,
-            demand_variability=6.0, total_cost=750.0, holding_cost=300.0,
-            ordering_cost=225.0, stockout_cost=225.0
+            item_id="ITEM002",
+            optimal_reorder_point=22,
+            optimal_reorder_quantity=55,
+            service_level=0.95,
+            safety_stock=10,
+            lead_time_demand=42.0,
+            demand_variability=6.0,
+            total_cost=750.0,
+            holding_cost=300.0,
+            ordering_cost=225.0,
+            stockout_cost=225.0,
         )
 
-        with patch.object(enhanced_inventory_agent, '_calculate_optimal_reorder_point',
-                         side_effect=[optimization1, optimization2]):
+        with patch.object(
+            enhanced_inventory_agent,
+            "_calculate_optimal_reorder_point",
+            side_effect=[optimization1, optimization2],
+        ):
 
-            decision = await enhanced_inventory_agent._optimize_reorder_points(mock_session_instance)
+            decision = await enhanced_inventory_agent._optimize_reorder_points(
+                mock_session_instance
+            )
 
             assert decision is not None
             assert decision.decision_type == "reorder_point_optimization"
@@ -304,14 +357,18 @@ class TestEnhancedInventoryAgent:
             assert decision.confidence >= 0.75
 
     @pytest.mark.asyncio
-    async def test_bulk_purchase_optimization(self, enhanced_inventory_agent, mock_db_session, sample_item):
+    async def test_bulk_purchase_optimization(
+        self, enhanced_inventory_agent, mock_db_session, sample_item
+    ):
         """Test bulk purchase optimization"""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
         # Mock items needing bulk analysis
         sample_item.current_stock = 10  # Below reorder point
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = [sample_item]
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = [
+            sample_item
+        ]
 
         # Mock forecast
         forecast = DemandForecast(
@@ -324,11 +381,13 @@ class TestEnhancedInventoryAgent:
             forecast_accuracy=0.8,
             historical_patterns={"avg_daily": 1.67},
             revenue_correlation=0.6,
-            method_used="ensemble"
+            method_used="ensemble",
         )
 
-        with patch.object(enhanced_inventory_agent, '_forecast_item_demand', return_value=forecast):
-            decision = await enhanced_inventory_agent._analyze_bulk_purchase_opportunities(mock_session_instance)
+        with patch.object(enhanced_inventory_agent, "_forecast_item_demand", return_value=forecast):
+            decision = await enhanced_inventory_agent._analyze_bulk_purchase_opportunities(
+                mock_session_instance
+            )
 
             # Should find optimization opportunities
             assert decision is not None
@@ -350,11 +409,13 @@ class TestEnhancedInventoryAgent:
             forecast_accuracy=0.85,
             historical_patterns={"avg_daily": 1.33},
             revenue_correlation=0.7,
-            method_used="ensemble"
+            method_used="ensemble",
         )
 
-        with patch.object(enhanced_inventory_agent, '_forecast_item_demand', return_value=forecast):
-            optimization = await enhanced_inventory_agent._calculate_bulk_purchase_optimization(mock_session, sample_item)
+        with patch.object(enhanced_inventory_agent, "_forecast_item_demand", return_value=forecast):
+            optimization = await enhanced_inventory_agent._calculate_bulk_purchase_optimization(
+                mock_session, sample_item
+            )
 
             assert optimization is not None
             assert optimization.item_id == "ITEM001"
@@ -375,9 +436,11 @@ class TestEnhancedInventoryAgent:
             current_stock=30,
             maximum_stock=50,
             expiry_days=7,
-            status=ItemStatus.ACTIVE
+            status=ItemStatus.ACTIVE,
         )
-        mock_session_instance.query.return_value.filter.return_value.all.return_value = [perishable_item]
+        mock_session_instance.query.return_value.filter.return_value.all.return_value = [
+            perishable_item
+        ]
 
         # Mock expiry analysis
         expiry_analysis = ExpiryIntelligence(
@@ -387,11 +450,15 @@ class TestEnhancedInventoryAgent:
             risk_score=0.8,
             recommended_discount_timing=2,
             shelf_life_optimization={"reduce_order_quantity": True},
-            rotation_efficiency=0.7
+            rotation_efficiency=0.7,
         )
 
-        with patch.object(enhanced_inventory_agent, '_analyze_expiry_intelligence', return_value=expiry_analysis):
-            decision = await enhanced_inventory_agent._perform_expiry_intelligence(mock_session_instance)
+        with patch.object(
+            enhanced_inventory_agent, "_analyze_expiry_intelligence", return_value=expiry_analysis
+        ):
+            decision = await enhanced_inventory_agent._perform_expiry_intelligence(
+                mock_session_instance
+            )
 
             assert decision is not None
             assert decision.decision_type == "expiry_intelligence_analysis"
@@ -404,11 +471,7 @@ class TestEnhancedInventoryAgent:
 
         # Mock perishable item
         perishable_item = Mock(
-            id="ITEM001",
-            name="Milk",
-            current_stock=20,
-            maximum_stock=30,
-            expiry_days=5
+            id="ITEM001", name="Milk", current_stock=20, maximum_stock=30, expiry_days=5
         )
 
         # Mock forecast
@@ -422,11 +485,13 @@ class TestEnhancedInventoryAgent:
             forecast_accuracy=0.8,
             historical_patterns={"avg_daily": 3.0, "std_daily": 0.5},
             revenue_correlation=0.6,
-            method_used="ensemble"
+            method_used="ensemble",
         )
 
-        with patch.object(enhanced_inventory_agent, '_forecast_item_demand', return_value=forecast):
-            analysis = await enhanced_inventory_agent._analyze_expiry_intelligence(mock_session, perishable_item)
+        with patch.object(enhanced_inventory_agent, "_forecast_item_demand", return_value=forecast):
+            analysis = await enhanced_inventory_agent._analyze_expiry_intelligence(
+                mock_session, perishable_item
+            )
 
             assert analysis is not None
             assert analysis.item_id == "ITEM001"
@@ -442,11 +507,10 @@ class TestEnhancedInventoryAgent:
         mock_db_session.return_value = mock_session_instance
 
         # Mock suppliers with recent activity
-        suppliers = [
-            Mock(id="SUP001", name="Supplier 1"),
-            Mock(id="SUP002", name="Supplier 2")
-        ]
-        mock_session_instance.query.return_value.join.return_value.filter.return_value.distinct.return_value.all.return_value = suppliers
+        suppliers = [Mock(id="SUP001", name="Supplier 1"), Mock(id="SUP002", name="Supplier 2")]
+        mock_session_instance.query.return_value.join.return_value.filter.return_value.distinct.return_value.all.return_value = (
+            suppliers
+        )
 
         # Mock supplier performance
         performance1 = SupplierPerformance(
@@ -457,7 +521,7 @@ class TestEnhancedInventoryAgent:
             quality_score=0.85,
             delivery_performance=0.9,
             risk_assessment={"single_source_risk": 0.3},
-            recommendation="Preferred supplier"
+            recommendation="Preferred supplier",
         )
 
         performance2 = SupplierPerformance(
@@ -468,13 +532,18 @@ class TestEnhancedInventoryAgent:
             quality_score=0.5,
             delivery_performance=0.6,
             risk_assessment={"single_source_risk": 0.4},
-            recommendation="Review relationship"
+            recommendation="Review relationship",
         )
 
-        with patch.object(enhanced_inventory_agent, '_analyze_individual_supplier_performance',
-                         side_effect=[performance1, performance2]):
+        with patch.object(
+            enhanced_inventory_agent,
+            "_analyze_individual_supplier_performance",
+            side_effect=[performance1, performance2],
+        ):
 
-            decision = await enhanced_inventory_agent._analyze_supplier_performance(mock_session_instance)
+            decision = await enhanced_inventory_agent._analyze_supplier_performance(
+                mock_session_instance
+            )
 
             assert decision is not None
             assert decision.decision_type == "supplier_performance_analysis"
@@ -493,18 +562,20 @@ class TestEnhancedInventoryAgent:
             supplier_id="SUP001",
             order_date=datetime.now().date() - timedelta(days=30),
             expected_delivery_date=datetime.now().date() - timedelta(days=25),
-            total_amount=Decimal("1000.00")
+            total_amount=Decimal("1000.00"),
         )
         po2 = Mock(
             supplier_id="SUP001",
             order_date=datetime.now().date() - timedelta(days=15),
             expected_delivery_date=datetime.now().date() - timedelta(days=10),
-            total_amount=Decimal("1500.00")
+            total_amount=Decimal("1500.00"),
         )
 
         mock_session.query.return_value.filter.return_value.all.return_value = [po1, po2]
 
-        performance = await enhanced_inventory_agent._analyze_individual_supplier_performance(mock_session, supplier)
+        performance = await enhanced_inventory_agent._analyze_individual_supplier_performance(
+            mock_session, supplier
+        )
 
         assert performance is not None
         assert performance.supplier_id == "SUP001"
@@ -513,16 +584,27 @@ class TestEnhancedInventoryAgent:
         assert performance.recommendation is not None
 
     @pytest.mark.asyncio
-    async def test_comprehensive_inventory_analysis(self, enhanced_inventory_agent, mock_db_session):
+    async def test_comprehensive_inventory_analysis(
+        self, enhanced_inventory_agent, mock_db_session
+    ):
         """Test comprehensive inventory health analysis"""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
         # Mock inventory metrics
-        mock_session_instance.query.return_value.filter.return_value.count.side_effect = [100, 15, 8]  # total, low stock, overstocked
-        mock_session_instance.query.return_value.filter.return_value.scalar.side_effect = [50000.0, 2500.0]  # total value, recent movements
+        mock_session_instance.query.return_value.filter.return_value.count.side_effect = [
+            100,
+            15,
+            8,
+        ]  # total, low stock, overstocked
+        mock_session_instance.query.return_value.filter.return_value.scalar.side_effect = [
+            50000.0,
+            2500.0,
+        ]  # total value, recent movements
 
-        decision = await enhanced_inventory_agent._comprehensive_inventory_analysis(mock_session_instance)
+        decision = await enhanced_inventory_agent._comprehensive_inventory_analysis(
+            mock_session_instance
+        )
 
         assert decision is not None
         assert decision.decision_type == "comprehensive_inventory_analysis"
@@ -532,22 +614,23 @@ class TestEnhancedInventoryAgent:
         assert decision.confidence > 0.5
 
     @pytest.mark.asyncio
-    async def test_enhanced_stock_movement_analysis(self, enhanced_inventory_agent, mock_db_session, sample_item):
+    async def test_enhanced_stock_movement_analysis(
+        self, enhanced_inventory_agent, mock_db_session, sample_item
+    ):
         """Test enhanced stock movement analysis"""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
-        mock_session_instance.query.return_value.filter.return_value.first.return_value = sample_item
+        mock_session_instance.query.return_value.filter.return_value.first.return_value = (
+            sample_item
+        )
 
         movement_data = {
             "item_id": "ITEM001",
             "movement_type": StockMovementType.OUT,
-            "quantity": 15  # Higher than normal
+            "quantity": 15,  # Higher than normal
         }
 
-        data = {
-            "type": "stock_movement",
-            "movement": movement_data
-        }
+        data = {"type": "stock_movement", "movement": movement_data}
 
         # Mock forecast
         forecast = DemandForecast(
@@ -560,10 +643,10 @@ class TestEnhancedInventoryAgent:
             forecast_accuracy=0.8,
             historical_patterns={"avg_daily": 5.0, "std_daily": 1.0},
             revenue_correlation=0.7,
-            method_used="ensemble"
+            method_used="ensemble",
         )
 
-        with patch.object(enhanced_inventory_agent, '_forecast_item_demand', return_value=forecast):
+        with patch.object(enhanced_inventory_agent, "_forecast_item_demand", return_value=forecast):
             decision = await enhanced_inventory_agent.process_data(data)
 
             # Should detect unusual consumption
@@ -587,11 +670,13 @@ class TestEnhancedInventoryAgent:
             forecast_accuracy=0.8,
             historical_patterns={"avg_daily": 5.0, "std_daily": 1.0},
             revenue_correlation=0.7,
-            method_used="ensemble"
+            method_used="ensemble",
         )
 
         # Test unusual consumption (3x normal)
-        decision = await enhanced_inventory_agent._analyze_consumption_movement(mock_session, sample_item, 15, forecast)
+        decision = await enhanced_inventory_agent._analyze_consumption_movement(
+            mock_session, sample_item, 15, forecast
+        )
 
         assert decision is not None
         assert decision.decision_type == "unusual_consumption_alert"
@@ -612,11 +697,13 @@ class TestEnhancedInventoryAgent:
             forecast_accuracy=0.8,
             historical_patterns={"avg_daily": 5.0, "std_daily": 1.0},
             revenue_correlation=0.7,
-            method_used="ensemble"
+            method_used="ensemble",
         )
 
         # Test overstock situation
-        decision = await enhanced_inventory_agent._analyze_receipt_movement(mock_session, sample_item, 60, forecast)
+        decision = await enhanced_inventory_agent._analyze_receipt_movement(
+            mock_session, sample_item, 60, forecast
+        )
 
         assert decision is not None
         assert decision.decision_type == "overstock_alert"
@@ -637,11 +724,13 @@ class TestEnhancedInventoryAgent:
             forecast_accuracy=0.8,
             historical_patterns={"avg_daily": 5.0, "std_daily": 1.0},
             revenue_correlation=0.7,
-            method_used="ensemble"
+            method_used="ensemble",
         )
 
         # Test significant adjustment (20% of current stock)
-        decision = await enhanced_inventory_agent._analyze_adjustment_movement(mock_session, sample_item, -10, forecast)
+        decision = await enhanced_inventory_agent._analyze_adjustment_movement(
+            mock_session, sample_item, -10, forecast
+        )
 
         assert decision is not None
         assert decision.decision_type == "inventory_adjustment_alert"
@@ -654,10 +743,13 @@ class TestEnhancedInventoryAgent:
         mock_db_session.return_value = mock_session_instance
 
         # Mock inventory counts
-        mock_session_instance.query.return_value.filter.return_value.count.side_effect = [100, 12]  # total, low stock
+        mock_session_instance.query.return_value.filter.return_value.count.side_effect = [
+            100,
+            12,
+        ]  # total, low stock
 
         # Mock forecasts
-        with patch.object(enhanced_inventory_agent, '_forecast_all_items_demand', return_value=[]):
+        with patch.object(enhanced_inventory_agent, "_forecast_all_items_demand", return_value=[]):
             report = await enhanced_inventory_agent.generate_report()
 
             assert isinstance(report, dict)
@@ -670,11 +762,11 @@ class TestEnhancedInventoryAgent:
     @pytest.mark.asyncio
     async def test_periodic_check_enhanced(self, enhanced_inventory_agent):
         """Test enhanced periodic check with intelligent scheduling"""
-        with patch.object(enhanced_inventory_agent, '_queue_analysis_message') as mock_queue:
+        with patch.object(enhanced_inventory_agent, "_queue_analysis_message") as mock_queue:
             # Mock current time for different scenarios
 
             # Test 6 AM (demand forecasting time)
-            with patch('agents.inventory_agent_enhanced.datetime') as mock_datetime:
+            with patch("agents.inventory_agent_enhanced.datetime") as mock_datetime:
                 mock_datetime.now.return_value = Mock(hour=6, minute=15, weekday=lambda: 1)
 
                 await enhanced_inventory_agent.periodic_check()
@@ -706,8 +798,9 @@ class TestEnhancedInventoryAgent:
 
         # Should handle the session close error (test will raise exception due to mock)
         import pytest
+
         with pytest.raises(Exception, match="Session close error"):
-            decision = await enhanced_inventory_agent.process_data(data)
+            await enhanced_inventory_agent.process_data(data)
 
     @pytest.mark.asyncio
     async def test_forecast_all_items_demand(self, enhanced_inventory_agent, mock_db_session):
@@ -718,34 +811,44 @@ class TestEnhancedInventoryAgent:
         # Mock active items with recent movement
         mock_session_instance.query.return_value.filter.return_value.join.return_value.filter.return_value.distinct.return_value.all.return_value = [
             ("ITEM001",),
-            ("ITEM002",)
+            ("ITEM002",),
         ]
 
         # Mock individual forecasts
         forecast1 = DemandForecast(
-            item_id="ITEM001", predicted_demand=50.0, confidence_interval=(45.0, 55.0),
-            seasonality_factor=1.0, trend_factor=0.05, forecast_horizon_days=30,
-            forecast_accuracy=0.8, historical_patterns={"avg_daily": 1.67},
-            revenue_correlation=0.7, method_used="ensemble"
+            item_id="ITEM001",
+            predicted_demand=50.0,
+            confidence_interval=(45.0, 55.0),
+            seasonality_factor=1.0,
+            trend_factor=0.05,
+            forecast_horizon_days=30,
+            forecast_accuracy=0.8,
+            historical_patterns={"avg_daily": 1.67},
+            revenue_correlation=0.7,
+            method_used="ensemble",
         )
 
-        with patch.object(enhanced_inventory_agent, '_forecast_item_demand', side_effect=[forecast1, None]):
-            forecasts = await enhanced_inventory_agent._forecast_all_items_demand(mock_session_instance, 30)
+        with patch.object(
+            enhanced_inventory_agent, "_forecast_item_demand", side_effect=[forecast1, None]
+        ):
+            forecasts = await enhanced_inventory_agent._forecast_all_items_demand(
+                mock_session_instance, 30
+            )
 
             assert len(forecasts) == 1
             assert forecasts[0].item_id == "ITEM001"
 
     def test_config_defaults(self):
         """Test enhanced configuration defaults"""
-        with patch('agents.base_agent.Anthropic'), \
-             patch('agents.base_agent.create_engine'), \
-             patch('agents.base_agent.sessionmaker'):
+        with patch("agents.base_agent.Anthropic"), patch("agents.base_agent.create_engine"), patch(
+            "agents.base_agent.sessionmaker"
+        ):
 
             agent = EnhancedInventoryAgent(
                 agent_id="test_agent",
                 api_key="test_key",
                 config={},  # Empty config
-                db_url="sqlite:///:memory:"
+                db_url="sqlite:///:memory:",
             )
 
             assert agent.service_level_target == 0.95
