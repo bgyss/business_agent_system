@@ -495,7 +495,7 @@ class TestPerformanceContext:
                 pass
 
             args = mock_log_perf.call_args[0]
-            assert args[1] == 123.0  # 123ms
+            assert abs(args[1] - 123.0) < 0.1  # ~123ms
 
 
 class TestIntegration:

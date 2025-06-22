@@ -1,5 +1,10 @@
 # Business Agent Management System
 
+[![CI](https://github.com/briangyss/business-agent-system/workflows/CI/badge.svg)](https://github.com/briangyss/business-agent-system/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/briangyss/business-agent-system/branch/main/graph/badge.svg)](https://codecov.io/gh/briangyss/business-agent-system)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 ## Preamble
 
 This project explores agent-based solutions for Small/Medium Business (SMB) simulation and automated business management workflows. Built semi-autonomously using Claude Code and Windsurf, it demonstrates practical applications of AI agents in business operations and decision-making.

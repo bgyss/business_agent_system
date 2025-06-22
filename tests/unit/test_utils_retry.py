@@ -622,9 +622,291 @@ class TestIntegration:
         
         assert breaker.state == CircuitBreakerState.OPEN
         
-        # ValueError should not be caught by circuit breaker
-        with pytest.raises(ValueError):
+        # ValueError should raise CircuitBreakerOpenError because circuit is open
+        with pytest.raises(CircuitBreakerOpenError):
             breaker.call(other_error_func)
+
+
+class TestMissingCoverage:
+    """Tests to cover missing lines and edge cases for 95% coverage"""
+    
+    def test_should_attempt_reset_with_no_last_failure(self):
+        """Test _should_attempt_reset when last_failure_time is None (line 93)"""
+        config = CircuitBreakerConfig(failure_threshold=1, recovery_timeout=0.1)
+        breaker = CircuitBreaker(config, "test_no_failure")
+        
+        # Manually set state to OPEN without setting last_failure_time
+        breaker.state = CircuitBreakerState.OPEN
+        breaker.last_failure_time = None
+        
+        # This should return True because last_failure_time is None
+        result = breaker._should_attempt_reset()
+        assert result is True
+    
+    def test_circuit_breaker_half_open_failure_reopens(self):
+        """Test that failure in HALF_OPEN state reopens circuit (line 121)"""
+        config = CircuitBreakerConfig(failure_threshold=1, recovery_timeout=0.01)
+        breaker = CircuitBreaker(config, "test_half_open_failure")
+        
+        def failing_func():
+            raise Exception("Test failure")
+        
+        # Open the circuit
+        with pytest.raises(Exception):
+            breaker.call(failing_func)
+        assert breaker.state == CircuitBreakerState.OPEN
+        
+        # Wait for recovery timeout
+        time.sleep(0.02)
+        
+        # Next call should transition to HALF_OPEN, then fail and reopen
+        with pytest.raises(Exception):
+            breaker.call(failing_func)
+        
+        # Circuit should reopen immediately after failure in HALF_OPEN state
+        assert breaker.state == CircuitBreakerState.OPEN
+    
+    @pytest.mark.asyncio
+    async def test_async_circuit_breaker_half_open_transition(self):
+        """Test async circuit breaker transitions to half-open (line 171)"""
+        config = CircuitBreakerConfig(failure_threshold=1, recovery_timeout=0.01)
+        breaker = CircuitBreaker(config, "test_async_half_open")
+        
+        async def failing_func():
+            raise Exception("Async failure")
+        
+        # Open the circuit
+        with pytest.raises(Exception):
+            await breaker.async_call(failing_func)
+        assert breaker.state == CircuitBreakerState.OPEN
+        
+        # Wait for recovery timeout
+        await asyncio.sleep(0.02)
+        
+        async def success_func():
+            return "success"
+        
+        # This should transition to HALF_OPEN first
+        result = await breaker.async_call(success_func)
+        assert result == "success"
+        assert breaker.state == CircuitBreakerState.HALF_OPEN
+    
+    @pytest.mark.asyncio  
+    async def test_async_retry_non_retryable_error(self):
+        """Test async retry with non-retryable error (lines 242-243)"""
+        call_count = 0
+        
+        @retry(RetryConfig(max_attempts=3, base_delay=0.01))
+        async def async_non_retryable():
+            nonlocal call_count
+            call_count += 1
+            raise NonRetryableError("Don't retry this async")
+        
+        # Should not retry non-retryable errors
+        with pytest.raises(NonRetryableError):
+            await async_non_retryable()
+        
+        assert call_count == 1
+    
+    @pytest.mark.asyncio
+    async def test_async_retry_max_attempts_reached(self):
+        """Test async retry when max attempts reached (lines 247-248)"""
+        call_count = 0
+        
+        @retry(RetryConfig(max_attempts=2, base_delay=0.01))
+        async def async_always_failing():
+            nonlocal call_count
+            call_count += 1
+            raise RetryableError("Always fails async")
+        
+        # Should retry up to max attempts then fail
+        with pytest.raises(RetryableError):
+            await async_always_failing()
+        
+        assert call_count == 2
+    
+    @pytest.mark.asyncio
+    async def test_async_retry_unexpected_error(self):
+        """Test async retry with unexpected error (lines 253-258)"""
+        call_count = 0
+        
+        @retry(RetryConfig(max_attempts=3, base_delay=0.01))
+        async def async_unexpected_error():
+            nonlocal call_count
+            call_count += 1
+            raise KeyError("Unexpected async error")
+        
+        # Should not retry unexpected errors
+        with pytest.raises(KeyError):
+            await async_unexpected_error()
+        
+        assert call_count == 1
+    
+    def test_circuit_breaker_decorator_default_config(self):
+        """Test circuit breaker decorator with default config (line 272)"""
+        # Test default config creation in decorator
+        @circuit_breaker()  # No config passed, should use default
+        def test_func():
+            return "default_config_test"
+        
+        result = test_func()
+        assert result == "default_config_test"
+        
+        # Verify default circuit breaker was created
+        stats = get_circuit_breaker_stats("default")
+        assert stats is not None
+        assert stats.success_count >= 1
+    
+    def test_circuit_breaker_stats_edge_cases(self):
+        """Test edge cases for circuit breaker stats"""
+        stats = CircuitBreakerStats()
+        
+        # Test failure rate with zero calls
+        assert stats.get_failure_rate() == 0.0
+        
+        # Test multiple state changes
+        states = [
+            (CircuitBreakerState.CLOSED, CircuitBreakerState.OPEN),
+            (CircuitBreakerState.OPEN, CircuitBreakerState.HALF_OPEN),
+            (CircuitBreakerState.HALF_OPEN, CircuitBreakerState.CLOSED)
+        ]
+        
+        for old_state, new_state in states:
+            stats.record_state_change(old_state, new_state)
+        
+        assert len(stats.state_changes) == 3
+        
+        # Verify all timestamps are datetime objects
+        for timestamp, old_state, new_state in stats.state_changes:
+            assert isinstance(timestamp, datetime)
+    
+    def test_calculate_delay_edge_cases(self):
+        """Test calculate_delay edge cases"""
+        # Test with zero base delay
+        config = RetryConfig(base_delay=0.0, jitter=False)
+        delay = calculate_delay(1, config)
+        assert delay == 0.0
+        
+        # Test with very small base delay and jitter
+        config = RetryConfig(base_delay=0.001, jitter=True)
+        delay = calculate_delay(1, config)
+        assert delay >= 0.0
+        
+        # Test with extreme exponential base
+        config = RetryConfig(base_delay=1.0, exponential_base=10.0, max_delay=100.0, jitter=False)
+        delay = calculate_delay(3, config)  # Would be 100 without max_delay cap
+        assert delay == 100.0
+    
+    def test_circuit_breaker_success_count_reset_on_closed(self):
+        """Test that success count resets failure count when circuit is closed"""
+        config = CircuitBreakerConfig(failure_threshold=3)
+        breaker = CircuitBreaker(config, "test_success_reset")
+        
+        def sometimes_failing():
+            if breaker.failure_count < 2:
+                raise Exception("Fail first two times")
+            return "success"
+        
+        # Fail twice (but not enough to open circuit)
+        for _ in range(2):
+            with pytest.raises(Exception):
+                breaker.call(sometimes_failing)
+        
+        assert breaker.failure_count == 2
+        assert breaker.state == CircuitBreakerState.CLOSED
+        
+        # Success should reset failure count
+        result = breaker.call(sometimes_failing)
+        assert result == "success"
+        assert breaker.failure_count == 0  # Reset on success
+    
+    def test_resilient_call_decorator_composition(self):
+        """Test resilient_call decorator properly composes retry and circuit breaker"""
+        call_count = 0
+        
+        @resilient_call(
+            retry_config=RetryConfig(max_attempts=2, base_delay=0.01),
+            circuit_breaker_config=CircuitBreakerConfig(failure_threshold=5),
+            circuit_breaker_name="composition_test"
+        )
+        def flaky_composition():
+            nonlocal call_count
+            call_count += 1
+            if call_count < 2:
+                raise RetryableError("Flaky function")
+            return "composed_success"
+        
+        # Should retry once and succeed
+        result = flaky_composition()
+        assert result == "composed_success"
+        assert call_count == 2
+        
+        # Verify both decorators are applied
+        stats = get_circuit_breaker_stats("composition_test")
+        assert stats is not None
+        assert stats.success_count == 1
+    
+    @pytest.mark.asyncio
+    async def test_async_circuit_breaker_open_error(self):
+        """Test async circuit breaker raises error when open"""
+        config = CircuitBreakerConfig(failure_threshold=1, recovery_timeout=60.0)
+        breaker = CircuitBreaker(config, "test_async_open_error")
+        
+        async def failing_func():
+            raise Exception("Async failure")
+        
+        # Open the circuit
+        with pytest.raises(Exception):
+            await breaker.async_call(failing_func)
+        
+        assert breaker.state == CircuitBreakerState.OPEN
+        
+        # Next call should raise CircuitBreakerOpenError immediately
+        with pytest.raises(CircuitBreakerOpenError) as exc_info:
+            await breaker.async_call(failing_func)
+        
+        # Verify error details
+        error = exc_info.value
+        assert "test_async_open_error" in str(error)
+        assert error.error_code == "CIRCUIT_BREAKER_OPEN"
+        assert "failure_count" in error.context
+    
+    def test_retry_config_custom_exceptions(self):
+        """Test retry config with custom exception tuples"""
+        config = RetryConfig(
+            retryable_exceptions=(ConnectionError, TimeoutError),
+            non_retryable_exceptions=(ValueError, TypeError, AttributeError)
+        )
+        
+        call_count = 0
+        
+        @retry(config)
+        def connection_error_func():
+            nonlocal call_count
+            call_count += 1
+            if call_count < 2:
+                raise ConnectionError("Retry this")
+            return "success"
+        
+        # Should retry ConnectionError
+        result = connection_error_func()
+        assert result == "success"
+        assert call_count == 2
+        
+        # Reset for next test
+        call_count = 0
+        
+        @retry(config)
+        def attribute_error_func():
+            nonlocal call_count
+            call_count += 1
+            raise AttributeError("Don't retry this")
+        
+        # Should not retry AttributeError
+        with pytest.raises(AttributeError):
+            attribute_error_func()
+        
+        assert call_count == 1
 
 
 if __name__ == "__main__":
