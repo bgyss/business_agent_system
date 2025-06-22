@@ -83,10 +83,12 @@ jobs:
           coverage.xml
     
     - name: Upload coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       if: matrix.python-version == '3.11'
       with:
         file: ./coverage.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
 
   security:
     runs-on: ubuntu-latest
