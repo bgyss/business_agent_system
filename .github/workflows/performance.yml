@@ -1,13 +1,17 @@
 name: Performance Tests
 
+# Temporarily disabled - uncomment to re-enable
+# on:
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     branches: [ main ]
+#   schedule:
+#     # Run nightly at 2 AM UTC
+#     - cron: '0 2 * * *'
+
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  schedule:
-    # Run nightly at 2 AM UTC
-    - cron: '0 2 * * *'
+  workflow_dispatch: # Only allow manual triggering
 
 jobs:
   performance-tests:

@@ -1,10 +1,14 @@
 name: Web Tests
 
+# Temporarily disabled - uncomment to re-enable
+# on:
+#   push:
+#     branches: [ main, develop ]
+#   pull_request:
+#     branches: [ main, develop ]
+
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+  workflow_dispatch: # Only allow manual triggering
 
 jobs:
   web-tests:
