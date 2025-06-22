@@ -171,6 +171,9 @@ def business_system(temp_config_file, mock_anthropic_client, mock_env_vars):
 @pytest_asyncio.fixture
 async def running_system(business_system):
     """Start the business system and yield it running."""
+    # Set system as running (like run() method does)
+    business_system.is_running = True
+    
     # Start agents but not the full run loop (which would run indefinitely)
     await business_system.start_agents()
 

@@ -132,6 +132,9 @@ class BusinessAgentSystem:
             task = asyncio.create_task(agent.start())
             self.tasks.append(task)
             self.logger.info(f"Started {agent_name} agent")
+        
+        # Give agents a moment to start their loops
+        await asyncio.sleep(0.1)
 
     async def start_simulator(self):
         """Start the real-time simulator if enabled"""
