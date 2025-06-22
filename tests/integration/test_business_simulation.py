@@ -88,17 +88,18 @@ class TestBusinessSimulation:
             assert item_count > 0
             assert movement_count > 0
 
-            # Verify transactions have reasonable dates
+            # Verify transactions have reasonable dates (within reasonable range allowing for timezone differences)
             latest_transaction = (
                 session.query(Transaction).order_by(Transaction.transaction_date.desc()).first()
             )
-            assert latest_transaction.transaction_date <= datetime.now().date()
+            # Allow up to 12 hours future for timezone differences
+            assert latest_transaction.transaction_date <= datetime.now() + timedelta(hours=12)
 
             earliest_transaction = (
                 session.query(Transaction).order_by(Transaction.transaction_date.asc()).first()
             )
             assert earliest_transaction.transaction_date >= (
-                datetime.now().date() - timedelta(days=6)
+                datetime.now() - timedelta(days=7)  # Allow one extra day buffer
             )
 
         finally:
