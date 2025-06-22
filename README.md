@@ -1,7 +1,7 @@
 # Business Agent Management System
 
-[![CI](https://github.com/briangyss/business-agent-system/workflows/CI/badge.svg)](https://github.com/briangyss/business-agent-system/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/briangyss/business-agent-system/branch/main/graph/badge.svg)](https://codecov.io/gh/briangyss/business-agent-system)
+[![CI](https://github.com/bgyss/business_agent_system/actions/workflows/ci.yml/badge.svg)](https://github.com/bgyss/business_agent_system/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/bgyss/business_agent_system/branch/main/graph/badge.svg)](https://codecov.io/gh/bgyss/business_agent_system)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -53,7 +53,7 @@ Contact: _bgyss at hey dot com_
 
 2. **Clone and setup**
    ```bash
-   git clone https://github.com/briangyss/business-agent-system.git
+   git clone https://github.com/bgyss/business_agent_system.git
    cd business_agent_system
    
    # Set up development environment (installs direnv if needed)
@@ -94,7 +94,7 @@ Contact: _bgyss at hey dot com_
 
 2. **Clone and setup**
    ```bash
-   git clone https://github.com/briangyss/business-agent-system.git
+   git clone https://github.com/bgyss/business_agent_system.git
    cd business_agent_system
    
    # Create virtual environment and install dependencies

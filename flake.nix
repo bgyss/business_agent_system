@@ -169,25 +169,25 @@
           
           restaurant = {
             type = "app";
-            program = pkgs.writeShellScript "run-restaurant" ''
+            program = "${pkgs.writeShellScript "run-restaurant" ''
               ${business-agent-system}/bin/python ${business-agent-system}/bin/main.py \
                 --config ${business-agent-system}/share/config/restaurant_config.yaml
-            '';
+            ''}";
           };
           
           retail = {
             type = "app";
-            program = pkgs.writeShellScript "run-retail" ''
+            program = "${pkgs.writeShellScript "run-retail" ''
               ${business-agent-system}/bin/python ${business-agent-system}/bin/main.py \
                 --config ${business-agent-system}/share/config/retail_config.yaml
-            '';
+            ''}";
           };
           
           dashboard = {
             type = "app";
-            program = pkgs.writeShellScript "run-dashboard" ''
+            program = "${pkgs.writeShellScript "run-dashboard" ''
               ${business-agent-system}/bin/streamlit run ${business-agent-system}/share/dashboard/app.py
-            '';
+            ''}";
           };
         };
 

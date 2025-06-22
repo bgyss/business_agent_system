@@ -89,15 +89,19 @@ performance = [
     "matplotlib>=3.7.0",
     "seaborn>=0.12.0",
 ]
+security = [
+    "safety>=3.0.0",
+    "bandit>=1.7.0",
+]
 all = [
-    "business-agent-system[dev,test,docs,performance]",
+    "business-agent-system[dev,test,docs,performance,security]",
 ]
 
 [project.urls]
-Homepage = "https://github.com/briangyss/business-agent-system"
-Documentation = "https://github.com/briangyss/business-agent-system#readme"
-Repository = "https://github.com/briangyss/business-agent-system.git"
-"Bug Tracker" = "https://github.com/briangyss/business-agent-system/issues"
+Homepage = "https://github.com/bgyss/business_agent_system"
+Documentation = "https://github.com/bgyss/business_agent_system#readme"
+Repository = "https://github.com/bgyss/business_agent_system.git"
+"Bug Tracker" = "https://github.com/bgyss/business_agent_system/issues"
 
 [project.scripts]
 business-agent-system = "main:main"

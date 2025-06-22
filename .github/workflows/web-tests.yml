@@ -51,7 +51,7 @@ jobs:
           -m "not slow"
     
     - name: Upload test artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: web-test-artifacts
@@ -61,7 +61,7 @@ jobs:
           test-results-*.xml
     
     - name: Upload screenshots on failure
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: failure-screenshots
