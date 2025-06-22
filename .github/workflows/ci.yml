@@ -105,22 +105,3 @@ jobs:
     - name: Run bandit security check
       run: uv run bandit -r agents/ models/ simulation/ -ll || true
 
-  docker:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [uv-test, security]
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Build Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: false
-        tags: business-agent-system:latest
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
