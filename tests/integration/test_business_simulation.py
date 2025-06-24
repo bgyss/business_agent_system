@@ -92,14 +92,14 @@ class TestBusinessSimulation:
             latest_transaction = (
                 session.query(Transaction).order_by(Transaction.transaction_date.desc()).first()
             )
-            # Allow up to 12 hours future for timezone differences
-            assert latest_transaction.transaction_date <= datetime.now() + timedelta(hours=12)
+            # Allow up to 1 day future for timezone differences (transaction_date is now a date)
+            assert latest_transaction.transaction_date <= datetime.now().date() + timedelta(days=1)
 
             earliest_transaction = (
                 session.query(Transaction).order_by(Transaction.transaction_date.asc()).first()
             )
             assert earliest_transaction.transaction_date >= (
-                datetime.now() - timedelta(days=7)  # Allow one extra day buffer
+                datetime.now().date() - timedelta(days=7)  # Allow one extra day buffer
             )
 
         finally:
@@ -228,7 +228,7 @@ class TestBusinessSimulation:
 
             # Verify movement types
             movement_types = {m.movement_type for m in movements}
-            expected_types = {"consumption", "delivery", "adjustment"}
+            expected_types = {"out", "in", "adjustment", "waste"}
 
             # Should have at least some of these movement types
             assert len(movement_types.intersection(expected_types)) > 0
