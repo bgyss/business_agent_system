@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import Optional, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import (
@@ -15,9 +15,10 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, DeclarativeBase
 
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
 
 class TransactionType(str, Enum):
@@ -76,7 +77,7 @@ class Transaction(Base):
     # Relationships
     account = relationship("Account", back_populates="transactions")
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         # Handle backward compatibility for 'reference' -> 'reference_number'
         if "reference" in kwargs:
             kwargs["reference_number"] = kwargs.pop("reference")

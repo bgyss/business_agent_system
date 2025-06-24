@@ -2,13 +2,14 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String, Text
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, DeclarativeBase
 
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
 
 class StockMovementType(str, Enum):
@@ -68,7 +69,7 @@ class StockMovement(Base):
     # Relationships
     item = relationship("Item", back_populates="stock_movements")
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         # Handle backward compatibility for 'reference' -> 'reference_number'
         if "reference" in kwargs:
             kwargs["reference_number"] = kwargs.pop("reference")
