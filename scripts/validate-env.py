@@ -77,7 +77,7 @@ def check_environment_variables():
     # Load .env file if it exists
     env_vars = {}
     if Path(".env").exists():
-        with open(".env", "r") as f:
+        with open(".env") as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
