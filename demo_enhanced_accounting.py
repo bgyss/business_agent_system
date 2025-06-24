@@ -56,7 +56,8 @@ async def demo_enhanced_accounting():
         amount=Decimal("15000.00"),  # Much larger than typical
         transaction_type=TransactionType.EXPENSE,
         category="office_supplies",
-        transaction_date=datetime.now().replace(hour=3, minute=30),  # Unusual time
+        account_id="5001",  # Add required account_id
+        transaction_date=datetime.now().date(),  # Use date instead of datetime
     )
 
     # Create similar historical transactions

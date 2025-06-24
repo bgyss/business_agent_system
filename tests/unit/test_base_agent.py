@@ -40,6 +40,10 @@ class ConcreteAgent(BaseAgent):
             "decisions_count": len(self.decisions_log),
         }
 
+    async def periodic_check(self):
+        """Test implementation of periodic check."""
+        self.logger.info(f"Periodic check for test agent {self.agent_id}")
+
 
 class TestBaseAgent:
     """Test cases for BaseAgent."""

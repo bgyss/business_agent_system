@@ -157,7 +157,8 @@ class TestEnhancedAccountingAgentMissingCoverage:
             "amount": Decimal("1000.00"),
             "transaction_type": TransactionType.INCOME,
             "category": "sales",
-            "transaction_date": datetime.now(),
+            "transaction_date": datetime.now().date(),
+            "account_id": "4001",
         }
 
         mock_session_instance = Mock()
@@ -183,7 +184,8 @@ class TestEnhancedAccountingAgentMissingCoverage:
             "amount": Decimal("1000.00"),
             "transaction_type": TransactionType.INCOME,
             "category": "sales",
-            "transaction_date": datetime.now(),
+            "transaction_date": datetime.now().date(),
+            "account_id": "4001",
         }
 
         mock_session_instance = Mock()
@@ -215,7 +217,8 @@ class TestEnhancedAccountingAgentMissingCoverage:
             amount=Decimal("1000.00"),
             transaction_type=TransactionType.INCOME,
             category="sales",
-            transaction_date=datetime.now(),
+            transaction_date=datetime.now().date(),
+            account_id="4001",
         )
 
         # Pass invalid similar_transactions to trigger exception
@@ -716,7 +719,8 @@ class TestEnhancedAccountingAgentMissingCoverage:
             amount=Decimal("1000.00"),
             transaction_type=TransactionType.INCOME,
             category="sales",
-            transaction_date=datetime.now(),
+            transaction_date=datetime.now().date(),
+            account_id="4001",
         )
 
         # Create only 3 similar transactions (less than 5 needed for IQR)
@@ -745,7 +749,8 @@ class TestEnhancedAccountingAgentMissingCoverage:
             amount=Decimal("1000.00"),
             transaction_type=TransactionType.INCOME,
             category="sales",
-            transaction_date=datetime.now(),
+            transaction_date=datetime.now().date(),
+            account_id="4001",
         )
 
         # Create only 1 similar transaction (not enough for std dev)

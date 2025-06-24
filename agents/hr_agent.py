@@ -649,7 +649,7 @@ class HRAgent(BaseAgent):
                         daily_records[date] = []
                     daily_records[date].append(record)
 
-                for date, day_records in daily_records.items():
+                for _date, day_records in daily_records.items():
                     daily_hours = self._calculate_daily_hours(day_records)
                     total_hours += daily_hours
 
@@ -728,3 +728,33 @@ class HRAgent(BaseAgent):
             )
 
         return alerts
+
+    async def periodic_check(self) -> None:
+        """Perform periodic HR analysis and monitoring."""
+        try:
+            session = self.SessionLocal()
+
+            # Check for overtime patterns
+            overtime_decision = await self._check_overtime_patterns(session)
+            if overtime_decision:
+                self.log_decision(overtime_decision)
+
+            # Analyze scheduling efficiency
+            schedule_decision = await self._analyze_schedule_efficiency(session)
+            if schedule_decision:
+                self.log_decision(schedule_decision)
+
+            # Monitor labor costs
+            labor_decision = await self._monitor_labor_costs(session)
+            if labor_decision:
+                self.log_decision(labor_decision)
+
+            self.logger.info(f"Periodic check completed for {self.agent_id}")
+
+        except Exception as e:
+            self.logger.error(f"Error in periodic check for {self.agent_id}: {e}")
+        finally:
+            try:
+                session.close()
+            except Exception as e:
+                self.logger.warning(f"Error closing session in periodic check: {e}")

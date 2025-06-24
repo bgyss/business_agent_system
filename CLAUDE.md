@@ -110,6 +110,12 @@ make format        # Auto-format code
 make type-check    # Run mypy type checking
 make test          # Run test suite
 
+# Testing (IMPORTANT: Always use uv for running tests)
+uv run pytest tests/unit/              # Run unit tests
+uv run pytest tests/integration/       # Run integration tests
+uv run pytest tests/unit/ -v --tb=short # Verbose unit tests with short traceback
+make test                              # Run full test suite via make
+
 # Running applications
 make run-restaurant   # Start restaurant system
 make run-retail      # Start retail system  

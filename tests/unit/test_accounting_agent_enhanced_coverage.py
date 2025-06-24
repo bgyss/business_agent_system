@@ -125,7 +125,8 @@ class TestAccountingAgentEnhancedCoverage:
             amount=Decimal("1500.00"),
             transaction_type=TransactionType.INCOME,
             category="sales",
-            transaction_date=datetime.now(),
+            transaction_date=datetime.now().date(),
+            account_id="4001",
         )
 
         # Test with invalid transaction data that causes exception
@@ -155,7 +156,8 @@ class TestAccountingAgentEnhancedCoverage:
             amount=Decimal("1500.00"),
             transaction_type=TransactionType.INCOME,
             category="sales",
-            transaction_date=datetime.now(),
+            transaction_date=datetime.now().date(),
+            account_id="4001",
         )
 
         # Create similar transactions with invalid date data
@@ -656,14 +658,13 @@ class TestAccountingAgentEnhancedCoverage:
         """Test comprehensive anomaly detection scenarios."""
         mock_session_instance = Mock()
 
-        transaction = TransactionModel(
-            id="1",
-            description="Test transaction",
-            amount=Decimal("5000.00"),  # Large amount
-            transaction_type=TransactionType.INCOME,
-            category="sales",
-            transaction_date=datetime(2023, 1, 1, 23, 0, 0),  # Unusual hour
-        )
+        transaction = Mock()
+        transaction.id = "1"
+        transaction.description = "Test transaction"
+        transaction.amount = Decimal("5000.00")  # Large amount
+        transaction.transaction_type = TransactionType.INCOME
+        transaction.category = "sales"
+        transaction.transaction_date = datetime(2023, 1, 1, 23, 0, 0)  # Unusual hour
 
         # Create similar transactions with various amounts for IQR testing
         similar_transactions = [
@@ -762,14 +763,13 @@ class TestAccountingAgentEnhancedCoverage:
         mock_session_instance = Mock()
 
         # Transaction at unusual time (3 AM on Sunday)
-        transaction = TransactionModel(
-            id="1",
-            description="Test transaction",
-            amount=Decimal("1000.00"),
-            transaction_type=TransactionType.INCOME,
-            category="sales",
-            transaction_date=datetime(2023, 1, 1, 3, 0, 0),  # Sunday 3 AM
-        )
+        transaction = Mock()
+        transaction.id = "1"
+        transaction.description = "Test transaction"
+        transaction.amount = Decimal("1000.00")
+        transaction.transaction_type = TransactionType.INCOME
+        transaction.category = "sales"
+        transaction.transaction_date = datetime(2023, 1, 1, 3, 0, 0)  # Sunday 3 AM
 
         # Similar transactions mostly during business hours on weekdays
         similar_transactions = []

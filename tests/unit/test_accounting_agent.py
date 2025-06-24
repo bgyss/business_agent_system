@@ -88,7 +88,8 @@ class TestAccountingAgent:
             "amount": Decimal("1500.00"),
             "transaction_type": TransactionType.INCOME,
             "category": "sales",
-            "transaction_date": datetime.now(),
+            "transaction_date": datetime.now().date(),
+            "account_id": "4001",  # Add required account_id
         }
 
         data = {"type": "new_transaction", "transaction": transaction_data}
@@ -240,7 +241,8 @@ class TestAccountingAgent:
             "amount": Decimal("1500.00"),
             "transaction_type": TransactionType.INCOME,
             "category": "sales",
-            "transaction_date": datetime.now(),
+            "transaction_date": datetime.now().date(),
+            "account_id": "4001",
         }
 
         mock_session_instance = Mock()
@@ -264,7 +266,8 @@ class TestAccountingAgent:
             "amount": Decimal("1000.00"),
             "transaction_type": TransactionType.INCOME,
             "category": "sales",
-            "transaction_date": datetime.now(),
+            "transaction_date": datetime.now().date(),
+            "account_id": "4001",
         }
 
         mock_session_instance = Mock()
@@ -484,7 +487,8 @@ class TestAccountingAgent:
             "amount": Decimal("1000.00"),
             "transaction_type": TransactionType.INCOME,
             "category": "sales",
-            "transaction_date": datetime.now(),
+            "transaction_date": datetime.now().date(),
+            "account_id": "4001",
         }
 
         mock_session_instance = Mock()
@@ -564,7 +568,8 @@ class TestAccountingAgent:
             "amount": Decimal("500.00"),
             "transaction_type": TransactionType.EXPENSE,
             "category": "office_supplies",
-            "transaction_date": datetime.now(),
+            "transaction_date": datetime.now().date(),
+            "account_id": "4001",
         }
 
         mock_session_instance = Mock()
@@ -594,7 +599,8 @@ class TestAccountingAgent:
             "amount": Decimal("200.00"),  # Potential outlier
             "transaction_type": TransactionType.EXPENSE,
             "category": "test_category",
-            "transaction_date": datetime.now(),
+            "transaction_date": datetime.now().date(),
+            "account_id": "4001",
         }
 
         mock_session_instance = Mock()
@@ -951,9 +957,10 @@ class TestAccountingAgent:
             "id": "1",
             "amount": Decimal("1000.00"),
             "transaction_type": TransactionType.EXPENSE,
-            "transaction_date": datetime.now(),
+            "transaction_date": datetime.now().date(),
             "description": "Test transaction",
             "category": "test",
+            "account_id": "4001",
         }
 
         # Mock Claude API failure

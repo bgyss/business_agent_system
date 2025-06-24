@@ -3002,3 +3002,38 @@ class InventoryAgent(BaseAgent):
         except Exception as e:
             self.logger.error(f"Error in comprehensive analytics analysis: {e}")
             return None
+
+    async def periodic_check(self) -> None:
+        """Perform periodic inventory analysis and monitoring."""
+        try:
+            session = self.SessionLocal()
+
+            # Check for low stock items - use existing daily inventory check
+            daily_decision = await self._perform_daily_inventory_check(session)
+            if daily_decision:
+                self.log_decision(daily_decision)
+
+            # Analyze reorder needs
+            reorder_decision = await self._analyze_reorder_needs(session)
+            if reorder_decision:
+                self.log_decision(reorder_decision)
+
+            # Check supplier performance
+            supplier_decision = await self._analyze_supplier_performance(session)
+            if supplier_decision:
+                self.log_decision(supplier_decision)
+
+            # Check expiring items
+            expiring_decision = await self._check_expiring_items(session)
+            if expiring_decision:
+                self.log_decision(expiring_decision)
+
+            self.logger.info(f"Periodic check completed for {self.agent_id}")
+
+        except Exception as e:
+            self.logger.error(f"Error in periodic check for {self.agent_id}: {e}")
+        finally:
+            try:
+                session.close()
+            except Exception as e:
+                self.logger.warning(f"Error closing session in periodic check: {e}")

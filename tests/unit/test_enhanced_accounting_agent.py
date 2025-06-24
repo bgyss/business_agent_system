@@ -102,7 +102,8 @@ class TestEnhancedAccountingAgent:
             "amount": Decimal("5000.00"),  # Much larger than average
             "transaction_type": TransactionType.INCOME,
             "category": "sales",
-            "transaction_date": datetime.now(),
+            "transaction_date": datetime.now().date(),
+            "account_id": "4001",
         }
 
         data = {"type": "new_transaction", "transaction": transaction_data}
@@ -297,14 +298,13 @@ class TestEnhancedAccountingAgent:
         self, enhanced_accounting_agent, mock_db_session
     ):
         """Test multi-algorithm anomaly detection."""
-        transaction = TransactionModel(
-            id="1",
-            description="Test transaction",
-            amount=Decimal("2000.00"),  # Outlier amount
-            transaction_type=TransactionType.INCOME,
-            category="sales",
-            transaction_date=datetime.now().replace(hour=2),  # Unusual hour
-        )
+        transaction = Mock()
+        transaction.id = "1"
+        transaction.description = "Test transaction"
+        transaction.amount = Decimal("2000.00")  # Outlier amount
+        transaction.transaction_type = TransactionType.INCOME
+        transaction.category = "sales"
+        transaction.transaction_date = datetime.now().replace(hour=2)  # Unusual hour
 
         # Create similar transactions with normal amounts and times
         similar_transactions = [
@@ -386,14 +386,13 @@ class TestEnhancedAccountingAgent:
     @pytest.mark.asyncio
     async def test_analyze_time_patterns(self, enhanced_accounting_agent, mock_db_session):
         """Test time-based pattern analysis."""
-        transaction = TransactionModel(
-            id="1",
-            description="Test transaction",
-            amount=Decimal("1000.00"),
-            transaction_type=TransactionType.INCOME,
-            category="sales",
-            transaction_date=datetime.now().replace(hour=3, minute=0),  # 3 AM - unusual
-        )
+        transaction = Mock()
+        transaction.id = "1"
+        transaction.description = "Test transaction"
+        transaction.amount = Decimal("1000.00")
+        transaction.transaction_type = TransactionType.INCOME
+        transaction.category = "sales"
+        transaction.transaction_date = datetime.now().replace(hour=3, minute=0)  # 3 AM - unusual
 
         # Create similar transactions mostly during business hours
         similar_transactions = []
@@ -602,7 +601,8 @@ class TestEnhancedAccountingAgent:
                 description="test",
                 amount=Decimal("100"),
                 transaction_type=TransactionType.INCOME,
-                transaction_date=datetime.now(),
+                transaction_date=datetime.now().date(),
+                account_id="4001",
             ),
             [],
         )
