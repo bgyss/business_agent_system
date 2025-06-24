@@ -2,11 +2,12 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional, Any
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String, Text
-from sqlalchemy.orm import declarative_base, relationship, DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, relationship
+
 
 class Base(DeclarativeBase):
     pass
