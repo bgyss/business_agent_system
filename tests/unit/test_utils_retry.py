@@ -1,6 +1,4 @@
-"""
-Test suite for utils.retry module
-"""
+"""Test suite for utils.retry module."""
 
 import asyncio
 import time
@@ -30,10 +28,10 @@ from utils.retry import (
 
 
 class TestRetryConfig:
-    """Test RetryConfig dataclass"""
+    """Test RetryConfig dataclass."""
 
     def test_default_config(self):
-        """Test default retry configuration"""
+        """Test default retry configuration."""
         config = RetryConfig()
         assert config.max_attempts == 3
         assert config.base_delay == 1.0
@@ -44,7 +42,7 @@ class TestRetryConfig:
         assert NonRetryableError in config.non_retryable_exceptions
 
     def test_custom_config(self):
-        """Test custom retry configuration"""
+        """Test custom retry configuration."""
         config = RetryConfig(
             max_attempts=5, base_delay=0.5, max_delay=30.0, exponential_base=1.5, jitter=False
         )
@@ -56,10 +54,10 @@ class TestRetryConfig:
 
 
 class TestCircuitBreakerConfig:
-    """Test CircuitBreakerConfig dataclass"""
+    """Test CircuitBreakerConfig dataclass."""
 
     def test_default_config(self):
-        """Test default circuit breaker configuration"""
+        """Test default circuit breaker configuration."""
         config = CircuitBreakerConfig()
         assert config.failure_threshold == 5
         assert config.recovery_timeout == 60.0
@@ -67,7 +65,7 @@ class TestCircuitBreakerConfig:
         assert config.success_threshold == 3
 
     def test_custom_config(self):
-        """Test custom circuit breaker configuration"""
+        """Test custom circuit breaker configuration."""
         config = CircuitBreakerConfig(
             failure_threshold=3,
             recovery_timeout=30.0,
@@ -81,10 +79,10 @@ class TestCircuitBreakerConfig:
 
 
 class TestCircuitBreakerStats:
-    """Test CircuitBreakerStats class"""
+    """Test CircuitBreakerStats class."""
 
     def test_initial_stats(self):
-        """Test initial statistics"""
+        """Test initial statistics."""
         stats = CircuitBreakerStats()
         assert stats.failure_count == 0
         assert stats.success_count == 0
@@ -94,7 +92,7 @@ class TestCircuitBreakerStats:
         assert stats.get_failure_rate() == 0.0
 
     def test_record_success(self):
-        """Test recording successful calls"""
+        """Test recording successful calls."""
         stats = CircuitBreakerStats()
         stats.record_success()
         assert stats.success_count == 1
@@ -102,7 +100,7 @@ class TestCircuitBreakerStats:
         assert stats.failure_count == 0
 
     def test_record_failure(self):
-        """Test recording failed calls"""
+        """Test recording failed calls."""
         stats = CircuitBreakerStats()
         stats.record_failure()
         assert stats.failure_count == 1
@@ -111,7 +109,7 @@ class TestCircuitBreakerStats:
         assert stats.last_failure_time is not None
 
     def test_failure_rate_calculation(self):
-        """Test failure rate calculation"""
+        """Test failure rate calculation."""
         stats = CircuitBreakerStats()
         stats.record_success()
         stats.record_success()
@@ -121,7 +119,7 @@ class TestCircuitBreakerStats:
         assert stats.get_failure_rate() == 1 / 3
 
     def test_state_change_recording(self):
-        """Test recording state changes"""
+        """Test recording state changes."""
         stats = CircuitBreakerStats()
         old_state = CircuitBreakerState.CLOSED
         new_state = CircuitBreakerState.OPEN
@@ -136,10 +134,10 @@ class TestCircuitBreakerStats:
 
 
 class TestCircuitBreaker:
-    """Test CircuitBreaker class"""
+    """Test CircuitBreaker class."""
 
     def test_initial_state(self):
-        """Test circuit breaker initial state"""
+        """Test circuit breaker initial state."""
         config = CircuitBreakerConfig()
         breaker = CircuitBreaker(config, "test")
 
@@ -149,7 +147,7 @@ class TestCircuitBreaker:
         assert breaker.name == "test"
 
     def test_successful_call(self):
-        """Test successful function call through circuit breaker"""
+        """Test successful function call through circuit breaker."""
         config = CircuitBreakerConfig()
         breaker = CircuitBreaker(config, "test")
 
@@ -162,7 +160,7 @@ class TestCircuitBreaker:
         assert breaker.failure_count == 0
 
     def test_failed_call(self):
-        """Test failed function call through circuit breaker"""
+        """Test failed function call through circuit breaker."""
         config = CircuitBreakerConfig(failure_threshold=2)
         breaker = CircuitBreaker(config, "test")
 
@@ -184,7 +182,7 @@ class TestCircuitBreaker:
         assert breaker.state == CircuitBreakerState.OPEN
 
     def test_circuit_opens_after_threshold(self):
-        """Test circuit opens after failure threshold"""
+        """Test circuit opens after failure threshold."""
         config = CircuitBreakerConfig(failure_threshold=3)
         breaker = CircuitBreaker(config, "test")
 
@@ -203,7 +201,7 @@ class TestCircuitBreaker:
             breaker.call(failing_func)
 
     def test_circuit_half_open_after_timeout(self):
-        """Test circuit goes to half-open state after timeout"""
+        """Test circuit goes to half-open state after timeout."""
         config = CircuitBreakerConfig(failure_threshold=1, recovery_timeout=0.1)
         breaker = CircuitBreaker(config, "test")
 
@@ -228,7 +226,7 @@ class TestCircuitBreaker:
         assert breaker.state == CircuitBreakerState.HALF_OPEN
 
     def test_circuit_closes_after_success_threshold(self):
-        """Test circuit closes after success threshold in half-open state"""
+        """Test circuit closes after success threshold in half-open state."""
         config = CircuitBreakerConfig(
             failure_threshold=1, success_threshold=2, recovery_timeout=0.1
         )
@@ -255,7 +253,7 @@ class TestCircuitBreaker:
 
     @pytest.mark.asyncio
     async def test_async_call(self):
-        """Test async function call through circuit breaker"""
+        """Test async function call through circuit breaker."""
         config = CircuitBreakerConfig()
         breaker = CircuitBreaker(config, "test")
 
@@ -268,7 +266,7 @@ class TestCircuitBreaker:
 
     @pytest.mark.asyncio
     async def test_async_call_failure(self):
-        """Test async function failure through circuit breaker"""
+        """Test async function failure through circuit breaker."""
         config = CircuitBreakerConfig(failure_threshold=1)
         breaker = CircuitBreaker(config, "test")
 
@@ -286,10 +284,10 @@ class TestCircuitBreaker:
 
 
 class TestCalculateDelay:
-    """Test calculate_delay function"""
+    """Test calculate_delay function."""
 
     def test_exponential_backoff(self):
-        """Test exponential backoff calculation"""
+        """Test exponential backoff calculation."""
         config = RetryConfig(base_delay=1.0, exponential_base=2.0, jitter=False)
 
         delay1 = calculate_delay(1, config)
@@ -301,14 +299,14 @@ class TestCalculateDelay:
         assert delay3 == 4.0
 
     def test_max_delay_cap(self):
-        """Test maximum delay cap"""
+        """Test maximum delay cap."""
         config = RetryConfig(base_delay=1.0, exponential_base=2.0, max_delay=3.0, jitter=False)
 
         delay = calculate_delay(10, config)  # Would be 512 without cap
         assert delay == 3.0
 
     def test_jitter_adds_randomness(self):
-        """Test that jitter adds randomness to delay"""
+        """Test that jitter adds randomness to delay."""
         config = RetryConfig(base_delay=10.0, exponential_base=2.0, jitter=True)
 
         delays = [calculate_delay(2, config) for _ in range(10)]
@@ -321,7 +319,7 @@ class TestCalculateDelay:
             assert 18.0 <= delay <= 22.0  # 10% jitter range
 
     def test_no_negative_delays(self):
-        """Test that delays are never negative"""
+        """Test that delays are never negative."""
         config = RetryConfig(base_delay=0.1, jitter=True)
 
         for attempt in range(1, 6):
@@ -330,10 +328,10 @@ class TestCalculateDelay:
 
 
 class TestRetryDecorator:
-    """Test retry decorator"""
+    """Test retry decorator."""
 
     def test_retry_success_on_first_attempt(self):
-        """Test successful function on first attempt"""
+        """Test successful function on first attempt."""
 
         @retry()
         def success_func():
@@ -343,7 +341,7 @@ class TestRetryDecorator:
         assert result == "success"
 
     def test_retry_success_after_failures(self):
-        """Test success after some failures"""
+        """Test success after some failures."""
         call_count = 0
 
         @retry(RetryConfig(max_attempts=3, base_delay=0.01, jitter=False))
@@ -359,7 +357,7 @@ class TestRetryDecorator:
         assert call_count == 3
 
     def test_retry_exhausted(self):
-        """Test retry exhaustion"""
+        """Test retry exhaustion."""
 
         @retry(RetryConfig(max_attempts=2, base_delay=0.01))
         def always_failing():
@@ -369,7 +367,7 @@ class TestRetryDecorator:
             always_failing()
 
     def test_non_retryable_error_not_retried(self):
-        """Test non-retryable errors are not retried"""
+        """Test non-retryable errors are not retried."""
         call_count = 0
 
         @retry(RetryConfig(max_attempts=3))
@@ -385,7 +383,7 @@ class TestRetryDecorator:
 
     @pytest.mark.asyncio
     async def test_async_retry_success(self):
-        """Test async function retry success"""
+        """Test async function retry success."""
 
         @retry(RetryConfig(max_attempts=2, base_delay=0.01))
         async def async_success():
@@ -396,7 +394,7 @@ class TestRetryDecorator:
 
     @pytest.mark.asyncio
     async def test_async_retry_after_failure(self):
-        """Test async function retry after failure"""
+        """Test async function retry after failure."""
         call_count = 0
 
         @retry(RetryConfig(max_attempts=3, base_delay=0.01, jitter=False))
@@ -412,7 +410,7 @@ class TestRetryDecorator:
         assert call_count == 2
 
     def test_unexpected_error_not_retried(self):
-        """Test unexpected errors are not retried"""
+        """Test unexpected errors are not retried."""
         call_count = 0
 
         @retry()
@@ -428,10 +426,10 @@ class TestRetryDecorator:
 
 
 class TestCircuitBreakerDecorator:
-    """Test circuit_breaker decorator"""
+    """Test circuit_breaker decorator."""
 
     def test_circuit_breaker_success(self):
-        """Test successful calls through circuit breaker decorator"""
+        """Test successful calls through circuit breaker decorator."""
 
         @circuit_breaker(CircuitBreakerConfig(), "test_success")
         def success_func():
@@ -444,7 +442,7 @@ class TestCircuitBreakerDecorator:
         assert stats.success_count == 1
 
     def test_circuit_breaker_failure_and_open(self):
-        """Test circuit breaker opens after failures"""
+        """Test circuit breaker opens after failures."""
 
         @circuit_breaker(CircuitBreakerConfig(failure_threshold=2), "test_failure")
         def failing_func():
@@ -461,7 +459,7 @@ class TestCircuitBreakerDecorator:
 
     @pytest.mark.asyncio
     async def test_async_circuit_breaker(self):
-        """Test async circuit breaker decorator"""
+        """Test async circuit breaker decorator."""
 
         @circuit_breaker(CircuitBreakerConfig(), "test_async")
         async def async_func():
@@ -471,7 +469,7 @@ class TestCircuitBreakerDecorator:
         assert result == "async_result"
 
     def test_multiple_circuit_breakers(self):
-        """Test multiple named circuit breakers"""
+        """Test multiple named circuit breakers."""
 
         @circuit_breaker(CircuitBreakerConfig(), "breaker1")
         def func1():
@@ -491,7 +489,7 @@ class TestCircuitBreakerDecorator:
         assert stats2.success_count == 1
 
     def test_get_circuit_breaker_stats_nonexistent(self):
-        """Test getting stats for non-existent circuit breaker"""
+        """Test getting stats for non-existent circuit breaker."""
         stats = get_circuit_breaker_stats("nonexistent")
         assert stats is None
 
@@ -500,7 +498,7 @@ class TestResilientCall:
     """Test resilient_call decorator (retry + circuit breaker)"""
 
     def test_resilient_call_success(self):
-        """Test successful call with resilient decorator"""
+        """Test successful call with resilient decorator."""
 
         @resilient_call(
             retry_config=RetryConfig(max_attempts=3),
@@ -514,7 +512,7 @@ class TestResilientCall:
         assert result == "resilient_success"
 
     def test_resilient_call_with_retry(self):
-        """Test resilient call retries failures"""
+        """Test resilient call retries failures."""
         call_count = 0
 
         @resilient_call(
@@ -534,7 +532,7 @@ class TestResilientCall:
         assert call_count == 3
 
     def test_resilient_call_circuit_breaker_opens(self):
-        """Test resilient call circuit breaker opens after failures"""
+        """Test resilient call circuit breaker opens after failures."""
 
         @resilient_call(
             retry_config=RetryConfig(max_attempts=1, base_delay=0.01),
@@ -555,7 +553,7 @@ class TestResilientCall:
 
     @pytest.mark.asyncio
     async def test_async_resilient_call(self):
-        """Test async resilient call"""
+        """Test async resilient call."""
         call_count = 0
 
         @resilient_call(
@@ -576,10 +574,10 @@ class TestResilientCall:
 
 
 class TestIntegration:
-    """Integration tests for retry and circuit breaker patterns"""
+    """Integration tests for retry and circuit breaker patterns."""
 
     def test_logging_during_retries(self):
-        """Test that retries generate appropriate log messages"""
+        """Test that retries generate appropriate log messages."""
         with patch("logging.getLogger") as mock_logger:
             mock_log = Mock()
             mock_logger.return_value = mock_log
@@ -595,7 +593,7 @@ class TestIntegration:
             assert mock_log.warning.called
 
     def test_circuit_breaker_logging(self):
-        """Test that circuit breaker state changes generate log messages"""
+        """Test that circuit breaker state changes generate log messages."""
         with patch("logging.getLogger") as mock_logger:
             mock_log = Mock()
             mock_logger.return_value = mock_log
@@ -612,7 +610,7 @@ class TestIntegration:
             assert mock_log.warning.called
 
     def test_circuit_breaker_with_custom_exception(self):
-        """Test circuit breaker with custom expected exception"""
+        """Test circuit breaker with custom expected exception."""
         config = CircuitBreakerConfig(failure_threshold=1, expected_exception=ConnectionError)
         breaker = CircuitBreaker(config, "custom_exception_test")
 
@@ -634,10 +632,11 @@ class TestIntegration:
 
 
 class TestMissingCoverage:
-    """Tests to cover missing lines and edge cases for 95% coverage"""
+    """Tests to cover missing lines and edge cases for 95% coverage."""
 
     def test_should_attempt_reset_with_no_last_failure(self):
-        """Test _should_attempt_reset when last_failure_time is None (line 93)"""
+        """Test _should_attempt_reset when last_failure_time is None (line
+        93)"""
         config = CircuitBreakerConfig(failure_threshold=1, recovery_timeout=0.1)
         breaker = CircuitBreaker(config, "test_no_failure")
 
@@ -765,7 +764,7 @@ class TestMissingCoverage:
         assert stats.success_count >= 1
 
     def test_circuit_breaker_stats_edge_cases(self):
-        """Test edge cases for circuit breaker stats"""
+        """Test edge cases for circuit breaker stats."""
         stats = CircuitBreakerStats()
 
         # Test failure rate with zero calls
@@ -788,7 +787,7 @@ class TestMissingCoverage:
             assert isinstance(timestamp, datetime)
 
     def test_calculate_delay_edge_cases(self):
-        """Test calculate_delay edge cases"""
+        """Test calculate_delay edge cases."""
         # Test with zero base delay
         config = RetryConfig(base_delay=0.0, jitter=False)
         delay = calculate_delay(1, config)
@@ -805,7 +804,8 @@ class TestMissingCoverage:
         assert delay == 100.0
 
     def test_circuit_breaker_success_count_reset_on_closed(self):
-        """Test that success count resets failure count when circuit is closed"""
+        """Test that success count resets failure count when circuit is
+        closed."""
         config = CircuitBreakerConfig(failure_threshold=3)
         breaker = CircuitBreaker(config, "test_success_reset")
 
@@ -828,7 +828,8 @@ class TestMissingCoverage:
         assert breaker.failure_count == 0  # Reset on success
 
     def test_resilient_call_decorator_composition(self):
-        """Test resilient_call decorator properly composes retry and circuit breaker"""
+        """Test resilient_call decorator properly composes retry and circuit
+        breaker."""
         call_count = 0
 
         @resilient_call(
@@ -855,7 +856,7 @@ class TestMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_async_circuit_breaker_open_error(self):
-        """Test async circuit breaker raises error when open"""
+        """Test async circuit breaker raises error when open."""
         config = CircuitBreakerConfig(failure_threshold=1, recovery_timeout=60.0)
         breaker = CircuitBreaker(config, "test_async_open_error")
 
@@ -879,7 +880,7 @@ class TestMissingCoverage:
         assert "failure_count" in error.context
 
     def test_retry_config_custom_exceptions(self):
-        """Test retry config with custom exception tuples"""
+        """Test retry config with custom exception tuples."""
         config = RetryConfig(
             retryable_exceptions=(ConnectionError, TimeoutError),
             non_retryable_exceptions=(ValueError, TypeError, AttributeError),

@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class DemandForecast:
-    """Demand forecast result with comprehensive analytics"""
+    """Demand forecast result with comprehensive analytics."""
 
     item_id: str
     predicted_demand: float
@@ -41,7 +41,7 @@ class DemandForecast:
 
 @dataclass
 class OptimalReorderPoint:
-    """Optimal reorder point calculation with service level optimization"""
+    """Optimal reorder point calculation with service level optimization."""
 
     item_id: str
     optimal_reorder_point: int
@@ -58,7 +58,7 @@ class OptimalReorderPoint:
 
 @dataclass
 class BulkPurchaseOptimization:
-    """Bulk purchase optimization with discount analysis"""
+    """Bulk purchase optimization with discount analysis."""
 
     item_id: str
     optimal_order_quantity: int
@@ -72,7 +72,7 @@ class BulkPurchaseOptimization:
 
 @dataclass
 class ExpiryIntelligence:
-    """Advanced expiry management analytics"""
+    """Advanced expiry management analytics."""
 
     item_id: str
     predicted_waste_amount: float
@@ -85,7 +85,7 @@ class ExpiryIntelligence:
 
 @dataclass
 class SupplierPerformance:
-    """Comprehensive supplier analytics"""
+    """Comprehensive supplier analytics."""
 
     supplier_id: str
     overall_score: float
@@ -98,7 +98,8 @@ class SupplierPerformance:
 
 
 class EnhancedInventoryAgent(BaseAgent):
-    """Enhanced Inventory Management Agent with advanced analytics and optimization"""
+    """Enhanced Inventory Management Agent with advanced analytics and
+    optimization."""
 
     def __init__(
         self,
@@ -139,7 +140,7 @@ class EnhancedInventoryAgent(BaseAgent):
 
     @property
     def system_prompt(self) -> str:
-        """Enhanced system prompt describing advanced capabilities"""
+        """Enhanced system prompt describing advanced capabilities."""
         return f"""You are an AI Inventory Management Agent with advanced analytics capabilities for {self.agent_id}.
 
 Your enhanced responsibilities include:
@@ -176,7 +177,7 @@ Provide detailed analysis with confidence scores, reasoning, and specific recomm
 Focus on data-driven decisions that optimize total inventory cost and business performance."""
 
     async def process_data(self, data: Dict[str, Any]) -> Optional[AgentDecision]:
-        """Enhanced data processing with advanced analytics"""
+        """Enhanced data processing with advanced analytics."""
         session = None
         try:
             session = self.SessionLocal()
@@ -213,7 +214,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
     async def _perform_demand_forecasting(
         self, session: Session, data: Dict[str, Any]
     ) -> Optional[AgentDecision]:
-        """Perform comprehensive demand forecasting for inventory items"""
+        """Perform comprehensive demand forecasting for inventory items."""
         try:
             item_id = data.get("item_id")
             forecast_days = data.get("forecast_days", self.forecast_horizon_days)
@@ -295,7 +296,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
     async def _forecast_item_demand(
         self, session: Session, item_id: str, forecast_days: int
     ) -> Optional[DemandForecast]:
-        """Forecast demand for a specific item using multiple methods"""
+        """Forecast demand for a specific item using multiple methods."""
         try:
             # Get historical consumption data
             end_date = datetime.now().date()
@@ -412,7 +413,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
     async def _forecast_all_items_demand(
         self, session: Session, forecast_days: int
     ) -> List[DemandForecast]:
-        """Forecast demand for all active items"""
+        """Forecast demand for all active items."""
         try:
             # Get all active items with recent movement
             recent_date = datetime.now().date() - timedelta(days=30)
@@ -465,7 +466,8 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             return dict.fromkeys(range(7), 1.0)
 
     def _calculate_forecast_accuracy(self, consumption_series: List[float]) -> float:
-        """Calculate forecast accuracy based on recent prediction performance"""
+        """Calculate forecast accuracy based on recent prediction
+        performance."""
         try:
             if len(consumption_series) < 21:  # Need at least 3 weeks
                 return 0.7  # Default moderate accuracy
@@ -499,7 +501,8 @@ Focus on data-driven decisions that optimize total inventory cost and business p
     async def _calculate_revenue_correlation(
         self, session: Session, item_id: str, movements: List[StockMovement]
     ) -> float:
-        """Calculate correlation between item consumption and overall revenue"""
+        """Calculate correlation between item consumption and overall
+        revenue."""
         try:
             # This is a simplified calculation - in a real system, you'd have revenue data
             # For now, assume correlation based on movement frequency and volume
@@ -520,7 +523,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             return 0.5
 
     async def _optimize_reorder_points(self, session: Session) -> Optional[AgentDecision]:
-        """Optimize reorder points for all items using advanced analytics"""
+        """Optimize reorder points for all items using advanced analytics."""
         try:
             # Get all active items that need optimization
             items = (
@@ -604,7 +607,8 @@ Focus on data-driven decisions that optimize total inventory cost and business p
     async def _calculate_optimal_reorder_point(
         self, session: Session, item: Item
     ) -> Optional[OptimalReorderPoint]:
-        """Calculate optimal reorder point using EOQ and service level optimization"""
+        """Calculate optimal reorder point using EOQ and service level
+        optimization."""
         try:
             # Get demand forecast
             forecast = await self._forecast_item_demand(session, item.id, self.reorder_lead_time)
@@ -670,7 +674,8 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             return None
 
     def _get_z_score_for_service_level(self, service_level: float) -> float:
-        """Get Z-score for given service level (assuming normal distribution)"""
+        """Get Z-score for given service level (assuming normal
+        distribution)"""
         # Common service levels and their Z-scores
         service_level_map = {0.90: 1.28, 0.95: 1.65, 0.97: 1.88, 0.99: 2.33, 0.995: 2.58}
 
@@ -679,7 +684,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
         return service_level_map[closest_level]
 
     def _calculate_current_inventory_cost(self, item: Item) -> float:
-        """Calculate current inventory cost for comparison"""
+        """Calculate current inventory cost for comparison."""
         try:
             annual_demand = 365 * 10  # Estimate based on reorder quantity
             holding_cost_per_unit = float(item.unit_cost) * self.holding_cost_rate
@@ -694,7 +699,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             return 0.0
 
     def _calculate_current_inventory_cost_by_id(self, session: Session, item_id: str) -> float:
-        """Calculate current inventory cost by item ID"""
+        """Calculate current inventory cost by item ID."""
         try:
             item = session.query(Item).filter(Item.id == item_id).first()
             if item:
@@ -707,7 +712,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
     async def _analyze_bulk_purchase_opportunities(
         self, session: Session
     ) -> Optional[AgentDecision]:
-        """Analyze bulk purchase opportunities with discount optimization"""
+        """Analyze bulk purchase opportunities with discount optimization."""
         try:
             # Get items that might benefit from bulk purchasing
             items = (
@@ -780,7 +785,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
     async def _calculate_bulk_purchase_optimization(
         self, session: Session, item: Item
     ) -> Optional[BulkPurchaseOptimization]:
-        """Calculate optimal bulk purchase quantity with discount analysis"""
+        """Calculate optimal bulk purchase quantity with discount analysis."""
         try:
             # Get demand forecast
             forecast = await self._forecast_item_demand(session, item.id, 90)  # 3-month forecast
@@ -840,7 +845,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             return None
 
     async def _perform_expiry_intelligence(self, session: Session) -> Optional[AgentDecision]:
-        """Perform advanced expiry management and waste minimization"""
+        """Perform advanced expiry management and waste minimization."""
         try:
             # Get items with expiry dates
             items_with_expiry = session.query(Item).filter(Item.status == ItemStatus.ACTIVE).all()
@@ -928,7 +933,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
     async def _analyze_expiry_intelligence(
         self, session: Session, item: Item
     ) -> Optional[ExpiryIntelligence]:
-        """Analyze expiry intelligence for a specific item"""
+        """Analyze expiry intelligence for a specific item."""
         try:
             expiry_days = getattr(item, "expiry_days", 30)  # Default 30 days if not specified
 
@@ -1015,7 +1020,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             return None
 
     async def _analyze_supplier_performance(self, session: Session) -> Optional[AgentDecision]:
-        """Analyze comprehensive supplier performance"""
+        """Analyze comprehensive supplier performance."""
         try:
             # Get all suppliers with recent activity
             recent_date = datetime.now().date() - timedelta(days=90)
@@ -1100,7 +1105,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
     async def _analyze_individual_supplier_performance(
         self, session: Session, supplier: Supplier
     ) -> Optional[SupplierPerformance]:
-        """Analyze performance metrics for an individual supplier"""
+        """Analyze performance metrics for an individual supplier."""
         try:
             recent_date = datetime.now().date() - timedelta(days=90)
 
@@ -1187,7 +1192,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             return None
 
     async def _comprehensive_inventory_analysis(self, session: Session) -> Optional[AgentDecision]:
-        """Perform comprehensive inventory health analysis"""
+        """Perform comprehensive inventory health analysis."""
         try:
             # Get overall inventory metrics
             total_items = session.query(Item).filter(Item.status == ItemStatus.ACTIVE).count()
@@ -1311,7 +1316,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
     async def _analyze_stock_movement_enhanced(
         self, session: Session, movement_data: Dict[str, Any]
     ) -> Optional[AgentDecision]:
-        """Enhanced stock movement analysis with predictive insights"""
+        """Enhanced stock movement analysis with predictive insights."""
         try:
             item_id = movement_data.get("item_id")
             movement_type = movement_data.get("movement_type")
@@ -1344,7 +1349,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
     async def _analyze_consumption_movement(
         self, session: Session, item: Item, quantity: float, forecast: Optional[DemandForecast]
     ) -> Optional[AgentDecision]:
-        """Analyze consumption movement with predictive context"""
+        """Analyze consumption movement with predictive context."""
         try:
             new_stock_level = item.current_stock - quantity
 
@@ -1420,7 +1425,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
     async def _analyze_receipt_movement(
         self, session: Session, item: Item, quantity: float, forecast: Optional[DemandForecast]
     ) -> Optional[AgentDecision]:
-        """Analyze stock receipt with optimization insights"""
+        """Analyze stock receipt with optimization insights."""
         try:
             new_stock_level = item.current_stock + quantity
 
@@ -1470,7 +1475,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
     async def _analyze_adjustment_movement(
         self, session: Session, item: Item, quantity: float, forecast: Optional[DemandForecast]
     ) -> Optional[AgentDecision]:
-        """Analyze inventory adjustment with accuracy insights"""
+        """Analyze inventory adjustment with accuracy insights."""
         try:
             adjustment_percentage = (
                 abs(quantity) / item.current_stock if item.current_stock > 0 else 0
@@ -1509,7 +1514,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             return None
 
     async def _analyze_reorder_needs_enhanced(self, session: Session) -> Optional[AgentDecision]:
-        """Enhanced reorder analysis with predictive insights"""
+        """Enhanced reorder analysis with predictive insights."""
         try:
             # Get items approaching reorder point
             items_near_reorder = (
@@ -1584,7 +1589,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             return None
 
     async def generate_report(self) -> Dict[str, Any]:
-        """Generate comprehensive inventory intelligence report"""
+        """Generate comprehensive inventory intelligence report."""
         session = None
         try:
             session = self.SessionLocal()
@@ -1639,7 +1644,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
                 session.close()
 
     async def periodic_check(self) -> None:
-        """Enhanced periodic check with intelligent scheduling"""
+        """Enhanced periodic check with intelligent scheduling."""
         try:
             current_time = datetime.now()
 
@@ -1667,7 +1672,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
             logger.error(f"Error in enhanced periodic check: {e}")
 
     async def _queue_analysis_message(self, analysis_type: str) -> None:
-        """Queue analysis message for processing"""
+        """Queue analysis message for processing."""
         try:
             if self.message_queue:
                 message = {

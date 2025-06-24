@@ -1,6 +1,4 @@
-"""
-Pytest configuration and fixtures for unit tests
-"""
+"""Pytest configuration and fixtures for unit tests."""
 
 import os
 import sys
@@ -19,7 +17,7 @@ from agents.base_agent import AgentDecision
 
 @pytest.fixture
 def mock_claude_response():
-    """Mock Claude API response"""
+    """Mock Claude API response."""
 
     def _create_response(text: str = "Test Claude response"):
         mock_response = Mock()
@@ -31,7 +29,7 @@ def mock_claude_response():
 
 @pytest.fixture
 def sample_agent_decision():
-    """Create a sample agent decision for testing"""
+    """Create a sample agent decision for testing."""
 
     def _create_decision(
         agent_id: str = "test_agent",
@@ -54,7 +52,7 @@ def sample_agent_decision():
 
 @pytest.fixture
 def mock_transaction():
-    """Create a mock financial transaction"""
+    """Create a mock financial transaction."""
 
     def _create_transaction(
         amount: Decimal = Decimal("100.00"),
@@ -77,7 +75,7 @@ def mock_transaction():
 
 @pytest.fixture
 def mock_inventory_item():
-    """Create a mock inventory item"""
+    """Create a mock inventory item."""
 
     def _create_item(current_stock: int = 50, reorder_point: int = 20, **kwargs):
         return Mock(
@@ -98,7 +96,7 @@ def mock_inventory_item():
 
 @pytest.fixture
 def mock_employee():
-    """Create a mock employee"""
+    """Create a mock employee."""
 
     def _create_employee(
         employee_id: int = 1, first_name: str = "John", last_name: str = "Doe", **kwargs
@@ -119,7 +117,7 @@ def mock_employee():
 
 @pytest.fixture
 def mock_time_record():
-    """Create a mock time record"""
+    """Create a mock time record."""
 
     def _create_record(
         employee_id: int = 1, record_type: str = "CLOCK_IN", timestamp: datetime = None, **kwargs
@@ -138,7 +136,7 @@ def mock_time_record():
 
 @pytest.fixture
 def mock_database_session():
-    """Create a mock database session with common query patterns"""
+    """Create a mock database session with common query patterns."""
 
     def _create_session():
         session = Mock()
@@ -169,13 +167,13 @@ def mock_database_session():
 
 @pytest.fixture
 def agent_base_config():
-    """Base configuration for all agents"""
+    """Base configuration for all agents."""
     return {"check_interval": 300, "api_timeout": 30, "max_retries": 3}
 
 
 @pytest.fixture
 def accounting_config(agent_base_config):
-    """Configuration specific to accounting agent"""
+    """Configuration specific to accounting agent."""
     config = agent_base_config.copy()
     config.update(
         {
@@ -192,7 +190,7 @@ def accounting_config(agent_base_config):
 
 @pytest.fixture
 def inventory_config(agent_base_config):
-    """Configuration specific to inventory agent"""
+    """Configuration specific to inventory agent."""
     config = agent_base_config.copy()
     config.update(
         {"low_stock_multiplier": 1.2, "reorder_lead_time": 7, "consumption_analysis_days": 30}
@@ -202,7 +200,7 @@ def inventory_config(agent_base_config):
 
 @pytest.fixture
 def hr_config(agent_base_config):
-    """Configuration specific to HR agent"""
+    """Configuration specific to HR agent."""
     config = agent_base_config.copy()
     config.update(
         {"overtime_threshold": 40, "max_labor_cost_percentage": 0.30, "scheduling_buffer_hours": 2}
@@ -212,14 +210,14 @@ def hr_config(agent_base_config):
 
 @pytest.fixture(autouse=True)
 def mock_logging():
-    """Mock logging to reduce test output noise"""
+    """Mock logging to reduce test output noise."""
     with patch("agents.base_agent.logging"):
         yield
 
 
 @pytest.fixture
 def mock_anthropic_client():
-    """Mock Anthropic client that can be configured for different responses"""
+    """Mock Anthropic client that can be configured for different responses."""
     with patch("agents.base_agent.Anthropic") as mock_anthropic:
         # Default response
         mock_response = Mock()
@@ -230,7 +228,7 @@ def mock_anthropic_client():
 
 @pytest.fixture
 def mock_sqlalchemy():
-    """Mock SQLAlchemy components"""
+    """Mock SQLAlchemy components."""
     with patch("agents.base_agent.create_engine") as mock_engine, patch(
         "agents.base_agent.sessionmaker"
     ) as mock_sessionmaker:
@@ -243,18 +241,18 @@ def mock_sqlalchemy():
 
 
 class AgentTestHelper:
-    """Helper class for common agent testing operations"""
+    """Helper class for common agent testing operations."""
 
     @staticmethod
     def create_decision_context(**kwargs):
-        """Create a standardized decision context"""
+        """Create a standardized decision context."""
         default_context = {"timestamp": datetime.now().isoformat(), "test_mode": True}
         default_context.update(kwargs)
         return default_context
 
     @staticmethod
     def assert_decision_structure(decision: AgentDecision, expected_type: str = None):
-        """Assert that a decision has the proper structure"""
+        """Assert that a decision has the proper structure."""
         assert isinstance(decision, AgentDecision)
         assert decision.agent_id is not None
         assert decision.decision_type is not None
@@ -268,7 +266,7 @@ class AgentTestHelper:
 
     @staticmethod
     def create_mock_query_chain(return_value=None, count_value=0):
-        """Create a mock query chain for database testing"""
+        """Create a mock query chain for database testing."""
         query_mock = Mock()
         filter_mock = Mock()
 
@@ -284,5 +282,5 @@ class AgentTestHelper:
 
 @pytest.fixture
 def agent_test_helper():
-    """Provide the AgentTestHelper class"""
+    """Provide the AgentTestHelper class."""
     return AgentTestHelper

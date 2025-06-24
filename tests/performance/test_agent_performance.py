@@ -1,5 +1,4 @@
-"""
-Agent Performance Tests
+"""Agent Performance Tests.
 
 Tests for measuring and benchmarking agent decision processing speed,
 memory usage, and scalability under various conditions.

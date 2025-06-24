@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Test runner script for unit tests
-"""
+"""Test runner script for unit tests."""
 import os
 import subprocess
 import sys
@@ -13,7 +11,7 @@ sys.path.insert(0, str(project_root))
 
 
 def run_tests():
-    """Run all unit tests with coverage"""
+    """Run all unit tests with coverage."""
     test_dir = Path(__file__).parent
     project_root = test_dir.parent.parent
 
@@ -35,7 +33,7 @@ def run_tests():
 
     # Add coverage if available
     try:
-        import coverage
+        pass
 
         cmd.extend(
             [
@@ -58,7 +56,7 @@ def run_tests():
 
 
 def run_specific_test(test_name):
-    """Run a specific test file or test method"""
+    """Run a specific test file or test method."""
     test_dir = Path(__file__).parent
     project_root = test_dir.parent.parent
 
@@ -80,7 +78,7 @@ def run_specific_test(test_name):
 
 
 def main():
-    """Main entry point"""
+    """Main entry point."""
     if len(sys.argv) > 1:
         # Run specific test
         test_name = sys.argv[1]

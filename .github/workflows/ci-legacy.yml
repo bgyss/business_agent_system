@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # TODO: Re-enable Nix build once performance issues are resolved
+  # nix-build:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   
+  #   - name: Install Nix
+  #     uses: DeterminateSystems/nix-installer-action@main
+  #     with:
+  #       extra-conf: |
+  #         experimental-features = nix-command flakes
+  #   
+  #   - name: Setup Nix cache
+  #     uses: DeterminateSystems/magic-nix-cache-action@main
+  #   
+  #   - name: Check flake
+  #     run: nix flake check
+  #   
+  #   - name: Build package
+  #     run: nix build
+  #   
+  #   - name: Run checks
+  #     run: nix run .#checks
+
+  uv-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v2
+      with:
+        version: "latest"
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: uv sync --all-extras
+    
+    - name: Run linting
+      run: |
+        uv run ruff check agents/ models/ simulation/ dashboard/ main.py tests/ --select=W292
+        uv run black --check agents/ models/ simulation/ dashboard/ main.py tests/
+        uv run isort --check-only agents/ models/ simulation/ dashboard/ main.py tests/
+    
+    - name: Run type checking  
+      run: uv run mypy agents/ models/ simulation/ --ignore-missing-imports || echo "Type checking issues detected - see logs for details"
+    
+    - name: Run unit tests
+      run: |
+        uv run pytest tests/unit/ -v \
+          --cov=agents --cov=models --cov=simulation --cov=utils \
+          --cov-report=xml --cov-report=term-missing \
+          --junit-xml=test-results-unit.xml
+    
+    - name: Run integration tests
+      if: matrix.python-version == '3.11'
+      env:
+        ANTHROPIC_API_KEY: test-api-key-for-testing
+      run: |
+        uv run pytest tests/integration/ -v \
+          --asyncio-mode=auto \
+          --junit-xml=test-results-integration.xml
+    
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          test-results-*.xml
+          coverage.xml
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      if: matrix.python-version == '3.11'
+      with:
+        file: ./coverage.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v2
+    
+    - name: Install dependencies
+      run: uv sync --extra security
+    
+    - name: Run safety check
+      run: uv run safety check
+    
+    - name: Run bandit security check
+      run: uv run bandit -r agents/ models/ simulation/ -ll || true
+

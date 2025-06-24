@@ -34,25 +34,17 @@ class BusinessAgentException(Exception):
 class AgentError(BusinessAgentException):
     """Base class for agent-related errors."""
 
-    pass
-
 
 class AgentInitializationError(AgentError):
     """Raised when an agent fails to initialize properly."""
-
-    pass
 
 
 class AgentDecisionError(AgentError):
     """Raised when an agent fails to make a decision."""
 
-    pass
-
 
 class AgentCommunicationError(AgentError):
     """Raised when agents fail to communicate with each other."""
-
-    pass
 
 
 class ClaudeAPIError(AgentError):
@@ -71,13 +63,9 @@ class ClaudeAPIError(AgentError):
 class DatabaseError(BusinessAgentException):
     """Base class for database-related errors."""
 
-    pass
-
 
 class DatabaseConnectionError(DatabaseError):
     """Raised when database connection fails."""
-
-    pass
 
 
 class DatabaseTransactionError(DatabaseError):
@@ -95,8 +83,6 @@ class DatabaseTransactionError(DatabaseError):
 
 class DatabaseIntegrityError(DatabaseError):
     """Raised when database integrity constraints are violated."""
-
-    pass
 
 
 class DataValidationError(DatabaseError):
@@ -116,13 +102,9 @@ class DataValidationError(DatabaseError):
 class ConfigurationError(BusinessAgentException):
     """Base class for configuration-related errors."""
 
-    pass
-
 
 class ConfigFileNotFoundError(ConfigurationError):
     """Raised when configuration file is not found."""
-
-    pass
 
 
 class ConfigValidationError(ConfigurationError):
@@ -152,13 +134,9 @@ class EnvironmentVariableError(ConfigurationError):
 class SimulationError(BusinessAgentException):
     """Base class for simulation-related errors."""
 
-    pass
-
 
 class SimulationInitializationError(SimulationError):
     """Raised when simulation fails to initialize."""
-
-    pass
 
 
 class DataGenerationError(SimulationError):
@@ -177,14 +155,10 @@ class DataGenerationError(SimulationError):
 class BusinessProfileError(SimulationError):
     """Raised when business profile configuration is invalid."""
 
-    pass
-
 
 # API and external service exceptions
 class ExternalServiceError(BusinessAgentException):
     """Base class for external service errors."""
-
-    pass
 
 
 class APIRateLimitError(ExternalServiceError):
@@ -216,8 +190,6 @@ class ServiceUnavailableError(ExternalServiceError):
 # Business logic exceptions
 class BusinessLogicError(BusinessAgentException):
     """Base class for business logic errors."""
-
-    pass
 
 
 class InsufficientDataError(BusinessLogicError):
@@ -272,8 +244,6 @@ class InventoryError(BusinessLogicError):
 class FinancialError(BusinessLogicError):
     """Base class for financial-related errors."""
 
-    pass
-
 
 class InsufficientFundsError(FinancialError):
     """Raised when there are insufficient funds for an operation."""
@@ -290,8 +260,6 @@ class InsufficientFundsError(FinancialError):
 
 class CashFlowError(FinancialError):
     """Raised for cash flow related issues."""
-
-    pass
 
 
 class AccountingAnomalyError(FinancialError):
@@ -311,8 +279,6 @@ class AccountingAnomalyError(FinancialError):
 class DashboardError(BusinessAgentException):
     """Base class for dashboard-related errors."""
 
-    pass
-
 
 class DataVisualizationError(DashboardError):
     """Raised when data visualization fails."""
@@ -330,14 +296,10 @@ class DataVisualizationError(DashboardError):
 class ReportGenerationError(DashboardError):
     """Raised when report generation fails."""
 
-    pass
-
 
 # System-level exceptions
 class SystemError(BusinessAgentException):
     """Base class for system-level errors."""
-
-    pass
 
 
 class ResourceExhaustionError(SystemError):
@@ -388,8 +350,6 @@ class RecoverableError(BusinessAgentException):
 
 class NonRecoverableError(BusinessAgentException):
     """Base class for errors that cannot be recovered from."""
-
-    pass
 
 
 # Exception mapping for common error types

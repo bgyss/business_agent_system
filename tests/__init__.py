@@ -1,3 +1,1 @@
-"""
-Test package for Business Agent Management System
-"""
+"""Test package for Business Agent Management System."""

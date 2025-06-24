@@ -12,7 +12,7 @@ from .web_test_utils import StreamlitPageObject, WebTestReporter
 
 
 class TestDashboardSmoke:
-    """Smoke tests for basic dashboard functionality"""
+    """Smoke tests for basic dashboard functionality."""
 
     def test_dashboard_loads(self, dashboard_page):
         """Basic smoke test - dashboard loads without errors"""
@@ -24,7 +24,7 @@ class TestDashboardSmoke:
         assert len(body.text) > 0, "Page should have content"
 
     def test_title_is_present(self, dashboard_page, streamlit_helper):
-        """Test that the main dashboard title is present"""
+        """Test that the main dashboard title is present."""
         try:
             streamlit_helper.wait_for_text("Business Management Dashboard", timeout=10)
         except TimeoutException:
@@ -40,7 +40,7 @@ class TestDashboardSmoke:
             assert dashboard_text_found, "Should have dashboard-related title"
 
     def test_sidebar_is_present(self, dashboard_page):
-        """Test that sidebar navigation is present"""
+        """Test that sidebar navigation is present."""
         # Look for sidebar elements
         sidebar_selectors = [
             "[data-testid='stSidebar']",
@@ -72,7 +72,7 @@ class TestDashboardSmoke:
         assert sidebar_found, "Sidebar should be present"
 
     def test_main_content_area_exists(self, dashboard_page):
-        """Test that main content area exists"""
+        """Test that main content area exists."""
         # Look for main content indicators
         main_content_found = False
 
@@ -101,7 +101,7 @@ class TestDashboardSmoke:
         assert main_content_found, "Main content area should exist and have content"
 
     def test_no_obvious_errors(self, dashboard_page):
-        """Test that there are no obvious error messages"""
+        """Test that there are no obvious error messages."""
         page_text = dashboard_page.find_element(By.TAG_NAME, "body").text.lower()
 
         error_indicators = [
@@ -117,7 +117,7 @@ class TestDashboardSmoke:
             assert error_text not in page_text, f"Page should not contain error: {error_text}"
 
     def test_configuration_loads(self, dashboard_page, streamlit_helper):
-        """Test that configuration section loads"""
+        """Test that configuration section loads."""
         try:
             streamlit_helper.wait_for_text("Configuration", timeout=10)
         except TimeoutException:
@@ -127,7 +127,7 @@ class TestDashboardSmoke:
 
     @pytest.mark.slow
     def test_view_switching_works(self, dashboard_page, streamlit_helper):
-        """Test that basic view switching works"""
+        """Test that basic view switching works."""
         page_object = StreamlitPageObject(dashboard_page)
 
         try:
@@ -149,7 +149,7 @@ class TestDashboardSmoke:
             assert "error" not in page_text, f"Page crashed during view switching: {e}"
 
     def test_page_responsive(self, dashboard_page):
-        """Test that page responds to window resizing"""
+        """Test that page responds to window resizing."""
         original_size = dashboard_page.get_window_size()
 
         try:
@@ -169,7 +169,7 @@ class TestDashboardSmoke:
             dashboard_page.set_window_size(original_size["width"], original_size["height"])
 
     def test_javascript_loads(self, dashboard_page):
-        """Test that JavaScript loads properly"""
+        """Test that JavaScript loads properly."""
         try:
             # Execute simple JavaScript to verify it's working
             result = dashboard_page.execute_script("return document.readyState;")
@@ -184,10 +184,10 @@ class TestDashboardSmoke:
 
 
 class TestDashboardSmokeWithReporting:
-    """Smoke tests with enhanced reporting and screenshots"""
+    """Smoke tests with enhanced reporting and screenshots."""
 
     def test_dashboard_screenshot(self, dashboard_page):
-        """Take a screenshot of the dashboard for visual verification"""
+        """Take a screenshot of the dashboard for visual verification."""
         reporter = WebTestReporter(dashboard_page)
 
         # Ensure test_screenshots directory exists
@@ -205,7 +205,7 @@ class TestDashboardSmokeWithReporting:
         assert dashboard_page.current_url.startswith("http://localhost:")
 
     def test_performance_baseline(self, dashboard_page):
-        """Establish basic performance baseline"""
+        """Establish basic performance baseline."""
         reporter = WebTestReporter(dashboard_page)
 
         perf_info = reporter.get_page_performance_info()

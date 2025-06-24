@@ -1,6 +1,4 @@
-"""
-Additional unit tests for Enhanced Inventory Agent to improve coverage
-"""
+"""Additional unit tests for Enhanced Inventory Agent to improve coverage."""
 
 import os
 import sys
@@ -20,11 +18,11 @@ from models.inventory import ItemStatus, StockMovementType
 
 
 class TestEnhancedInventoryAgentMissingCoverage:
-    """Test cases to improve coverage for Enhanced Inventory Agent"""
+    """Test cases to improve coverage for Enhanced Inventory Agent."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [
@@ -35,7 +33,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -45,7 +43,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.fixture
     def enhanced_config(self):
-        """Enhanced inventory agent configuration"""
+        """Enhanced inventory agent configuration."""
         return {
             "check_interval": 300,
             "low_stock_multiplier": 1.2,
@@ -63,7 +61,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.fixture
     def enhanced_inventory_agent(self, mock_anthropic, mock_db_session, enhanced_config):
-        """Create enhanced inventory agent instance"""
+        """Create enhanced inventory agent instance."""
         return EnhancedInventoryAgent(
             agent_id="enhanced_inventory_agent",
             api_key="test_api_key",
@@ -73,7 +71,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.fixture
     def sample_item(self):
-        """Create sample inventory item"""
+        """Create sample inventory item."""
         return Mock(
             id="ITEM001",
             name="Test Item",
@@ -89,12 +87,13 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.fixture
     def sample_supplier(self):
-        """Create sample supplier"""
+        """Create sample supplier."""
         return Mock(id="SUP001", name="Test Supplier", contact_email="test@supplier.com")
 
     @pytest.mark.asyncio
     async def test_process_data_different_types(self, enhanced_inventory_agent, mock_db_session):
-        """Test process_data with different data types to cover missing lines"""
+        """Test process_data with different data types to cover missing
+        lines."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -138,7 +137,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_process_data_exception_handling(self, enhanced_inventory_agent, mock_db_session):
-        """Test exception handling in process_data"""
+        """Test exception handling in process_data."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -155,7 +154,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_perform_demand_forecasting_no_forecasts(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test demand forecasting when no forecasts are generated"""
+        """Test demand forecasting when no forecasts are generated."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -171,7 +170,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_perform_demand_forecasting_exception(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test exception handling in demand forecasting"""
+        """Test exception handling in demand forecasting."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -189,7 +188,8 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_forecast_item_demand_insufficient_data_cases(self, enhanced_inventory_agent):
-        """Test forecast_item_demand with various insufficient data scenarios"""
+        """Test forecast_item_demand with various insufficient data
+        scenarios."""
         mock_session = Mock()
 
         # Test with no movements
@@ -217,7 +217,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_forecast_item_demand_edge_cases(self, enhanced_inventory_agent):
-        """Test forecast_item_demand with edge cases for trend analysis"""
+        """Test forecast_item_demand with edge cases for trend analysis."""
         mock_session = Mock()
 
         # Create movements with constant consumption (no trend)
@@ -252,7 +252,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_forecast_item_demand_with_seasonality(self, enhanced_inventory_agent):
-        """Test forecast_item_demand with seasonal patterns"""
+        """Test forecast_item_demand with seasonal patterns."""
         mock_session = Mock()
 
         # Create 4+ weeks of data for seasonal analysis
@@ -288,7 +288,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_forecast_item_demand_exception_handling(self, enhanced_inventory_agent):
-        """Test exception handling in forecast_item_demand"""
+        """Test exception handling in forecast_item_demand."""
         mock_session = Mock()
 
         # Make the query raise an exception
@@ -299,7 +299,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_forecast_all_items_demand_exception(self, enhanced_inventory_agent):
-        """Test exception handling in forecast_all_items_demand"""
+        """Test exception handling in forecast_all_items_demand."""
         mock_session = Mock()
 
         # Make the query raise an exception
@@ -309,7 +309,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
         assert result == []
 
     def test_calculate_weekly_seasonality_exception(self, enhanced_inventory_agent):
-        """Test exception handling in calculate_weekly_seasonality"""
+        """Test exception handling in calculate_weekly_seasonality."""
         # Test with invalid data that might cause division by zero
         consumption_series = [0] * 14  # All zeros
 
@@ -320,7 +320,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
         assert all(factor == 1.0 for factor in result.values())
 
     def test_calculate_forecast_accuracy_edge_cases(self, enhanced_inventory_agent):
-        """Test forecast accuracy calculation with edge cases"""
+        """Test forecast accuracy calculation with edge cases."""
         # Test with insufficient data
         short_series = [1, 2, 3, 4, 5]  # Less than 21 days
         accuracy = enhanced_inventory_agent._calculate_forecast_accuracy(short_series)
@@ -337,7 +337,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
         assert 0.1 <= accuracy <= 0.95
 
     def test_calculate_forecast_accuracy_exception(self, enhanced_inventory_agent):
-        """Test exception handling in calculate_forecast_accuracy"""
+        """Test exception handling in calculate_forecast_accuracy."""
         # Test with data that might cause numpy errors
         invalid_series = None
         accuracy = enhanced_inventory_agent._calculate_forecast_accuracy(invalid_series)
@@ -345,7 +345,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_calculate_revenue_correlation_edge_cases(self, enhanced_inventory_agent):
-        """Test revenue correlation calculation with edge cases"""
+        """Test revenue correlation calculation with edge cases."""
         mock_session = Mock()
 
         # Test with insufficient movements
@@ -364,7 +364,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_calculate_revenue_correlation_exception(self, enhanced_inventory_agent):
-        """Test exception handling in calculate_revenue_correlation"""
+        """Test exception handling in calculate_revenue_correlation."""
         mock_session = Mock()
 
         # Test with invalid movements that might cause errors
@@ -376,7 +376,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_optimize_reorder_points_no_items(self, enhanced_inventory_agent):
-        """Test reorder optimization when no items are found"""
+        """Test reorder optimization when no items are found."""
         mock_session = Mock()
 
         # No items to optimize
@@ -389,7 +389,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_optimize_reorder_points_no_optimizations(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test reorder optimization when no optimizations are found"""
+        """Test reorder optimization when no optimizations are found."""
         mock_session = Mock()
 
         # Items exist but no optimizations
@@ -403,7 +403,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_optimize_reorder_points_exception(self, enhanced_inventory_agent):
-        """Test exception handling in optimize_reorder_points"""
+        """Test exception handling in optimize_reorder_points."""
         mock_session = Mock()
 
         # Make the query raise an exception
@@ -416,7 +416,8 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_calculate_optimal_reorder_point_no_forecast(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test optimal reorder point calculation when no forecast is available"""
+        """Test optimal reorder point calculation when no forecast is
+        available."""
         mock_session = Mock()
 
         with patch.object(enhanced_inventory_agent, "_forecast_item_demand", return_value=None):
@@ -429,7 +430,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_calculate_optimal_reorder_point_zero_holding_cost(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test optimal reorder point calculation with zero holding cost"""
+        """Test optimal reorder point calculation with zero holding cost."""
         mock_session = Mock()
 
         # Mock forecast
@@ -461,7 +462,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_calculate_optimal_reorder_point_exception(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test exception handling in calculate_optimal_reorder_point"""
+        """Test exception handling in calculate_optimal_reorder_point."""
         mock_session = Mock()
 
         with patch.object(
@@ -477,7 +478,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     def test_calculate_current_inventory_cost_exception(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test exception handling in calculate_current_inventory_cost"""
+        """Test exception handling in calculate_current_inventory_cost."""
         # Set invalid data that might cause calculation errors
         sample_item.unit_cost = None
 
@@ -485,7 +486,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
         assert result == 0.0
 
     def test_calculate_current_inventory_cost_by_id_no_item(self, enhanced_inventory_agent):
-        """Test calculate_current_inventory_cost_by_id when item not found"""
+        """Test calculate_current_inventory_cost_by_id when item not found."""
         mock_session = Mock()
 
         # No item found
@@ -497,7 +498,8 @@ class TestEnhancedInventoryAgentMissingCoverage:
         assert result == 0.0
 
     def test_calculate_current_inventory_cost_by_id_exception(self, enhanced_inventory_agent):
-        """Test exception handling in calculate_current_inventory_cost_by_id"""
+        """Test exception handling in
+        calculate_current_inventory_cost_by_id."""
         mock_session = Mock()
 
         # Make the query raise an exception
@@ -510,7 +512,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_bulk_purchase_opportunities_no_items(self, enhanced_inventory_agent):
-        """Test bulk purchase analysis when no items are found"""
+        """Test bulk purchase analysis when no items are found."""
         mock_session = Mock()
 
         # No items to analyze
@@ -523,7 +525,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_analyze_bulk_purchase_opportunities_no_opportunities(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test bulk purchase analysis when no opportunities are found"""
+        """Test bulk purchase analysis when no opportunities are found."""
         mock_session = Mock()
 
         # Items exist but no bulk opportunities
@@ -539,7 +541,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_bulk_purchase_opportunities_exception(self, enhanced_inventory_agent):
-        """Test exception handling in analyze_bulk_purchase_opportunities"""
+        """Test exception handling in analyze_bulk_purchase_opportunities."""
         mock_session = Mock()
 
         # Make the query raise an exception
@@ -552,7 +554,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_calculate_bulk_purchase_optimization_no_forecast(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test bulk purchase optimization when no forecast is available"""
+        """Test bulk purchase optimization when no forecast is available."""
         mock_session = Mock()
 
         with patch.object(enhanced_inventory_agent, "_forecast_item_demand", return_value=None):
@@ -565,7 +567,8 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_calculate_bulk_purchase_optimization_large_tier(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test bulk purchase optimization with tier quantities larger than reasonable demand"""
+        """Test bulk purchase optimization with tier quantities larger than
+        reasonable demand."""
         mock_session = Mock()
 
         # Mock forecast with low demand
@@ -600,7 +603,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_calculate_bulk_purchase_optimization_exception(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test exception handling in calculate_bulk_purchase_optimization"""
+        """Test exception handling in calculate_bulk_purchase_optimization."""
         mock_session = Mock()
 
         with patch.object(
@@ -615,7 +618,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_perform_expiry_intelligence_no_perishables(self, enhanced_inventory_agent):
-        """Test expiry intelligence when no perishable items are found"""
+        """Test expiry intelligence when no perishable items are found."""
         mock_session = Mock()
 
         # Mock items without expiry considerations
@@ -631,7 +634,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_perform_expiry_intelligence_no_analyses(self, enhanced_inventory_agent):
-        """Test expiry intelligence when no analyses are generated"""
+        """Test expiry intelligence when no analyses are generated."""
         mock_session = Mock()
 
         # Mock perishable items
@@ -646,7 +649,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_perform_expiry_intelligence_exception(self, enhanced_inventory_agent):
-        """Test exception handling in perform_expiry_intelligence"""
+        """Test exception handling in perform_expiry_intelligence."""
         mock_session = Mock()
 
         # Make the query raise an exception
@@ -657,7 +660,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_expiry_intelligence_no_forecast(self, enhanced_inventory_agent):
-        """Test expiry intelligence analysis when no forecast is available"""
+        """Test expiry intelligence analysis when no forecast is available."""
         mock_session = Mock()
 
         perishable_item = Mock(id="ITEM001", expiry_days=7, current_stock=20, maximum_stock=30)
@@ -670,7 +673,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_expiry_intelligence_zero_consumption(self, enhanced_inventory_agent):
-        """Test expiry intelligence analysis with zero consumption"""
+        """Test expiry intelligence analysis with zero consumption."""
         mock_session = Mock()
 
         perishable_item = Mock(id="ITEM001", expiry_days=7, current_stock=20, maximum_stock=30)
@@ -700,7 +703,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_expiry_intelligence_exception(self, enhanced_inventory_agent):
-        """Test exception handling in analyze_expiry_intelligence"""
+        """Test exception handling in analyze_expiry_intelligence."""
         mock_session = Mock()
 
         perishable_item = Mock(id="ITEM001", expiry_days=7, current_stock=20, maximum_stock=30)
@@ -717,7 +720,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_supplier_performance_no_suppliers(self, enhanced_inventory_agent):
-        """Test supplier performance analysis when no suppliers are found"""
+        """Test supplier performance analysis when no suppliers are found."""
         mock_session = Mock()
 
         # No suppliers with recent activity
@@ -732,7 +735,8 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_analyze_supplier_performance_no_analyses(
         self, enhanced_inventory_agent, sample_supplier
     ):
-        """Test supplier performance analysis when no analyses are generated"""
+        """Test supplier performance analysis when no analyses are
+        generated."""
         mock_session = Mock()
 
         # Suppliers exist but no analyses
@@ -748,7 +752,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_supplier_performance_exception(self, enhanced_inventory_agent):
-        """Test exception handling in analyze_supplier_performance"""
+        """Test exception handling in analyze_supplier_performance."""
         mock_session = Mock()
 
         # Make the query raise an exception
@@ -761,7 +765,8 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_analyze_individual_supplier_performance_no_orders(
         self, enhanced_inventory_agent, sample_supplier
     ):
-        """Test individual supplier performance when no purchase orders are found"""
+        """Test individual supplier performance when no purchase orders are
+        found."""
         mock_session = Mock()
 
         # No purchase orders for this supplier
@@ -776,7 +781,8 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_analyze_individual_supplier_performance_exception(
         self, enhanced_inventory_agent, sample_supplier
     ):
-        """Test exception handling in analyze_individual_supplier_performance"""
+        """Test exception handling in
+        analyze_individual_supplier_performance."""
         mock_session = Mock()
 
         # Make the query raise an exception
@@ -789,7 +795,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_comprehensive_inventory_analysis_edge_cases(self, enhanced_inventory_agent):
-        """Test comprehensive inventory analysis with edge cases"""
+        """Test comprehensive inventory analysis with edge cases."""
         mock_session = Mock()
 
         # Test with zero items
@@ -811,7 +817,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_comprehensive_inventory_analysis_high_issues(self, enhanced_inventory_agent):
-        """Test comprehensive inventory analysis with high issue counts"""
+        """Test comprehensive inventory analysis with high issue counts."""
         mock_session = Mock()
 
         # Test with high issue counts
@@ -833,7 +839,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_comprehensive_inventory_analysis_exception(self, enhanced_inventory_agent):
-        """Test exception handling in comprehensive_inventory_analysis"""
+        """Test exception handling in comprehensive_inventory_analysis."""
         mock_session = Mock()
 
         # Make the query raise an exception
@@ -844,7 +850,8 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_stock_movement_enhanced_no_item_id(self, enhanced_inventory_agent):
-        """Test enhanced stock movement analysis when no item_id is provided"""
+        """Test enhanced stock movement analysis when no item_id is
+        provided."""
         mock_session = Mock()
 
         movement_data = {
@@ -860,7 +867,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_stock_movement_enhanced_no_item_found(self, enhanced_inventory_agent):
-        """Test enhanced stock movement analysis when item is not found"""
+        """Test enhanced stock movement analysis when item is not found."""
         mock_session = Mock()
 
         # Item not found in database
@@ -881,7 +888,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_analyze_stock_movement_enhanced_unknown_type(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test enhanced stock movement analysis with unknown movement type"""
+        """Test enhanced stock movement analysis with unknown movement type."""
         mock_session = Mock()
 
         mock_session.query.return_value.filter.return_value.first.return_value = sample_item
@@ -895,7 +902,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_stock_movement_enhanced_exception(self, enhanced_inventory_agent):
-        """Test exception handling in analyze_stock_movement_enhanced"""
+        """Test exception handling in analyze_stock_movement_enhanced."""
         mock_session = Mock()
 
         # Make the query raise an exception
@@ -916,7 +923,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_analyze_consumption_movement_normal_consumption(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test consumption movement analysis with normal consumption"""
+        """Test consumption movement analysis with normal consumption."""
         mock_session = Mock()
 
         # Mock forecast showing normal consumption
@@ -945,7 +952,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_analyze_consumption_movement_no_forecast(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test consumption movement analysis without forecast"""
+        """Test consumption movement analysis without forecast."""
         mock_session = Mock()
 
         # No forecast available
@@ -960,7 +967,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_analyze_consumption_movement_exception(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test exception handling in analyze_consumption_movement"""
+        """Test exception handling in analyze_consumption_movement."""
         mock_session = Mock()
 
         # Mock forecast that might cause errors
@@ -976,7 +983,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_analyze_receipt_movement_no_overstock(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test receipt movement analysis without overstock"""
+        """Test receipt movement analysis without overstock."""
         mock_session = Mock()
 
         forecast = DemandForecast(
@@ -1002,7 +1009,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_receipt_movement_exception(self, enhanced_inventory_agent, sample_item):
-        """Test exception handling in analyze_receipt_movement"""
+        """Test exception handling in analyze_receipt_movement."""
         mock_session = Mock()
 
         # Mock forecast that might cause errors
@@ -1018,7 +1025,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_analyze_adjustment_movement_small_adjustment(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test adjustment movement analysis with small adjustment"""
+        """Test adjustment movement analysis with small adjustment."""
         mock_session = Mock()
 
         forecast = DemandForecast(
@@ -1046,7 +1053,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_analyze_adjustment_movement_exception(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test exception handling in analyze_adjustment_movement"""
+        """Test exception handling in analyze_adjustment_movement."""
         mock_session = Mock()
 
         # Set sample item to have zero stock to cause division by zero
@@ -1061,7 +1068,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_reorder_needs_enhanced_no_items(self, enhanced_inventory_agent):
-        """Test enhanced reorder analysis when no items need reordering"""
+        """Test enhanced reorder analysis when no items need reordering."""
         mock_session = Mock()
 
         # No items near reorder point
@@ -1072,7 +1079,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_reorder_needs_enhanced_exception(self, enhanced_inventory_agent):
-        """Test exception handling in analyze_reorder_needs_enhanced"""
+        """Test exception handling in analyze_reorder_needs_enhanced."""
         mock_session = Mock()
 
         # Make the query raise an exception
@@ -1083,7 +1090,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_generate_report_exception(self, enhanced_inventory_agent, mock_db_session):
-        """Test exception handling in generate_report"""
+        """Test exception handling in generate_report."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -1097,7 +1104,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_periodic_check_different_times(self, enhanced_inventory_agent):
-        """Test periodic check with different time scenarios"""
+        """Test periodic check with different time scenarios."""
         with patch.object(enhanced_inventory_agent, "_queue_analysis_message") as mock_queue:
 
             # Test 4 AM (comprehensive analysis time)
@@ -1148,7 +1155,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_periodic_check_exception(self, enhanced_inventory_agent):
-        """Test exception handling in periodic_check"""
+        """Test exception handling in periodic_check."""
         with patch("agents.inventory_agent_enhanced.datetime") as mock_datetime:
             mock_datetime.now.side_effect = Exception("Time error")
 
@@ -1158,7 +1165,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_queue_analysis_message_no_queue(self, enhanced_inventory_agent):
-        """Test queue_analysis_message when no message queue is available"""
+        """Test queue_analysis_message when no message queue is available."""
         enhanced_inventory_agent.message_queue = None
 
         # Should handle gracefully without queue
@@ -1167,7 +1174,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_queue_analysis_message_exception(self, enhanced_inventory_agent):
-        """Test exception handling in queue_analysis_message"""
+        """Test exception handling in queue_analysis_message."""
         mock_queue = AsyncMock()
         mock_queue.put.side_effect = Exception("Queue error")
         enhanced_inventory_agent.message_queue = mock_queue
@@ -1177,7 +1184,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
         # No assertion needed - just ensuring it doesn't crash
 
     def test_z_score_edge_cases(self, enhanced_inventory_agent):
-        """Test Z-score calculation with edge cases"""
+        """Test Z-score calculation with edge cases."""
         # Test with service level not in the map
         z_score = enhanced_inventory_agent._get_z_score_for_service_level(0.92)
 
@@ -1185,7 +1192,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
         assert z_score == 1.28
 
     def test_system_prompt_content(self, enhanced_inventory_agent):
-        """Test system prompt contains all required content"""
+        """Test system prompt contains all required content."""
         prompt = enhanced_inventory_agent.system_prompt
 
         # Verify all key sections are present
@@ -1198,7 +1205,8 @@ class TestEnhancedInventoryAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_process_data_unknown_type(self, enhanced_inventory_agent, mock_db_session):
-        """Test process_data with unknown data type falls back to enhanced reorder analysis"""
+        """Test process_data with unknown data type falls back to enhanced
+        reorder analysis."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -1214,7 +1222,7 @@ class TestEnhancedInventoryAgentMissingCoverage:
     async def test_demand_forecasting_with_specific_item(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test demand forecasting for specific item"""
+        """Test demand forecasting for specific item."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 

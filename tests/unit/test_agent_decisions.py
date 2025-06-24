@@ -1,6 +1,4 @@
-"""
-Unit tests for AgentDecision and AgentDecisionModel classes
-"""
+"""Unit tests for AgentDecision and AgentDecisionModel classes."""
 
 import os
 import sys
@@ -20,10 +18,10 @@ from models.agent_decisions import (
 
 
 class TestAgentDecision:
-    """Test cases for AgentDecision Pydantic model"""
+    """Test cases for AgentDecision Pydantic model."""
 
     def test_agent_decision_creation(self):
-        """Test basic AgentDecision creation"""
+        """Test basic AgentDecision creation."""
         decision = AgentDecision(
             agent_id="test_agent",
             decision_type="test_decision",
@@ -41,7 +39,7 @@ class TestAgentDecision:
         assert isinstance(decision.timestamp, datetime)
 
     def test_agent_decision_with_context(self):
-        """Test AgentDecision creation with context"""
+        """Test AgentDecision creation with context."""
         context = {
             "item_id": 123,
             "amount": 150.75,
@@ -63,7 +61,7 @@ class TestAgentDecision:
         assert decision.context["metadata"]["source"] == "api"
 
     def test_agent_decision_confidence_validation(self):
-        """Test confidence score validation"""
+        """Test confidence score validation."""
         # Valid confidence scores
         for confidence in [0.0, 0.5, 1.0, 0.123]:
             decision = AgentDecision(
@@ -95,7 +93,7 @@ class TestAgentDecision:
             )
 
     def test_agent_decision_required_fields(self):
-        """Test that all required fields are validated"""
+        """Test that all required fields are validated."""
         # Missing agent_id
         with pytest.raises(ValueError):
             AgentDecision(decision_type="test", action="test", reasoning="test", confidence=0.8)
@@ -123,7 +121,7 @@ class TestAgentDecision:
             )
 
     def test_agent_decision_to_dict(self):
-        """Test conversion to dictionary"""
+        """Test conversion to dictionary."""
         timestamp = datetime(2024, 1, 1, 12, 0, 0)
         context = {"test": "data"}
 
@@ -148,7 +146,7 @@ class TestAgentDecision:
         assert result_dict["timestamp"] == timestamp
 
     def test_agent_decision_to_db_model(self):
-        """Test conversion to database model"""
+        """Test conversion to database model."""
         timestamp = datetime(2024, 1, 1, 12, 0, 0)
         context = {"amount": Decimal("150.75"), "category": "sales"}
 
@@ -176,7 +174,7 @@ class TestAgentDecision:
         assert db_model.context["category"] == "sales"
 
     def test_agent_decision_from_db_model(self):
-        """Test creation from database model"""
+        """Test creation from database model."""
         timestamp = datetime(2024, 1, 1, 12, 0, 0)
         context = {"amount": 150.75, "category": "sales"}
 
@@ -204,20 +202,20 @@ class TestAgentDecision:
 
 
 class TestSerializeContext:
-    """Test cases for context serialization"""
+    """Test cases for context serialization."""
 
     def test_serialize_none_context(self):
-        """Test serializing None context"""
+        """Test serializing None context."""
         result = serialize_context(None)
         assert result is None
 
     def test_serialize_empty_context(self):
-        """Test serializing empty context"""
+        """Test serializing empty context."""
         result = serialize_context({})
         assert result == {}
 
     def test_serialize_decimal_values(self):
-        """Test serializing context with Decimal values"""
+        """Test serializing context with Decimal values."""
         context = {
             "amount": Decimal("150.75"),
             "cost": Decimal("99.99"),
@@ -232,7 +230,7 @@ class TestSerializeContext:
         assert all(isinstance(v, float) for v in result.values())
 
     def test_serialize_datetime_values(self):
-        """Test serializing context with datetime values"""
+        """Test serializing context with datetime values."""
         timestamp = datetime(2024, 1, 1, 12, 0, 0)
         context = {"created_at": timestamp, "updated_at": timestamp}
 
@@ -242,7 +240,7 @@ class TestSerializeContext:
         assert result["updated_at"] == "2024-01-01T12:00:00"
 
     def test_serialize_nested_structures(self):
-        """Test serializing nested dictionaries and lists"""
+        """Test serializing nested dictionaries and lists."""
         context = {
             "metadata": {
                 "amounts": [Decimal("10.00"), Decimal("20.00")],
@@ -261,7 +259,7 @@ class TestSerializeContext:
         assert result["list_data"][1]["amount"] == 200.0
 
     def test_serialize_mixed_types(self):
-        """Test serializing context with mixed data types"""
+        """Test serializing context with mixed data types."""
         context = {
             "string_value": "test",
             "int_value": 42,
@@ -286,10 +284,10 @@ class TestSerializeContext:
 
 
 class TestAgentDecisionSummary:
-    """Test cases for AgentDecisionSummary"""
+    """Test cases for AgentDecisionSummary."""
 
     def test_agent_decision_summary_creation(self):
-        """Test AgentDecisionSummary creation"""
+        """Test AgentDecisionSummary creation."""
         timestamp = datetime(2024, 1, 1, 12, 0, 0)
         decision_types = {"transaction_analysis": 5, "cash_flow_check": 3}
 
@@ -310,7 +308,7 @@ class TestAgentDecisionSummary:
         assert summary.decision_types == decision_types
 
     def test_agent_decision_summary_optional_fields(self):
-        """Test AgentDecisionSummary with optional fields"""
+        """Test AgentDecisionSummary with optional fields."""
         summary = AgentDecisionSummary(
             agent_id="test_agent",
             total_decisions=0,
@@ -325,10 +323,10 @@ class TestAgentDecisionSummary:
 
 
 class TestAgentDecisionModel:
-    """Test cases for AgentDecisionModel SQLAlchemy model"""
+    """Test cases for AgentDecisionModel SQLAlchemy model."""
 
     def test_agent_decision_model_creation(self):
-        """Test AgentDecisionModel creation"""
+        """Test AgentDecisionModel creation."""
         timestamp = datetime(2024, 1, 1, 12, 0, 0)
         context = {"test": "data"}
 
@@ -351,15 +349,16 @@ class TestAgentDecisionModel:
         assert model.timestamp == timestamp
 
     def test_agent_decision_model_table_name(self):
-        """Test AgentDecisionModel table name"""
+        """Test AgentDecisionModel table name."""
         assert AgentDecisionModel.__tablename__ == "agent_decisions"
 
 
 class TestIntegration:
-    """Integration tests for AgentDecision workflow"""
+    """Integration tests for AgentDecision workflow."""
 
     def test_full_decision_workflow(self):
-        """Test complete workflow from creation to database conversion and back"""
+        """Test complete workflow from creation to database conversion and
+        back."""
         original_context = {
             "transaction": {
                 "id": 123,
@@ -405,7 +404,7 @@ class TestIntegration:
         assert restored_decision.context["analysis"]["variance"] == 0.25
 
     def test_edge_cases(self):
-        """Test edge cases and error conditions"""
+        """Test edge cases and error conditions."""
         # Very long strings
         long_reasoning = "A" * 10000
         decision = AgentDecision(

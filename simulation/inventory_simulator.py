@@ -164,7 +164,8 @@ class InventorySimulator:
         return movements
 
     def _get_base_consumption(self, category: str, current_stock: int) -> float:
-        """Calculate base daily consumption based on category and stock levels"""
+        """Calculate base daily consumption based on category and stock
+        levels."""
         consumption_rates = {
             # Restaurant categories
             "vegetables": 0.15,  # 15% of stock per day
@@ -277,7 +278,7 @@ class InventorySimulator:
         return deliveries
 
     def _find_supplier_for_item(self, item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Find the best supplier for a given item"""
+        """Find the best supplier for a given item."""
         category = item["category"]
 
         suitable_suppliers = [

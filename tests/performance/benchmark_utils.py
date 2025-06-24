@@ -1,8 +1,8 @@
-"""
-Benchmarking Utilities
+"""Benchmarking Utilities.
 
-Utilities for establishing baseline metrics, tracking performance trends,
-and generating performance reports for the Business Agent System.
+Utilities for establishing baseline metrics, tracking performance
+trends, and generating performance reports for the Business Agent
+System.
 """
 
 import json
@@ -338,7 +338,8 @@ class BenchmarkRunner:
         return benchmark_result
 
     def compare_with_baseline(self, test_name: str, tolerance: float = 0.1) -> Dict[str, Any]:
-        """Compare latest results with baseline and return comparison report."""
+        """Compare latest results with baseline and return comparison
+        report."""
         baseline = self.tracker.get_baseline_metrics(test_name)
         regressions = self.tracker.detect_regressions(test_name, tolerance)
 

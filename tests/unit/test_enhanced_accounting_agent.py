@@ -1,6 +1,5 @@
-"""
-Unit tests for Enhanced AccountingAgent advanced financial analysis capabilities
-"""
+"""Unit tests for Enhanced AccountingAgent advanced financial analysis
+capabilities."""
 
 import os
 import sys
@@ -20,11 +19,11 @@ from models.financial import (
 
 
 class TestEnhancedAccountingAgent:
-    """Test cases for Enhanced AccountingAgent advanced capabilities"""
+    """Test cases for Enhanced AccountingAgent advanced capabilities."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [Mock(text="Advanced financial analysis completed")]
@@ -33,7 +32,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -43,7 +42,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.fixture
     def enhanced_agent_config(self):
-        """Enhanced accounting agent configuration"""
+        """Enhanced accounting agent configuration."""
         return {
             "check_interval": 300,
             "anomaly_threshold": 0.25,
@@ -67,7 +66,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.fixture
     def enhanced_accounting_agent(self, mock_anthropic, mock_db_session, enhanced_agent_config):
-        """Create enhanced accounting agent instance"""
+        """Create enhanced accounting agent instance."""
         return AccountingAgent(
             agent_id="enhanced_accounting_agent",
             api_key="test_api_key",
@@ -76,14 +75,14 @@ class TestEnhancedAccountingAgent:
         )
 
     def test_enhanced_initialization(self, enhanced_accounting_agent, enhanced_agent_config):
-        """Test enhanced agent initialization with new config"""
+        """Test enhanced agent initialization with new config."""
         assert enhanced_accounting_agent.agent_id == "enhanced_accounting_agent"
         assert enhanced_accounting_agent.forecasting_config == enhanced_agent_config["forecasting"]
         assert hasattr(enhanced_accounting_agent, "decision_outcomes")
         assert hasattr(enhanced_accounting_agent, "forecasting_accuracy_history")
 
     def test_enhanced_system_prompt(self, enhanced_accounting_agent):
-        """Test enhanced system prompt content"""
+        """Test enhanced system prompt content."""
         prompt = enhanced_accounting_agent.system_prompt
         assert "advanced AI Accounting Agent" in prompt
         assert "anomaly detection" in prompt
@@ -95,7 +94,8 @@ class TestEnhancedAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_enhanced_transaction_analysis(self, enhanced_accounting_agent, mock_db_session):
-        """Test enhanced transaction analysis with multiple detection methods"""
+        """Test enhanced transaction analysis with multiple detection
+        methods."""
         transaction_data = {
             "id": "1",
             "description": "Unusual large transaction",
@@ -131,7 +131,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_cash_flow_forecasting(self, enhanced_accounting_agent, mock_db_session):
-        """Test advanced cash flow forecasting capability"""
+        """Test advanced cash flow forecasting capability."""
         data = {"type": "cash_flow_forecast", "forecast_days": 30}
 
         mock_session_instance = Mock()
@@ -183,7 +183,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_financial_trend_analysis(self, enhanced_accounting_agent, mock_db_session):
-        """Test multi-period financial trend analysis"""
+        """Test multi-period financial trend analysis."""
         data = {"type": "trend_analysis"}
 
         mock_session_instance = Mock()
@@ -246,7 +246,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_decision_outcome_processing(self, enhanced_accounting_agent):
-        """Test decision outcome tracking and learning"""
+        """Test decision outcome tracking and learning."""
         # First, add some decision outcomes
         enhanced_accounting_agent.decision_outcomes = {
             "decision_1": {
@@ -296,7 +296,7 @@ class TestEnhancedAccountingAgent:
     async def test_detect_transaction_anomalies_multiple_methods(
         self, enhanced_accounting_agent, mock_db_session
     ):
-        """Test multi-algorithm anomaly detection"""
+        """Test multi-algorithm anomaly detection."""
         transaction = TransactionModel(
             id="1",
             description="Test transaction",
@@ -335,7 +335,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_calculate_dynamic_confidence(self, enhanced_accounting_agent, mock_db_session):
-        """Test dynamic confidence calculation"""
+        """Test dynamic confidence calculation."""
         analysis_data = {
             "anomaly_count": 3,
             "statistics": {"sample_size": 25, "mean": 1000.0, "std_dev": 100.0},
@@ -363,7 +363,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_forecast_confidence_calculation(self, enhanced_accounting_agent):
-        """Test forecast confidence calculation"""
+        """Test forecast confidence calculation."""
         daily_flows = {
             f"2024-01-{i:02d}": 100.0 + (i * 5) for i in range(1, 31)  # Consistent upward trend
         }
@@ -385,7 +385,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_analyze_time_patterns(self, enhanced_accounting_agent, mock_db_session):
-        """Test time-based pattern analysis"""
+        """Test time-based pattern analysis."""
         transaction = TransactionModel(
             id="1",
             description="Test transaction",
@@ -415,7 +415,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_prepare_daily_cash_flows(self, enhanced_accounting_agent):
-        """Test daily cash flow data preparation"""
+        """Test daily cash flow data preparation."""
         transactions = []
         base_date = datetime.now().date()
 
@@ -446,7 +446,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_generate_cash_flow_forecasts(self, enhanced_accounting_agent):
-        """Test cash flow forecast generation with multiple methods"""
+        """Test cash flow forecast generation with multiple methods."""
         daily_flows = {
             f"2024-01-{i:02d}": 100.0 + (i * 2)  # Upward trend
             for i in range(1, 21)  # 20 days of data
@@ -467,7 +467,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_calculate_trend(self, enhanced_accounting_agent):
-        """Test linear trend calculation"""
+        """Test linear trend calculation."""
         # Test upward trend
         upward_values = [100, 110, 120, 130, 140]
         upward_trend = enhanced_accounting_agent._calculate_trend(upward_values)
@@ -485,7 +485,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_identify_significant_trends(self, enhanced_accounting_agent):
-        """Test identification of significant financial trends"""
+        """Test identification of significant financial trends."""
         trend_analysis = {
             "7_days": {
                 "income_trend": -60,  # Declining income
@@ -506,7 +506,7 @@ class TestEnhancedAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_analyze_decision_patterns(self, enhanced_accounting_agent):
-        """Test decision pattern analysis for learning"""
+        """Test decision pattern analysis for learning."""
         # Setup decision outcomes with mixed accuracy
         enhanced_accounting_agent.decision_outcomes = {
             f"decision_{i}": {
@@ -536,7 +536,7 @@ class TestEnhancedAccountingAgent:
     async def test_enhanced_periodic_check_scheduling(
         self, enhanced_accounting_agent, mock_db_session
     ):
-        """Test enhanced periodic check with new scheduling"""
+        """Test enhanced periodic check with new scheduling."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -569,7 +569,7 @@ class TestEnhancedAccountingAgent:
             assert True
 
     def test_configuration_validation(self, enhanced_accounting_agent):
-        """Test that enhanced configuration is properly loaded"""
+        """Test that enhanced configuration is properly loaded."""
         config = enhanced_accounting_agent.forecasting_config
 
         assert "prediction_days" in config
@@ -591,7 +591,7 @@ class TestEnhancedAccountingAgent:
     async def test_error_handling_in_enhanced_methods(
         self, enhanced_accounting_agent, mock_db_session
     ):
-        """Test error handling in new enhanced methods"""
+        """Test error handling in new enhanced methods."""
         mock_session = Mock()
 
         # Test anomaly detection with empty data
@@ -626,7 +626,7 @@ class TestEnhancedAccountingAgent:
     async def test_forecast_with_insufficient_data(
         self, enhanced_accounting_agent, mock_db_session
     ):
-        """Test cash flow forecasting behavior with insufficient data"""
+        """Test cash flow forecasting behavior with insufficient data."""
         data = {"type": "cash_flow_forecast", "forecast_days": 30}
 
         mock_session_instance = Mock()
@@ -655,7 +655,7 @@ class TestEnhancedAccountingAgent:
     async def test_trend_analysis_with_no_significant_trends(
         self, enhanced_accounting_agent, mock_db_session
     ):
-        """Test trend analysis when no significant trends are detected"""
+        """Test trend analysis when no significant trends are detected."""
         data = {"type": "trend_analysis"}
 
         mock_session_instance = Mock()

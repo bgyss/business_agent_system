@@ -1,6 +1,4 @@
-"""
-Web tests for the Streamlit dashboard using Selenium
-"""
+"""Web tests for the Streamlit dashboard using Selenium."""
 
 import time
 
@@ -10,17 +8,17 @@ from selenium.webdriver.common.by import By
 
 
 class TestDashboardBasicFunctionality:
-    """Test basic dashboard loading and navigation"""
+    """Test basic dashboard loading and navigation."""
 
     def test_dashboard_loads_successfully(self, dashboard_page, streamlit_helper):
-        """Test that the dashboard loads and displays the main title"""
+        """Test that the dashboard loads and displays the main title."""
         assert (
             "Business Management Dashboard" in dashboard_page.title
             or streamlit_helper.wait_for_text("Business Management Dashboard")
         )
 
     def test_sidebar_navigation_exists(self, dashboard_page, streamlit_helper):
-        """Test that sidebar navigation elements are present"""
+        """Test that sidebar navigation elements are present."""
         # Check for sidebar header
         streamlit_helper.wait_for_text("Dashboard Mode")
 
@@ -36,7 +34,7 @@ class TestDashboardBasicFunctionality:
             pytest.fail("Sidebar navigation elements not found")
 
     def test_configuration_section_exists(self, dashboard_page, streamlit_helper):
-        """Test that configuration section is present in sidebar"""
+        """Test that configuration section is present in sidebar."""
         streamlit_helper.wait_for_text("Configuration")
 
         # Check for business configuration dropdown
@@ -47,10 +45,10 @@ class TestDashboardBasicFunctionality:
 
 
 class TestLiveMonitoringView:
-    """Test the Live Agent Monitoring view"""
+    """Test the Live Agent Monitoring view."""
 
     def test_switch_to_live_monitoring(self, dashboard_page, streamlit_helper):
-        """Test switching to live monitoring view"""
+        """Test switching to live monitoring view."""
         # Click on Live Agent Monitoring radio button
         streamlit_helper.select_sidebar_radio("Live Agent Monitoring")
 
@@ -59,7 +57,7 @@ class TestLiveMonitoringView:
         streamlit_helper.wait_for_text("LIVE - Agent Activity Monitor")
 
     def test_agent_status_section(self, dashboard_page, streamlit_helper):
-        """Test that agent status section displays correctly"""
+        """Test that agent status section displays correctly."""
         streamlit_helper.select_sidebar_radio("Live Agent Monitoring")
 
         # Check for agent status section
@@ -69,14 +67,14 @@ class TestLiveMonitoringView:
         streamlit_helper.wait_for_text("Current Time")
 
     def test_recent_activity_section(self, dashboard_page, streamlit_helper):
-        """Test that recent agent activity section is present"""
+        """Test that recent agent activity section is present."""
         streamlit_helper.select_sidebar_radio("Live Agent Monitoring")
 
         # Check for recent activity section
         streamlit_helper.wait_for_text("Recent Agent Activity")
 
     def test_live_metrics_section(self, dashboard_page, streamlit_helper):
-        """Test that live system metrics are displayed"""
+        """Test that live system metrics are displayed."""
         streamlit_helper.select_sidebar_radio("Live Agent Monitoring")
 
         # Check for live metrics
@@ -91,7 +89,7 @@ class TestLiveMonitoringView:
             pytest.fail("Live metrics not properly displayed")
 
     def test_auto_refresh_toggle(self, dashboard_page, streamlit_helper):
-        """Test that auto-refresh toggle is available"""
+        """Test that auto-refresh toggle is available."""
         streamlit_helper.select_sidebar_radio("Live Agent Monitoring")
 
         # Look for auto-refresh checkbox in sidebar
@@ -102,10 +100,10 @@ class TestLiveMonitoringView:
 
 
 class TestHistoricalAnalyticsView:
-    """Test the Historical Analytics view"""
+    """Test the Historical Analytics view."""
 
     def test_switch_to_historical_analytics(self, dashboard_page, streamlit_helper):
-        """Test switching to historical analytics view"""
+        """Test switching to historical analytics view."""
         # Click on Historical Analytics radio button
         streamlit_helper.select_sidebar_radio("Historical Analytics")
 
@@ -113,7 +111,7 @@ class TestHistoricalAnalyticsView:
         streamlit_helper.wait_for_text("Historical Analytics")
 
     def test_financial_metrics_display(self, dashboard_page, streamlit_helper):
-        """Test that financial metrics are displayed correctly"""
+        """Test that financial metrics are displayed correctly."""
         streamlit_helper.select_sidebar_radio("Historical Analytics")
 
         # Check for key financial metrics
@@ -126,7 +124,7 @@ class TestHistoricalAnalyticsView:
             pytest.fail("Financial metrics not properly displayed")
 
     def test_charts_are_rendered(self, dashboard_page, streamlit_helper):
-        """Test that charts are rendered in historical view"""
+        """Test that charts are rendered in historical view."""
         streamlit_helper.select_sidebar_radio("Historical Analytics")
 
         # Wait for charts to load
@@ -137,7 +135,7 @@ class TestHistoricalAnalyticsView:
         assert streamlit_helper.check_chart_exists("Expense Breakdown by Category")
 
     def test_inventory_section(self, dashboard_page, streamlit_helper):
-        """Test inventory overview section"""
+        """Test inventory overview section."""
         streamlit_helper.select_sidebar_radio("Historical Analytics")
 
         # Check for inventory section
@@ -153,7 +151,7 @@ class TestHistoricalAnalyticsView:
             pytest.fail("Inventory metrics not properly displayed")
 
     def test_hr_section(self, dashboard_page, streamlit_helper):
-        """Test human resources section"""
+        """Test human resources section."""
         streamlit_helper.select_sidebar_radio("Historical Analytics")
 
         # Check for HR section
@@ -168,7 +166,7 @@ class TestHistoricalAnalyticsView:
             pytest.fail("HR metrics not properly displayed")
 
     def test_recent_transactions_table(self, dashboard_page, streamlit_helper):
-        """Test that recent transactions table is displayed"""
+        """Test that recent transactions table is displayed."""
         streamlit_helper.select_sidebar_radio("Historical Analytics")
 
         # Check for recent transactions section
@@ -178,14 +176,14 @@ class TestHistoricalAnalyticsView:
         time.sleep(2)
 
     def test_agent_decisions_section(self, dashboard_page, streamlit_helper):
-        """Test agent decisions and recommendations section"""
+        """Test agent decisions and recommendations section."""
         streamlit_helper.select_sidebar_radio("Historical Analytics")
 
         # Check for agent decisions section
         streamlit_helper.wait_for_text("Agent Decisions & Recommendations")
 
     def test_system_status_section(self, dashboard_page, streamlit_helper):
-        """Test system status section"""
+        """Test system status section."""
         streamlit_helper.select_sidebar_radio("Historical Analytics")
 
         # Check for system status section
@@ -201,10 +199,10 @@ class TestHistoricalAnalyticsView:
 
 
 class TestInteractiveFeatures:
-    """Test interactive features of the dashboard"""
+    """Test interactive features of the dashboard."""
 
     def test_refresh_button_functionality(self, dashboard_page, streamlit_helper):
-        """Test that refresh buttons work"""
+        """Test that refresh buttons work."""
         # Test refresh button in sidebar
         try:
             refresh_button = streamlit_helper.wait_for_element(
@@ -216,7 +214,7 @@ class TestInteractiveFeatures:
             pytest.fail("Refresh button not found or not clickable")
 
     def test_time_period_selection(self, dashboard_page, streamlit_helper):
-        """Test time period selection dropdown"""
+        """Test time period selection dropdown."""
         streamlit_helper.select_sidebar_radio("Historical Analytics")
 
         # Look for time period dropdown
@@ -232,7 +230,7 @@ class TestInteractiveFeatures:
             pytest.fail("Time period dropdown not found")
 
     def test_business_config_selection(self, dashboard_page, streamlit_helper):
-        """Test business configuration selection"""
+        """Test business configuration selection."""
         try:
             config_dropdown = streamlit_helper.wait_for_element(
                 By.XPATH,
@@ -246,16 +244,16 @@ class TestInteractiveFeatures:
 
 
 class TestResponsiveness:
-    """Test dashboard responsiveness and error handling"""
+    """Test dashboard responsiveness and error handling."""
 
     def test_error_handling_with_invalid_config(self, dashboard_page, streamlit_helper):
-        """Test that the dashboard handles configuration errors gracefully"""
+        """Test that the dashboard handles configuration errors gracefully."""
         # This test would need a way to simulate invalid configs
         # For now, just ensure the dashboard loads without crashing
         streamlit_helper.wait_for_text("Business Management Dashboard")
 
     def test_empty_data_handling(self, dashboard_page, streamlit_helper):
-        """Test how dashboard handles empty or missing data"""
+        """Test how dashboard handles empty or missing data."""
         streamlit_helper.select_sidebar_radio("Historical Analytics")
 
         # Wait for page to load even if data is empty
@@ -269,7 +267,7 @@ class TestResponsiveness:
             pytest.fail("Dashboard failed to load with empty data")
 
     def test_page_navigation_performance(self, dashboard_page, streamlit_helper):
-        """Test that navigation between views is reasonably fast"""
+        """Test that navigation between views is reasonably fast."""
         start_time = time.time()
 
         # Switch between views multiple times
@@ -287,15 +285,15 @@ class TestResponsiveness:
 
 
 class TestAccessibility:
-    """Test basic accessibility features"""
+    """Test basic accessibility features."""
 
     def test_page_has_title(self, dashboard_page):
-        """Test that the page has a proper title"""
+        """Test that the page has a proper title."""
         assert dashboard_page.title, "Page should have a title"
         assert len(dashboard_page.title) > 0, "Page title should not be empty"
 
     def test_headings_hierarchy(self, dashboard_page, streamlit_helper):
-        """Test that headings follow proper hierarchy"""
+        """Test that headings follow proper hierarchy."""
         # Check for main heading
         try:
             h1_elements = dashboard_page.find_elements(By.TAG_NAME, "h1")
@@ -304,7 +302,7 @@ class TestAccessibility:
             pytest.fail("Could not find proper heading structure")
 
     def test_interactive_elements_accessible(self, dashboard_page, streamlit_helper):
-        """Test that interactive elements are accessible"""
+        """Test that interactive elements are accessible."""
         # Check that buttons and inputs have appropriate attributes
         buttons = dashboard_page.find_elements(By.TAG_NAME, "button")
 

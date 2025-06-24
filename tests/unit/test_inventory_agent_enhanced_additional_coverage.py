@@ -1,6 +1,4 @@
-"""
-Additional tests to reach 95% coverage for Enhanced Inventory Agent
-"""
+"""Additional tests to reach 95% coverage for Enhanced Inventory Agent."""
 
 import os
 import sys
@@ -22,11 +20,11 @@ from models.inventory import ItemStatus, StockMovementType
 
 
 class TestEnhancedInventoryAgentAdditionalCoverage:
-    """Additional tests to reach 95% coverage"""
+    """Additional tests to reach 95% coverage."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [
@@ -37,7 +35,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -47,7 +45,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
 
     @pytest.fixture
     def enhanced_config(self):
-        """Enhanced inventory agent configuration"""
+        """Enhanced inventory agent configuration."""
         return {
             "check_interval": 300,
             "low_stock_multiplier": 1.2,
@@ -65,7 +63,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
 
     @pytest.fixture
     def enhanced_inventory_agent(self, mock_anthropic, mock_db_session, enhanced_config):
-        """Create enhanced inventory agent instance"""
+        """Create enhanced inventory agent instance."""
         return EnhancedInventoryAgent(
             agent_id="enhanced_inventory_agent",
             api_key="test_api_key",
@@ -75,7 +73,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
 
     @pytest.fixture
     def sample_item(self):
-        """Create sample inventory item"""
+        """Create sample inventory item."""
         return Mock(
             id="ITEM001",
             name="Test Item",
@@ -91,14 +89,14 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
 
     @pytest.fixture
     def sample_supplier(self):
-        """Create sample supplier"""
+        """Create sample supplier."""
         return Mock(id="SUP001", name="Test Supplier", contact_email="test@supplier.com")
 
     @pytest.mark.asyncio
     async def test_perform_demand_forecasting_with_declining_items(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test demand forecasting with declining demand items"""
+        """Test demand forecasting with declining demand items."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -145,7 +143,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
 
     @pytest.mark.asyncio
     async def test_forecast_item_demand_short_consumption_series(self, enhanced_inventory_agent):
-        """Test forecast_item_demand with short consumption series"""
+        """Test forecast_item_demand with short consumption series."""
         mock_session = Mock()
 
         # Create movements but with short series (less than 14 days)
@@ -177,7 +175,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
 
     @pytest.mark.asyncio
     async def test_forecast_item_demand_with_single_value_series(self, enhanced_inventory_agent):
-        """Test forecast_item_demand with series that has no variance"""
+        """Test forecast_item_demand with series that has no variance."""
         mock_session = Mock()
 
         # Create movements with constant values and minimal data
@@ -212,7 +210,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
     async def test_optimize_reorder_points_with_cost_savings(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test reorder optimization with actual cost savings calculations"""
+        """Test reorder optimization with actual cost savings calculations."""
         mock_session = Mock()
 
         # Items exist
@@ -252,7 +250,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
     async def test_analyze_consumption_movement_reorder_needed(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test consumption movement analysis that triggers reorder"""
+        """Test consumption movement analysis that triggers reorder."""
         mock_session = Mock()
 
         # Set item to low stock level
@@ -285,7 +283,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
     async def test_analyze_consumption_movement_critical_reorder(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test consumption movement analysis with critical reorder timing"""
+        """Test consumption movement analysis with critical reorder timing."""
         mock_session = Mock()
 
         # Set item to very low stock with short remaining time
@@ -319,7 +317,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
     async def test_analyze_receipt_movement_no_overstock_no_forecast(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test receipt movement analysis without forecast"""
+        """Test receipt movement analysis without forecast."""
         mock_session = Mock()
 
         # Receipt that doesn't cause overstock, no forecast
@@ -332,7 +330,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_adjustment_movement_zero_stock(self, enhanced_inventory_agent):
-        """Test adjustment movement analysis with zero current stock"""
+        """Test adjustment movement analysis with zero current stock."""
         mock_session = Mock()
 
         # Item with zero stock
@@ -353,7 +351,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
     async def test_analyze_reorder_needs_enhanced_with_urgency_scores(
         self, enhanced_inventory_agent
     ):
-        """Test enhanced reorder analysis with urgency score calculations"""
+        """Test enhanced reorder analysis with urgency score calculations."""
         mock_session = Mock()
 
         # Items near reorder point
@@ -416,7 +414,8 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
 
     @pytest.mark.asyncio
     async def test_comprehensive_inventory_analysis_no_issues(self, enhanced_inventory_agent):
-        """Test comprehensive inventory analysis when no issues are identified"""
+        """Test comprehensive inventory analysis when no issues are
+        identified."""
         mock_session = Mock()
 
         # Healthy inventory metrics
@@ -440,7 +439,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
     async def test_bulk_purchase_optimization_negative_savings(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test bulk purchase optimization where no savings are achieved"""
+        """Test bulk purchase optimization where no savings are achieved."""
         mock_session = Mock()
 
         # Items exist
@@ -474,7 +473,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
     async def test_bulk_purchase_calculation_infinite_roi(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test bulk purchase calculation with infinite ROI scenario"""
+        """Test bulk purchase calculation with infinite ROI scenario."""
         mock_session = Mock()
 
         # Mock forecast with very low demand
@@ -510,7 +509,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
 
     @pytest.mark.asyncio
     async def test_expiry_intelligence_zero_maximum_stock(self, enhanced_inventory_agent):
-        """Test expiry intelligence with zero maximum stock"""
+        """Test expiry intelligence with zero maximum stock."""
         mock_session = Mock()
 
         perishable_item = Mock(
@@ -547,7 +546,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
     async def test_supplier_performance_zero_deliveries(
         self, enhanced_inventory_agent, sample_supplier
     ):
-        """Test supplier performance with zero deliveries"""
+        """Test supplier performance with zero deliveries."""
         mock_session = Mock()
 
         # Purchase orders without delivery dates
@@ -569,7 +568,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
 
     @pytest.mark.asyncio
     async def test_periodic_check_friday_reorder_optimization(self, enhanced_inventory_agent):
-        """Test periodic check on Friday for reorder optimization"""
+        """Test periodic check on Friday for reorder optimization."""
         with patch.object(enhanced_inventory_agent, "_queue_analysis_message") as mock_queue:
             # Test Friday 8 AM (reorder optimization time)
             with patch("agents.inventory_agent_enhanced.datetime") as mock_datetime:
@@ -584,7 +583,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
 
     @pytest.mark.asyncio
     async def test_periodic_check_non_trigger_times(self, enhanced_inventory_agent):
-        """Test periodic check during non-trigger times"""
+        """Test periodic check during non-trigger times."""
         with patch.object(enhanced_inventory_agent, "_queue_analysis_message") as mock_queue:
             # Test random time that doesn't trigger any analysis
             with patch("agents.inventory_agent_enhanced.datetime") as mock_datetime:
@@ -598,7 +597,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
                 mock_queue.assert_not_called()
 
     def test_z_score_various_service_levels(self, enhanced_inventory_agent):
-        """Test Z-score calculation for various service levels"""
+        """Test Z-score calculation for various service levels."""
         # Test edge cases
         assert (
             enhanced_inventory_agent._get_z_score_for_service_level(0.89) == 1.28
@@ -614,7 +613,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
     async def test_analyze_stock_movement_enhanced_in_movement(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test enhanced stock movement analysis with IN movement"""
+        """Test enhanced stock movement analysis with IN movement."""
         mock_session = Mock()
         mock_session.query.return_value.filter.return_value.first.return_value = sample_item
 
@@ -639,7 +638,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
     async def test_analyze_stock_movement_enhanced_adjustment_movement(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test enhanced stock movement analysis with ADJUSTMENT movement"""
+        """Test enhanced stock movement analysis with ADJUSTMENT movement."""
         mock_session = Mock()
         mock_session.query.return_value.filter.return_value.first.return_value = sample_item
 
@@ -664,7 +663,7 @@ class TestEnhancedInventoryAgentAdditionalCoverage:
 
     @pytest.mark.asyncio
     async def test_generate_report_with_forecasts(self, enhanced_inventory_agent, mock_db_session):
-        """Test report generation with actual forecasts"""
+        """Test report generation with actual forecasts."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 

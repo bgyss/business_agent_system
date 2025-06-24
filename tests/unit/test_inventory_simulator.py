@@ -1,6 +1,4 @@
-"""
-Unit tests for InventorySimulator class
-"""
+"""Unit tests for InventorySimulator class."""
 
 import os
 import sys
@@ -21,10 +19,10 @@ from simulation.inventory_simulator import (
 
 
 class TestInventoryProfile:
-    """Test cases for InventoryProfile dataclass"""
+    """Test cases for InventoryProfile dataclass."""
 
     def test_inventory_profile_creation(self):
-        """Test InventoryProfile creation with all fields"""
+        """Test InventoryProfile creation with all fields."""
         items = [
             {
                 "name": "Test Item",
@@ -57,11 +55,11 @@ class TestInventoryProfile:
 
 
 class TestInventorySimulator:
-    """Test cases for InventorySimulator"""
+    """Test cases for InventorySimulator."""
 
     @pytest.fixture
     def sample_inventory_profile(self):
-        """Create a sample inventory profile for testing"""
+        """Create a sample inventory profile for testing."""
         items = [
             {
                 "name": "Test Vegetables",
@@ -127,11 +125,11 @@ class TestInventorySimulator:
 
     @pytest.fixture
     def inventory_simulator(self, sample_inventory_profile):
-        """Create InventorySimulator instance for testing"""
+        """Create InventorySimulator instance for testing."""
         return InventorySimulator(sample_inventory_profile)
 
     def test_initialization(self, sample_inventory_profile):
-        """Test InventorySimulator initialization"""
+        """Test InventorySimulator initialization."""
         simulator = InventorySimulator(sample_inventory_profile)
 
         assert simulator.profile == sample_inventory_profile
@@ -139,7 +137,7 @@ class TestInventorySimulator:
         assert len(simulator.suppliers) > 0
 
     def test_generate_suppliers_restaurant(self, sample_inventory_profile):
-        """Test supplier generation for restaurant business"""
+        """Test supplier generation for restaurant business."""
         simulator = InventorySimulator(sample_inventory_profile)
 
         suppliers = simulator._generate_suppliers()
@@ -164,7 +162,7 @@ class TestInventorySimulator:
         assert 0.0 <= supplier["reliability"] <= 1.0
 
     def test_generate_suppliers_retail(self):
-        """Test supplier generation for retail business"""
+        """Test supplier generation for retail business."""
         profile = InventoryProfile(
             business_type="retail",
             items=[],
@@ -183,7 +181,7 @@ class TestInventorySimulator:
         assert "Direct Manufacturer" in supplier_names
 
     def test_generate_initial_inventory_single_variation(self, inventory_simulator):
-        """Test initial inventory generation with single variation items"""
+        """Test initial inventory generation with single variation items."""
         items = inventory_simulator.generate_initial_inventory()
 
         assert isinstance(items, list)
@@ -215,7 +213,7 @@ class TestInventorySimulator:
         assert item["unit_cost"] > 0
 
     def test_generate_initial_inventory_multiple_variations(self, inventory_simulator):
-        """Test initial inventory generation with multiple variation items"""
+        """Test initial inventory generation with multiple variation items."""
         items = inventory_simulator.generate_initial_inventory()
 
         # Should have items for beverages with variations
@@ -232,7 +230,7 @@ class TestInventorySimulator:
         assert "BEV001-02" in skus
 
     def test_generate_initial_inventory_cost_variance(self, inventory_simulator):
-        """Test that initial inventory applies cost variance"""
+        """Test that initial inventory applies cost variance."""
         items = inventory_simulator.generate_initial_inventory()
 
         # Get vegetable items (should have same base cost but with variance)
@@ -243,7 +241,7 @@ class TestInventorySimulator:
             assert 2.0 <= item["unit_cost"] <= 3.0  # 2.50 * (0.8 to 1.2)
 
     def test_simulate_daily_consumption_basic(self, inventory_simulator):
-        """Test basic daily consumption simulation"""
+        """Test basic daily consumption simulation."""
         items = [
             {
                 "id": 1,
@@ -275,7 +273,7 @@ class TestInventorySimulator:
             assert movement["quantity"] > 0
 
     def test_simulate_daily_consumption_no_stock(self, inventory_simulator):
-        """Test consumption simulation with no stock"""
+        """Test consumption simulation with no stock."""
         items = [
             {
                 "id": 1,
@@ -297,7 +295,7 @@ class TestInventorySimulator:
         assert len(consumption_movements) == 0
 
     def test_simulate_daily_consumption_seasonal_factors(self, inventory_simulator):
-        """Test that seasonal factors affect consumption"""
+        """Test that seasonal factors affect consumption."""
         items = [
             {
                 "id": 1,
@@ -334,7 +332,7 @@ class TestInventorySimulator:
             assert june_total >= january_total * 0.5  # Very loose assertion due to randomness
 
     def test_get_base_consumption(self, inventory_simulator):
-        """Test base consumption calculation for different categories"""
+        """Test base consumption calculation for different categories."""
         # Test restaurant categories
         vegetables_consumption = inventory_simulator._get_base_consumption("vegetables", 100)
         assert vegetables_consumption == 15.0  # 15% of 100
@@ -348,7 +346,7 @@ class TestInventorySimulator:
 
     @patch("simulation.inventory_simulator.random.random")
     def test_simulate_waste_basic(self, mock_random, inventory_simulator):
-        """Test basic waste simulation"""
+        """Test basic waste simulation."""
         items = [
             {
                 "id": 1,
@@ -376,7 +374,7 @@ class TestInventorySimulator:
                 assert "WASTE-" in movement["reference_number"]
 
     def test_simulate_waste_non_perishable(self, inventory_simulator):
-        """Test waste simulation for non-perishable items"""
+        """Test waste simulation for non-perishable items."""
         items = [
             {
                 "id": 1,
@@ -401,7 +399,7 @@ class TestInventorySimulator:
 
     @patch("simulation.inventory_simulator.random.random")
     def test_simulate_deliveries_basic(self, mock_random, inventory_simulator):
-        """Test basic delivery simulation"""
+        """Test basic delivery simulation."""
         items = [
             {
                 "id": 1,
@@ -433,7 +431,7 @@ class TestInventorySimulator:
                 assert items[0]["current_stock"] > 10
 
     def test_simulate_deliveries_no_reorder_needed(self, inventory_simulator):
-        """Test delivery simulation when no reorder is needed"""
+        """Test delivery simulation when no reorder is needed."""
         items = [
             {
                 "id": 1,
@@ -454,7 +452,7 @@ class TestInventorySimulator:
         assert len(deliveries) == 0
 
     def test_find_supplier_for_item(self, inventory_simulator):
-        """Test finding appropriate supplier for items"""
+        """Test finding appropriate supplier for items."""
         # Test with vegetables category
         vegetables_item = {"category": "vegetables"}
         supplier = inventory_simulator._find_supplier_for_item(vegetables_item)
@@ -471,7 +469,7 @@ class TestInventorySimulator:
         assert supplier is None
 
     def test_find_supplier_best_choice(self, inventory_simulator):
-        """Test that supplier selection chooses the best option"""
+        """Test that supplier selection chooses the best option."""
         # Mock multiple suppliers for same category
         mock_suppliers = [
             {
@@ -503,7 +501,7 @@ class TestInventorySimulator:
         assert supplier["name"] == "Good Supplier"
 
     def test_generate_purchase_orders_basic(self, inventory_simulator):
-        """Test basic purchase order generation"""
+        """Test basic purchase order generation."""
         items = [
             {
                 "id": 1,
@@ -545,7 +543,7 @@ class TestInventorySimulator:
             assert "total_cost" in po_item
 
     def test_generate_purchase_orders_no_reorder_needed(self, inventory_simulator):
-        """Test PO generation when no items need reordering"""
+        """Test PO generation when no items need reordering."""
         items = [
             {
                 "id": 1,
@@ -566,7 +564,7 @@ class TestInventorySimulator:
         assert len(purchase_orders) == 0
 
     def test_generate_purchase_orders_group_by_supplier(self, inventory_simulator):
-        """Test that PO generation groups items by supplier"""
+        """Test that PO generation groups items by supplier."""
         items = [
             {
                 "id": 1,
@@ -602,7 +600,7 @@ class TestInventorySimulator:
 
     @patch("simulation.inventory_simulator.random.random")
     def test_simulate_stock_adjustments_basic(self, mock_random, inventory_simulator):
-        """Test basic stock adjustment simulation"""
+        """Test basic stock adjustment simulation."""
         items = [
             {
                 "id": 1,
@@ -635,7 +633,7 @@ class TestInventorySimulator:
                 assert adjustment["quantity"] != 0
 
     def test_simulate_stock_adjustments_no_discrepancy(self, inventory_simulator):
-        """Test stock adjustments when no discrepancies are found"""
+        """Test stock adjustments when no discrepancies are found."""
         items = [
             {
                 "id": 1,
@@ -658,10 +656,10 @@ class TestInventorySimulator:
 
 
 class TestPredefinedProfiles:
-    """Test cases for predefined inventory profiles"""
+    """Test cases for predefined inventory profiles."""
 
     def test_get_restaurant_inventory_profile(self):
-        """Test restaurant inventory profile generation"""
+        """Test restaurant inventory profile generation."""
         profile = get_restaurant_inventory_profile()
 
         assert isinstance(profile, InventoryProfile)
@@ -701,7 +699,7 @@ class TestPredefinedProfiles:
         assert len(perishable_items) > 0  # Should have some very perishable items
 
     def test_get_retail_inventory_profile(self):
-        """Test retail inventory profile generation"""
+        """Test retail inventory profile generation."""
         profile = get_retail_inventory_profile()
 
         assert isinstance(profile, InventoryProfile)
@@ -727,7 +725,7 @@ class TestPredefinedProfiles:
         assert len(non_perishable_items) > 0
 
     def test_profile_differences(self):
-        """Test that restaurant and retail profiles are different"""
+        """Test that restaurant and retail profiles are different."""
         restaurant_profile = get_restaurant_inventory_profile()
         retail_profile = get_retail_inventory_profile()
 
@@ -751,7 +749,7 @@ class TestPredefinedProfiles:
         assert any("electronics" in cat or "clothing" in cat for cat in retail_categories)
 
     def test_profile_consistency(self):
-        """Test that profiles are consistent across calls"""
+        """Test that profiles are consistent across calls."""
         profile1 = get_restaurant_inventory_profile()
         profile2 = get_restaurant_inventory_profile()
 
@@ -763,7 +761,7 @@ class TestPredefinedProfiles:
         assert profile1.seasonal_factors == profile2.seasonal_factors
 
     def test_item_variations(self):
-        """Test that items with variations are properly handled"""
+        """Test that items with variations are properly handled."""
         restaurant_profile = get_restaurant_inventory_profile()
 
         # Find items with variations
@@ -778,7 +776,7 @@ class TestPredefinedProfiles:
             assert item["variations"] <= 5  # Reasonable upper limit
 
     def test_realistic_values(self):
-        """Test that profile values are realistic"""
+        """Test that profile values are realistic."""
         restaurant_profile = get_restaurant_inventory_profile()
 
         # Check consumption patterns are reasonable (0.5 to 1.5 range)

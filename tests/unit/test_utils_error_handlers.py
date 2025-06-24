@@ -1,6 +1,4 @@
-"""
-Test suite for utils.error_handlers module
-"""
+"""Test suite for utils.error_handlers module."""
 
 from unittest.mock import Mock, patch
 
@@ -31,19 +29,19 @@ from utils.exceptions import (
 
 
 class TestErrorHandler:
-    """Test ErrorHandler class"""
+    """Test ErrorHandler class."""
 
     def setup_method(self):
-        """Setup for each test method"""
+        """Setup for each test method."""
         self.error_handler = ErrorHandler("test_handler")
 
     def test_initialization(self):
-        """Test ErrorHandler initialization"""
+        """Test ErrorHandler initialization."""
         assert self.error_handler.recovery_strategies == {}
         assert self.error_handler.error_counts == {}
 
     def test_register_recovery_strategy(self):
-        """Test registering a recovery strategy"""
+        """Test registering a recovery strategy."""
 
         def mock_strategy(error, context):
             return True
@@ -53,7 +51,7 @@ class TestErrorHandler:
         assert self.error_handler.recovery_strategies[ValueError] == mock_strategy
 
     def test_handle_error_with_successful_recovery(self):
-        """Test error handling with successful recovery"""
+        """Test error handling with successful recovery."""
 
         def successful_recovery(error, context):
             return True
@@ -68,7 +66,7 @@ class TestErrorHandler:
         assert self.error_handler.error_counts["ValueError:Test error"] == 1
 
     def test_handle_error_with_failed_recovery(self):
-        """Test error handling with failed recovery"""
+        """Test error handling with failed recovery."""
 
         def failed_recovery(error, context):
             return False
@@ -81,14 +79,14 @@ class TestErrorHandler:
         assert result is False
 
     def test_handle_error_no_recovery_strategy(self):
-        """Test error handling with no recovery strategy"""
+        """Test error handling with no recovery strategy."""
         error = ValueError("Test error")
         result = self.error_handler.handle_error(error)
 
         assert result is False
 
     def test_handle_error_with_context(self):
-        """Test error handling with context"""
+        """Test error handling with context."""
 
         def context_aware_recovery(error, context):
             assert context is not None
@@ -104,7 +102,7 @@ class TestErrorHandler:
         assert result is True
 
     def test_handle_error_recovery_strategy_exception(self):
-        """Test error handling when recovery strategy raises exception"""
+        """Test error handling when recovery strategy raises exception."""
 
         def failing_recovery(error, context):
             raise Exception("Recovery failed")
@@ -117,7 +115,7 @@ class TestErrorHandler:
         assert result is False
 
     def test_error_count_tracking(self):
-        """Test error count tracking"""
+        """Test error count tracking."""
         error1 = ValueError("Test error")
         error2 = ValueError("Test error")  # Same error
         error3 = TypeError("Different error")
@@ -130,7 +128,7 @@ class TestErrorHandler:
         assert self.error_handler.error_counts["TypeError:Different error"] == 1
 
     def test_get_error_statistics(self):
-        """Test getting error statistics"""
+        """Test getting error statistics."""
         error1 = ValueError("Test error")
         error2 = TypeError("Different error")
 
@@ -145,7 +143,7 @@ class TestErrorHandler:
         assert "TypeError:Different error" in stats["error_breakdown"]
 
     def test_inheritance_based_recovery(self):
-        """Test recovery strategy matching based on inheritance"""
+        """Test recovery strategy matching based on inheritance."""
 
         def base_recovery(error, context):
             return True
@@ -160,10 +158,10 @@ class TestErrorHandler:
 
 
 class TestDecoratorAndContextManagers:
-    """Test decorators and context managers"""
+    """Test decorators and context managers."""
 
     def test_register_recovery_strategy_decorator(self):
-        """Test register_recovery_strategy decorator"""
+        """Test register_recovery_strategy decorator."""
 
         @register_recovery_strategy(ValueError)
         def test_recovery(error, context):
@@ -172,12 +170,12 @@ class TestDecoratorAndContextManagers:
         assert ValueError in _global_error_handler.recovery_strategies
 
     def test_error_handler_context_no_error(self):
-        """Test error handler context with no error"""
+        """Test error handler context with no error."""
         with error_handler_context():
             pass  # No error should occur
 
     def test_error_handler_context_with_error_reraise(self):
-        """Test error handler context with error and reraise=True"""
+        """Test error handler context with error and reraise=True."""
         # Clear any recovery strategies that might interfere
         original_strategies = _global_error_handler.recovery_strategies.copy()
         _global_error_handler.recovery_strategies.clear()
@@ -191,20 +189,20 @@ class TestDecoratorAndContextManagers:
             _global_error_handler.recovery_strategies = original_strategies
 
     def test_error_handler_context_with_error_no_reraise(self):
-        """Test error handler context with error and reraise=False"""
+        """Test error handler context with error and reraise=False."""
         with error_handler_context(reraise=False):
             raise ValueError("Test error")
         # Should not raise
 
     @pytest.mark.asyncio
     async def test_async_error_handler_context_no_error(self):
-        """Test async error handler context with no error"""
+        """Test async error handler context with no error."""
         async with async_error_handler_context():
             pass  # No error should occur
 
     @pytest.mark.asyncio
     async def test_async_error_handler_context_with_error(self):
-        """Test async error handler context with error"""
+        """Test async error handler context with error."""
         # Clear any recovery strategies that might interfere
         original_strategies = _global_error_handler.recovery_strategies.copy()
         _global_error_handler.recovery_strategies.clear()
@@ -218,7 +216,7 @@ class TestDecoratorAndContextManagers:
             _global_error_handler.recovery_strategies = original_strategies
 
     def test_graceful_degradation_success(self):
-        """Test graceful degradation decorator with successful function"""
+        """Test graceful degradation decorator with successful function."""
 
         @graceful_degradation(fallback_value="fallback")
         def success_func():
@@ -228,7 +226,7 @@ class TestDecoratorAndContextManagers:
         assert result == "success"
 
     def test_graceful_degradation_failure(self):
-        """Test graceful degradation decorator with failing function"""
+        """Test graceful degradation decorator with failing function."""
 
         @graceful_degradation(fallback_value="fallback")
         def failing_func():
@@ -238,7 +236,7 @@ class TestDecoratorAndContextManagers:
         assert result == "fallback"
 
     def test_graceful_degradation_no_logging(self):
-        """Test graceful degradation with logging disabled"""
+        """Test graceful degradation with logging disabled."""
 
         @graceful_degradation(fallback_value="fallback", log_error=False)
         def failing_func():
@@ -249,7 +247,7 @@ class TestDecoratorAndContextManagers:
 
     @pytest.mark.asyncio
     async def test_async_graceful_degradation_success(self):
-        """Test async graceful degradation with successful function"""
+        """Test async graceful degradation with successful function."""
 
         @graceful_degradation(fallback_value="fallback")
         async def async_success():
@@ -260,7 +258,7 @@ class TestDecoratorAndContextManagers:
 
     @pytest.mark.asyncio
     async def test_async_graceful_degradation_failure(self):
-        """Test async graceful degradation with failing function"""
+        """Test async graceful degradation with failing function."""
 
         @graceful_degradation(fallback_value="fallback")
         async def async_failing():
@@ -271,10 +269,10 @@ class TestDecoratorAndContextManagers:
 
 
 class TestSafeExecute:
-    """Test safe execution functions"""
+    """Test safe execution functions."""
 
     def test_safe_execute_success(self):
-        """Test safe_execute with successful function"""
+        """Test safe_execute with successful function."""
 
         def success_func(x, y):
             return x + y
@@ -284,7 +282,7 @@ class TestSafeExecute:
         assert error is None
 
     def test_safe_execute_failure(self):
-        """Test safe_execute with failing function"""
+        """Test safe_execute with failing function."""
 
         def failing_func():
             raise ValueError("Test error")
@@ -295,7 +293,7 @@ class TestSafeExecute:
         assert str(error) == "Test error"
 
     def test_safe_execute_with_kwargs(self):
-        """Test safe_execute with keyword arguments"""
+        """Test safe_execute with keyword arguments."""
 
         def func_with_kwargs(x, y=10):
             return x * y
@@ -306,7 +304,7 @@ class TestSafeExecute:
 
     @pytest.mark.asyncio
     async def test_async_safe_execute_success(self):
-        """Test async_safe_execute with successful function"""
+        """Test async_safe_execute with successful function."""
 
         async def async_success(x, y):
             return x + y
@@ -317,7 +315,7 @@ class TestSafeExecute:
 
     @pytest.mark.asyncio
     async def test_async_safe_execute_failure(self):
-        """Test async_safe_execute with failing function"""
+        """Test async_safe_execute with failing function."""
 
         async def async_failing():
             raise ValueError("Test error")
@@ -328,11 +326,11 @@ class TestSafeExecute:
 
 
 class TestRecoveryStrategies:
-    """Test built-in recovery strategies"""
+    """Test built-in recovery strategies."""
 
     @patch("utils.error_handlers.get_logger")
     def test_recover_database_connection_success(self, mock_get_logger):
-        """Test successful database connection recovery"""
+        """Test successful database connection recovery."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
 
@@ -351,7 +349,7 @@ class TestRecoveryStrategies:
 
     @patch("utils.error_handlers.get_logger")
     def test_recover_database_connection_failure(self, mock_get_logger):
-        """Test failed database connection recovery"""
+        """Test failed database connection recovery."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
 
@@ -367,7 +365,7 @@ class TestRecoveryStrategies:
 
     @patch("utils.error_handlers.get_logger")
     def test_recover_database_connection_no_context(self, mock_get_logger):
-        """Test database connection recovery with no context"""
+        """Test database connection recovery with no context."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
 
@@ -378,7 +376,7 @@ class TestRecoveryStrategies:
 
     @patch("utils.error_handlers.get_logger")
     def test_recover_configuration_error(self, mock_get_logger):
-        """Test configuration error recovery"""
+        """Test configuration error recovery."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
 
@@ -394,7 +392,7 @@ class TestRecoveryStrategies:
 
     @patch("utils.error_handlers.get_logger")
     def test_recover_external_service_error(self, mock_get_logger):
-        """Test external service error recovery"""
+        """Test external service error recovery."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
 
@@ -408,11 +406,11 @@ class TestRecoveryStrategies:
 
 
 class TestErrorContext:
-    """Test ErrorContext class"""
+    """Test ErrorContext class."""
 
     @patch("utils.error_handlers.get_logger")
     def test_error_context_success(self, mock_get_logger):
-        """Test ErrorContext with successful operation"""
+        """Test ErrorContext with successful operation."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
 
@@ -426,7 +424,7 @@ class TestErrorContext:
 
     @patch("utils.error_handlers.get_logger")
     def test_error_context_with_error(self, mock_get_logger):
-        """Test ErrorContext with error"""
+        """Test ErrorContext with error."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
 
@@ -444,7 +442,7 @@ class TestErrorContext:
 
     @patch("utils.error_handlers.get_logger")
     def test_error_context_with_recovery(self, mock_get_logger):
-        """Test ErrorContext with successful error recovery"""
+        """Test ErrorContext with successful error recovery."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
 
@@ -462,12 +460,12 @@ class TestErrorContext:
 
 
 class TestAsyncErrorContext:
-    """Test AsyncErrorContext class"""
+    """Test AsyncErrorContext class."""
 
     @pytest.mark.asyncio
     @patch("utils.error_handlers.get_logger")
     async def test_async_error_context_success(self, mock_get_logger):
-        """Test AsyncErrorContext with successful operation"""
+        """Test AsyncErrorContext with successful operation."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
 
@@ -485,7 +483,7 @@ class TestAsyncErrorContext:
     @pytest.mark.asyncio
     @patch("utils.error_handlers.get_logger")
     async def test_async_error_context_with_error(self, mock_get_logger):
-        """Test AsyncErrorContext with error"""
+        """Test AsyncErrorContext with error."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
 
@@ -506,7 +504,7 @@ class TestAsyncErrorContext:
     @pytest.mark.asyncio
     @patch("utils.error_handlers.get_logger")
     async def test_async_error_context_with_recovery(self, mock_get_logger):
-        """Test AsyncErrorContext with successful error recovery"""
+        """Test AsyncErrorContext with successful error recovery."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
 
@@ -526,21 +524,21 @@ class TestAsyncErrorContext:
 
 
 class TestGlobalFunctions:
-    """Test global utility functions"""
+    """Test global utility functions."""
 
     def setup_method(self):
-        """Setup for each test method"""
+        """Setup for each test method."""
         reset_error_statistics()
 
     def test_get_error_statistics_empty(self):
-        """Test getting error statistics when empty"""
+        """Test getting error statistics when empty."""
         stats = get_error_statistics()
         assert stats["total_errors"] == 0
         assert stats["unique_errors"] == 0
         assert stats["error_breakdown"] == {}
 
     def test_get_error_statistics_with_errors(self):
-        """Test getting error statistics with errors"""
+        """Test getting error statistics with errors."""
         _global_error_handler.handle_error(ValueError("Test error 1"))
         _global_error_handler.handle_error(TypeError("Test error 2"))
         _global_error_handler.handle_error(ValueError("Test error 1"))  # Duplicate
@@ -550,7 +548,7 @@ class TestGlobalFunctions:
         assert stats["unique_errors"] == 2
 
     def test_reset_error_statistics(self):
-        """Test resetting error statistics"""
+        """Test resetting error statistics."""
         _global_error_handler.handle_error(ValueError("Test error"))
 
         # Verify error was recorded
@@ -564,14 +562,14 @@ class TestGlobalFunctions:
 
 
 class TestErrorHandlerIntegration:
-    """Integration tests for error handler components"""
+    """Integration tests for error handler components."""
 
     def setup_method(self):
-        """Setup for each test method"""
+        """Setup for each test method."""
         reset_error_statistics()
 
     def test_full_error_handling_workflow(self):
-        """Test complete error handling workflow"""
+        """Test complete error handling workflow."""
         # Register a recovery strategy
         recovery_called = False
         recovery_context = None
@@ -598,7 +596,7 @@ class TestErrorHandlerIntegration:
         assert stats["total_errors"] == 1
 
     def test_nested_error_contexts(self):
-        """Test nested error contexts"""
+        """Test nested error contexts."""
         context_calls = []
 
         def track_recovery(error, context):
@@ -617,7 +615,7 @@ class TestErrorHandlerIntegration:
 
     @pytest.mark.asyncio
     async def test_mixed_sync_async_error_handling(self):
-        """Test mixing sync and async error handling"""
+        """Test mixing sync and async error handling."""
         recovery_count = 0
 
         def counting_recovery(error, context):

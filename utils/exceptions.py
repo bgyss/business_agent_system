@@ -28,115 +28,77 @@ class BusinessAgentError(Exception):
 class AgentInitializationError(BusinessAgentError):
     """Raised when an agent fails to initialize properly"""
 
-    pass
-
 
 class AgentDecisionError(BusinessAgentError):
     """Raised when an agent fails to make a decision"""
-
-    pass
 
 
 class AgentCommunicationError(BusinessAgentError):
     """Raised when agents fail to communicate"""
 
-    pass
-
 
 class DatabaseError(BusinessAgentError):
     """Base class for database-related errors"""
-
-    pass
 
 
 class DatabaseConnectionError(DatabaseError):
     """Raised when database connection fails"""
 
-    pass
-
 
 class DatabaseQueryError(DatabaseError):
     """Raised when database query fails"""
-
-    pass
 
 
 class DatabaseTransactionError(DatabaseError):
     """Raised when database transaction fails"""
 
-    pass
-
 
 class ConfigurationError(BusinessAgentError):
     """Base class for configuration-related errors"""
-
-    pass
 
 
 class ConfigurationFileError(ConfigurationError):
     """Raised when configuration file is invalid or missing"""
 
-    pass
-
 
 class ConfigurationValidationError(ConfigurationError):
     """Raised when configuration values are invalid"""
-
-    pass
 
 
 class SimulationError(BusinessAgentError):
     """Base class for simulation-related errors"""
 
-    pass
-
 
 class DataGenerationError(SimulationError):
     """Raised when data generation fails"""
-
-    pass
 
 
 class BusinessProfileError(SimulationError):
     """Raised when business profile is invalid"""
 
-    pass
-
 
 class ExternalServiceError(BusinessAgentError):
     """Base class for external service errors"""
-
-    pass
 
 
 class AnthropicAPIError(ExternalServiceError):
     """Raised when Anthropic API calls fail"""
 
-    pass
-
 
 class DashboardError(BusinessAgentError):
     """Base class for dashboard-related errors"""
-
-    pass
 
 
 class DataVisualizationError(DashboardError):
     """Raised when data visualization fails"""
 
-    pass
-
 
 class ResourceExhaustionError(BusinessAgentError):
     """Raised when system resources are exhausted"""
 
-    pass
-
 
 class ValidationError(BusinessAgentError):
     """Raised when data validation fails"""
-
-    pass
 
 
 class RetryableError(BusinessAgentError):
@@ -150,10 +112,6 @@ class RetryableError(BusinessAgentError):
 class NonRetryableError(BusinessAgentError):
     """Base class for errors that should not be retried"""
 
-    pass
-
 
 class CircuitBreakerOpenError(ExternalServiceError):
     """Raised when circuit breaker is open"""
-
-    pass

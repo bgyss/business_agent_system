@@ -1,0 +1,148 @@
+{
+  "folders": [
+    {
+      "name": "Business Agent System",
+      "path": "."
+    }
+  ],
+  "settings": {
+    // Workspace-specific settings that override user settings
+    "python.defaultInterpreterPath": "./.venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    
+    // File Explorer
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.expand": false,
+    "explorer.fileNesting.patterns": {
+      "*.py": "${capture}.pyi",
+      "pyproject.toml": "uv.lock, requirements.txt, setup.py, setup.cfg",
+      "main.py": "run_*.py, demo_*.py",
+      ".env.example": ".env",
+      "README.md": "CHANGELOG.md, CONTRIBUTING.md, LICENSE, SECURITY.md, PLAN.md",
+      "Dockerfile": "docker-compose.yml, .dockerignore",
+      "flake.nix": "shell.nix, flake.lock",
+      "Makefile": "scripts/*, .pre-commit-config.yaml"
+    },
+    
+    // Workspace-specific search settings
+    "search.useGlobalIgnoreFiles": true,
+    "search.useIgnoreFiles": true,
+    "search.followSymlinks": false,
+    
+    // Git integration
+    "git.detectSubmodules": false,
+    "git.fetchOnPull": true,
+    "git.pruneOnFetch": true,
+    
+    // Editor appearance for this project
+    "workbench.colorCustomizations": {
+      "statusBar.background": "#1e3a8a",
+      "statusBar.noFolderBackground": "#1e3a8a",
+      "statusBar.debuggingBackground": "#dc2626",
+      "activityBar.background": "#1e40af",
+      "titleBar.activeBackground": "#1d4ed8"
+    },
+    
+    // Custom activity bar
+    "workbench.activityBar.visible": true,
+    "workbench.statusBar.visible": true,
+    
+    // Project-specific file associations
+    "files.associations": {
+      "*.yaml": "yaml",
+      "*.yml": "yaml",
+      "CLAUDE.md": "markdown",
+      "*.nix": "nix",
+      "flake.lock": "json",
+      "uv.lock": "toml"
+    },
+    
+    // Terminal settings for this project
+    "terminal.integrated.profiles.osx": {
+      "Business Agent Dev": {
+        "path": "/bin/zsh",
+        "args": ["-l"],
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}",
+          "PROJECT_NAME": "business-agent-system"
+        }
+      },
+      "Nix Shell": {
+        "path": "nix",
+        "args": ["develop", "--command", "zsh"],
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}"
+        }
+      }
+    },
+    "terminal.integrated.defaultProfile.osx": "Business Agent Dev",
+    
+    // Problem matcher customization
+    "problems.decorations.enabled": true,
+    "problems.sortOrder": "severity",
+    
+    // IntelliSense settings
+    "python.analysis.extraPaths": [
+      "./agents",
+      "./models",
+      "./simulation",
+      "./utils"
+    ],
+    
+    // Code lens settings
+    "python.analysis.displayOptions": {
+      "launchConfiguration": true,
+      "variableType": true
+    }
+  },
+  
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Project Setup",
+        "type": "shell",
+        "command": "make",
+        "args": ["dev-setup"],
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "detail": "Set up the complete development environment"
+      }
+    ]
+  },
+  
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Workspace Debug",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/main.py",
+        "args": ["--config", "config/restaurant_fast_test.yaml"],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}"
+        },
+        "envFile": "${workspaceFolder}/.env"
+      }
+    ]
+  },
+  
+  "extensions": {
+    "recommendations": [
+      // Essential for this project
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-python.black-formatter",
+      "charliermarsh.ruff",
+      "jnoortheen.nix-ide"
+    ]
+  }
+}

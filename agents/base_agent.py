@@ -130,10 +130,9 @@ class BaseAgent(ABC):
                 self.logger.error(f"Error in agent loop: {e}")
                 await asyncio.sleep(60)
 
+    @abstractmethod
     async def periodic_check(self):
-        """Perform periodic analysis independent of messages"""
-        # This method can be overridden by specific agents for scheduled analysis
-        pass
+        """Perform periodic analysis independent of messages."""
 
     async def stop(self):
         self.is_running = False

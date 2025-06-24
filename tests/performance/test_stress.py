@@ -1,8 +1,7 @@
-"""
-Stress Tests
+"""Stress Tests.
 
-Comprehensive stress tests for high-volume scenarios, memory leak detection,
-and system stability under extreme conditions.
+Comprehensive stress tests for high-volume scenarios, memory leak
+detection, and system stability under extreme conditions.
 """
 
 import asyncio
@@ -178,7 +177,6 @@ class TestStressScenarios:
                     except Exception:
                         session.rollback()
                         # Continue with next operation
-                        pass
 
                 # Final commit
                 session.commit()

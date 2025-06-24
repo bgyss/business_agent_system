@@ -1,6 +1,4 @@
-"""
-Integration test fixtures and configuration.
-"""
+"""Integration test fixtures and configuration."""
 
 import asyncio
 import os

@@ -1,6 +1,4 @@
-"""
-Unit tests for AccountingAgent class
-"""
+"""Unit tests for AccountingAgent class."""
 
 import os
 import sys
@@ -21,11 +19,11 @@ from models.financial import (
 
 
 class TestAccountingAgent:
-    """Test cases for AccountingAgent"""
+    """Test cases for AccountingAgent."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [Mock(text="Accounting analysis: Transaction appears normal")]
@@ -34,7 +32,7 @@ class TestAccountingAgent:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -44,7 +42,7 @@ class TestAccountingAgent:
 
     @pytest.fixture
     def agent_config(self):
-        """Accounting agent configuration"""
+        """Accounting agent configuration."""
         return {
             "check_interval": 300,
             "anomaly_threshold": 0.25,
@@ -57,7 +55,7 @@ class TestAccountingAgent:
 
     @pytest.fixture
     def accounting_agent(self, mock_anthropic, mock_db_session, agent_config):
-        """Create accounting agent instance"""
+        """Create accounting agent instance."""
         return AccountingAgent(
             agent_id="accounting_agent",
             api_key="test_api_key",
@@ -66,13 +64,13 @@ class TestAccountingAgent:
         )
 
     def test_initialization(self, accounting_agent, agent_config):
-        """Test agent initialization"""
+        """Test agent initialization."""
         assert accounting_agent.agent_id == "accounting_agent"
         assert accounting_agent.anomaly_threshold == 0.25
         assert accounting_agent.alert_thresholds == agent_config["alert_thresholds"]
 
     def test_system_prompt(self, accounting_agent):
-        """Test system prompt content"""
+        """Test system prompt content."""
         prompt = accounting_agent.system_prompt
         assert "AI Accounting Agent" in prompt
         assert "financial analysis" in prompt
@@ -82,7 +80,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_new_transaction(self, accounting_agent, mock_db_session):
-        """Test processing new transaction data"""
+        """Test processing new transaction data."""
         # Mock transaction data
         transaction_data = {
             "id": "1",
@@ -120,7 +118,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_daily_analysis(self, accounting_agent, mock_db_session):
-        """Test daily financial analysis"""
+        """Test daily financial analysis."""
         data = {"type": "daily_analysis"}
 
         mock_session_instance = Mock()
@@ -145,7 +143,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_cash_flow_check_low_cash(self, accounting_agent, mock_db_session):
-        """Test cash flow check with low cash"""
+        """Test cash flow check with low cash."""
         data = {"type": "cash_flow_check"}
 
         mock_session_instance = Mock()
@@ -168,7 +166,7 @@ class TestAccountingAgent:
     async def test_process_data_cash_flow_check_sufficient_cash(
         self, accounting_agent, mock_db_session
     ):
-        """Test cash flow check with sufficient cash"""
+        """Test cash flow check with sufficient cash."""
         data = {"type": "cash_flow_check"}
 
         mock_session_instance = Mock()
@@ -186,7 +184,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_aging_analysis(self, accounting_agent, mock_db_session):
-        """Test aging analysis with overdue items"""
+        """Test aging analysis with overdue items."""
         data = {"type": "aging_analysis"}
 
         mock_session_instance = Mock()
@@ -235,7 +233,7 @@ class TestAccountingAgent:
     async def test_analyze_transaction_no_similar_transactions(
         self, accounting_agent, mock_db_session
     ):
-        """Test transaction analysis with no similar transactions"""
+        """Test transaction analysis with no similar transactions."""
         transaction_data = {
             "id": "1",
             "description": "Test transaction",
@@ -259,7 +257,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_analyze_transaction_normal_variance(self, accounting_agent, mock_db_session):
-        """Test transaction analysis with normal variance"""
+        """Test transaction analysis with normal variance."""
         transaction_data = {
             "id": "1",
             "description": "Test transaction",
@@ -289,7 +287,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_perform_daily_analysis_no_transactions(self, accounting_agent, mock_db_session):
-        """Test daily analysis with no transactions"""
+        """Test daily analysis with no transactions."""
         mock_session_instance = Mock()
         mock_session_instance.query.return_value.filter.return_value.all.return_value = []
 
@@ -299,7 +297,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_check_cash_flow_multiple_accounts(self, accounting_agent, mock_db_session):
-        """Test cash flow check with multiple account types"""
+        """Test cash flow check with multiple account types."""
         mock_session_instance = Mock()
 
         # Mock accounts with different types
@@ -318,7 +316,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_analyze_aging_no_overdue_items(self, accounting_agent, mock_db_session):
-        """Test aging analysis with no overdue items"""
+        """Test aging analysis with no overdue items."""
         mock_session_instance = Mock()
 
         # Mock empty overdue items
@@ -330,7 +328,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_generate_report(self, accounting_agent, mock_db_session):
-        """Test report generation"""
+        """Test report generation."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -384,7 +382,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_get_current_alerts_low_cash(self, accounting_agent, mock_db_session):
-        """Test current alerts with low cash"""
+        """Test current alerts with low cash."""
         mock_session_instance = Mock()
 
         # Mock low cash accounts
@@ -403,7 +401,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_get_current_alerts_overdue_receivables(self, accounting_agent, mock_db_session):
-        """Test current alerts with overdue receivables"""
+        """Test current alerts with overdue receivables."""
         mock_session_instance = Mock()
 
         # Mock sufficient cash but overdue receivables
@@ -422,7 +420,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_periodic_check(self, accounting_agent, mock_db_session):
-        """Test periodic check execution"""
+        """Test periodic check execution."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -446,7 +444,7 @@ class TestAccountingAgent:
             assert True
 
     def test_confidence_score_calculation(self, accounting_agent):
-        """Test confidence score calculation logic"""
+        """Test confidence score calculation logic."""
         # Test variance-based confidence calculation
         variance = 0.5  # 50% variance
         confidence = min(0.9, variance * 2)
@@ -460,7 +458,7 @@ class TestAccountingAgent:
         assert confidence == 0.6
 
     def test_config_defaults(self):
-        """Test configuration defaults"""
+        """Test configuration defaults."""
         with patch("agents.base_agent.Anthropic"), patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ):
@@ -479,7 +477,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_edge_case_zero_variance(self, accounting_agent, mock_db_session):
-        """Test edge case with zero variance in transactions"""
+        """Test edge case with zero variance in transactions."""
         transaction_data = {
             "id": "1",
             "description": "Test transaction",
@@ -509,7 +507,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_error_handling_in_process_data(self, accounting_agent, mock_db_session):
-        """Test error handling in process_data"""
+        """Test error handling in process_data."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
         mock_session_instance.close.side_effect = Exception("Session close error")
@@ -559,7 +557,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_analyze_transaction_insufficient_data(self, accounting_agent, mock_db_session):
-        """Test transaction analysis with insufficient similar transactions"""
+        """Test transaction analysis with insufficient similar transactions."""
         transaction_data = {
             "id": "1",
             "description": "Test transaction",
@@ -623,7 +621,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_cash_flow_check(self, accounting_agent, mock_db_session):
-        """Test cash flow check data processing"""
+        """Test cash flow check data processing."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -645,7 +643,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_aging_analysis(self, accounting_agent, mock_db_session):
-        """Test aging analysis data processing"""
+        """Test aging analysis data processing."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -677,7 +675,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_confidence_score_calculation_edge_cases(self, accounting_agent):
-        """Test confidence score calculation with edge cases"""
+        """Test confidence score calculation with edge cases."""
         # Test with zero variance (edge case)
         zero_variance_data = {
             "variance_percentage": 0.0,
@@ -702,7 +700,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_daily_analysis_with_mixed_transactions(self, accounting_agent, mock_db_session):
-        """Test daily analysis with mixed transaction types"""
+        """Test daily analysis with mixed transaction types."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -737,7 +735,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_claude_api_error_handling(self, accounting_agent, mock_db_session):
-        """Test Claude API error handling"""
+        """Test Claude API error handling."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -767,7 +765,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_multiple_account_cash_flow_analysis(self, accounting_agent, mock_db_session):
-        """Test cash flow analysis with multiple accounts"""
+        """Test cash flow analysis with multiple accounts."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -793,7 +791,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_zero_amount_transaction_handling(self, accounting_agent, mock_db_session):
-        """Test handling of zero amount transactions"""
+        """Test handling of zero amount transactions."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -930,7 +928,8 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_transaction_analysis_claude_exception(self, accounting_agent, mock_db_session):
-        """Test transaction analysis with Claude API exception (lines 489-491)"""
+        """Test transaction analysis with Claude API exception (lines
+        489-491)"""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -1016,7 +1015,8 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_forecasting_claude_exception(self, accounting_agent, mock_db_session):
-        """Test forecasting with Claude API exception (lines 586-593, 602-604)"""
+        """Test forecasting with Claude API exception (lines 586-593,
+        602-604)"""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -1041,7 +1041,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_agent_with_empty_configuration(self, mock_anthropic, mock_db_session):
-        """Test agent with minimal/empty configuration"""
+        """Test agent with minimal/empty configuration."""
         # Test with minimal config
         minimal_config = {}
 
@@ -1058,7 +1058,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_agent_with_invalid_configuration(self, mock_anthropic, mock_db_session):
-        """Test agent with invalid configuration values"""
+        """Test agent with invalid configuration values."""
         # Test with invalid config values
         invalid_config = {
             "anomaly_threshold": -0.5,  # Invalid negative threshold
@@ -1078,7 +1078,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_missing_configuration_keys(self, mock_anthropic, mock_db_session):
-        """Test agent with missing configuration keys"""
+        """Test agent with missing configuration keys."""
         # Test with missing keys
         partial_config = {
             "anomaly_threshold": 0.3
@@ -1098,7 +1098,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_basic_cash_flow_forecasting(self, accounting_agent, mock_db_session):
-        """Test basic cash flow forecasting with minimal data"""
+        """Test basic cash flow forecasting with minimal data."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -1121,7 +1121,7 @@ class TestAccountingAgent:
 
     @pytest.mark.asyncio
     async def test_decision_outcome_processing_basic(self, accounting_agent, mock_db_session):
-        """Test basic decision outcome processing"""
+        """Test basic decision outcome processing."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 

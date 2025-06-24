@@ -1,6 +1,4 @@
-"""
-Integration tests for business simulation workflows.
-"""
+"""Integration tests for business simulation workflows."""
 
 import asyncio
 from datetime import datetime, timedelta
@@ -265,7 +263,8 @@ class TestBusinessSimulation:
             session.close()
 
     def test_multiple_business_types(self, temp_db):
-        """Test that different business types generate different data profiles."""
+        """Test that different business types generate different data
+        profiles."""
         # Test restaurant
         config = {"simulation_interval": 1, "speed_multiplier": 1.0}
         restaurant_sim = BusinessSimulator(config, temp_db)

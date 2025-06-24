@@ -1,6 +1,7 @@
-"""
-Enhanced test coverage for AccountingAgent to achieve 95% coverage.
-This file focuses on covering the missing lines identified in the coverage analysis.
+"""Enhanced test coverage for AccountingAgent to achieve 95% coverage.
+
+This file focuses on covering the missing lines identified in the
+coverage analysis.
 """
 
 import os
@@ -21,11 +22,11 @@ from models.financial import (
 
 
 class TestAccountingAgentEnhancedCoverage:
-    """Enhanced test coverage for AccountingAgent focusing on missing lines"""
+    """Enhanced test coverage for AccountingAgent focusing on missing lines."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [Mock(text="Enhanced accounting analysis")]
@@ -34,7 +35,7 @@ class TestAccountingAgentEnhancedCoverage:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -44,7 +45,7 @@ class TestAccountingAgentEnhancedCoverage:
 
     @pytest.fixture
     def enhanced_agent_config(self):
-        """Enhanced accounting agent configuration"""
+        """Enhanced accounting agent configuration."""
         return {
             "check_interval": 300,
             "anomaly_threshold": 0.25,
@@ -68,7 +69,7 @@ class TestAccountingAgentEnhancedCoverage:
 
     @pytest.fixture
     def accounting_agent(self, mock_anthropic, mock_db_session, enhanced_agent_config):
-        """Create accounting agent instance"""
+        """Create accounting agent instance."""
         return AccountingAgent(
             agent_id="accounting_agent",
             api_key="test_api_key",
@@ -79,7 +80,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test exception handling in _analyze_aging - Line 300-308
     @pytest.mark.asyncio
     async def test_analyze_aging_claude_api_exception(self, accounting_agent, mock_db_session):
-        """Test _analyze_aging with Claude API exception"""
+        """Test _analyze_aging with Claude API exception."""
         data = {"type": "aging_analysis"}
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
@@ -114,7 +115,8 @@ class TestAccountingAgentEnhancedCoverage:
     async def test_detect_transaction_anomalies_exception_handling(
         self, accounting_agent, mock_db_session
     ):
-        """Test _detect_transaction_anomalies with various exception scenarios"""
+        """Test _detect_transaction_anomalies with various exception
+        scenarios."""
         mock_session_instance = Mock()
 
         transaction = TransactionModel(
@@ -144,7 +146,7 @@ class TestAccountingAgentEnhancedCoverage:
     async def test_analyze_time_patterns_exception_handling(
         self, accounting_agent, mock_db_session
     ):
-        """Test _analyze_time_patterns with exception handling"""
+        """Test _analyze_time_patterns with exception handling."""
         mock_session_instance = Mock()
 
         transaction = TransactionModel(
@@ -174,7 +176,7 @@ class TestAccountingAgentEnhancedCoverage:
     async def test_calculate_dynamic_confidence_exception_handling(
         self, accounting_agent, mock_db_session
     ):
-        """Test _calculate_dynamic_confidence with exception handling"""
+        """Test _calculate_dynamic_confidence with exception handling."""
         mock_session_instance = Mock()
 
         # Create invalid analysis_data that will cause exception
@@ -193,7 +195,7 @@ class TestAccountingAgentEnhancedCoverage:
     async def test_get_historical_accuracy_exception_handling(
         self, accounting_agent, mock_db_session
     ):
-        """Test _get_historical_accuracy with exception handling"""
+        """Test _get_historical_accuracy with exception handling."""
         mock_session_instance = Mock()
 
         # Test with no decision outcomes first (should return default)
@@ -213,7 +215,7 @@ class TestAccountingAgentEnhancedCoverage:
     async def test_calculate_seasonal_consistency_exception_handling(
         self, accounting_agent, mock_db_session
     ):
-        """Test _calculate_seasonal_consistency with exception handling"""
+        """Test _calculate_seasonal_consistency with exception handling."""
         mock_session_instance = Mock()
 
         # Test normal case first (current implementation just returns 0.6)
@@ -228,7 +230,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test edge case in _forecast_cash_flow with insufficient data - Line 622
     @pytest.mark.asyncio
     async def test_forecast_cash_flow_insufficient_data(self, accounting_agent, mock_db_session):
-        """Test _forecast_cash_flow with insufficient transaction data"""
+        """Test _forecast_cash_flow with insufficient transaction data."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -252,7 +254,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test exception handling in _prepare_daily_cash_flows - Lines 675-676
     @pytest.mark.asyncio
     async def test_prepare_daily_cash_flows_with_edge_cases(self, accounting_agent):
-        """Test _prepare_daily_cash_flows with edge cases"""
+        """Test _prepare_daily_cash_flows with edge cases."""
 
         # Test with transactions that have no transaction_type
         transactions = [
@@ -270,7 +272,7 @@ class TestAccountingAgentEnhancedCoverage:
 
     # Test edge case in _calculate_trend with insufficient data - Lines 700-701
     def test_calculate_trend_insufficient_data(self, accounting_agent):
-        """Test _calculate_trend with insufficient data"""
+        """Test _calculate_trend with insufficient data."""
 
         # Test with empty list
         result = accounting_agent._calculate_trend([])
@@ -282,7 +284,7 @@ class TestAccountingAgentEnhancedCoverage:
 
     # Test exception handling in _calculate_trend - Lines 747-749
     def test_calculate_trend_exception_handling(self, accounting_agent):
-        """Test _calculate_trend with exception handling"""
+        """Test _calculate_trend with exception handling."""
 
         # Test with invalid data that causes division by zero
         with patch("builtins.sum", side_effect=ZeroDivisionError("Division by zero")):
@@ -292,7 +294,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test exception handling in _apply_seasonal_adjustment - Lines 763-765
     @pytest.mark.asyncio
     async def test_apply_seasonal_adjustment_exception_handling(self, accounting_agent):
-        """Test _apply_seasonal_adjustment with exception handling"""
+        """Test _apply_seasonal_adjustment with exception handling."""
 
         # Test with invalid data
         daily_flows = {"invalid": "data"}
@@ -308,7 +310,7 @@ class TestAccountingAgentEnhancedCoverage:
     async def test_analyze_forecast_results_exception_handling(
         self, accounting_agent, mock_db_session
     ):
-        """Test _analyze_forecast_results with exception handling"""
+        """Test _analyze_forecast_results with exception handling."""
         mock_session_instance = Mock()
 
         # Create invalid forecasts that will cause exception
@@ -330,7 +332,7 @@ class TestAccountingAgentEnhancedCoverage:
     async def test_get_current_cash_balance_exception_handling(
         self, accounting_agent, mock_db_session
     ):
-        """Test _get_current_cash_balance with exception handling"""
+        """Test _get_current_cash_balance with exception handling."""
         mock_session_instance = Mock()
 
         # Mock database exception
@@ -344,7 +346,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test exception handling in _calculate_forecast_confidence - Lines 867-869
     @pytest.mark.asyncio
     async def test_calculate_forecast_confidence_exception_handling(self, accounting_agent):
-        """Test _calculate_forecast_confidence with exception handling"""
+        """Test _calculate_forecast_confidence with exception handling."""
 
         # Create invalid data that will cause exception
         daily_flows = {"invalid": "data"}
@@ -363,7 +365,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test edge case in _analyze_financial_trends with no trends - Line 892
     @pytest.mark.asyncio
     async def test_analyze_financial_trends_no_trends(self, accounting_agent, mock_db_session):
-        """Test _analyze_financial_trends with no significant trends"""
+        """Test _analyze_financial_trends with no significant trends."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -390,7 +392,7 @@ class TestAccountingAgentEnhancedCoverage:
     async def test_analyze_financial_trends_exception_handling(
         self, accounting_agent, mock_db_session
     ):
-        """Test _analyze_financial_trends with exception handling"""
+        """Test _analyze_financial_trends with exception handling."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -405,7 +407,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test exception handling in _calculate_period_trends - Lines 973-975
     @pytest.mark.asyncio
     async def test_calculate_period_trends_exception_handling(self, accounting_agent):
-        """Test _calculate_period_trends with exception handling"""
+        """Test _calculate_period_trends with exception handling."""
 
         # The current implementation handles None transaction_type gracefully
         # Let's test with transactions that will cause exception in trend calculation
@@ -427,7 +429,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test edge cases in _identify_significant_trends - Lines 990, 993, 996, 1004
     @pytest.mark.asyncio
     async def test_identify_significant_trends_edge_cases(self, accounting_agent):
-        """Test _identify_significant_trends with various edge cases"""
+        """Test _identify_significant_trends with various edge cases."""
 
         # Test with declining income trend
         trend_analysis = {
@@ -453,7 +455,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test exception handling in _identify_significant_trends - Lines 1008-1010
     @pytest.mark.asyncio
     async def test_identify_significant_trends_exception_handling(self, accounting_agent):
-        """Test _identify_significant_trends with exception handling"""
+        """Test _identify_significant_trends with exception handling."""
 
         # Create invalid trend_analysis that will cause exception
         trend_analysis = {
@@ -470,7 +472,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test _calculate_trend_confidence with various scenarios - Lines 1014-1048
     @pytest.mark.asyncio
     async def test_calculate_trend_confidence_comprehensive(self, accounting_agent):
-        """Test _calculate_trend_confidence with comprehensive scenarios"""
+        """Test _calculate_trend_confidence with comprehensive scenarios."""
 
         # Test with insufficient data
         trend_analysis = {"7_days": {"transaction_count": 5}}
@@ -494,7 +496,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test exception handling in _calculate_trend_confidence - Lines 1046-1048
     @pytest.mark.asyncio
     async def test_calculate_trend_confidence_exception_handling(self, accounting_agent):
-        """Test _calculate_trend_confidence with exception handling"""
+        """Test _calculate_trend_confidence with exception handling."""
 
         # Create invalid trend_analysis that will cause exception
         trend_analysis = {"invalid": {"transaction_count": "not_a_number"}}
@@ -507,7 +509,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test edge case in _process_decision_outcome with missing decision_id - Line 1059
     @pytest.mark.asyncio
     async def test_process_decision_outcome_missing_decision_id(self, accounting_agent):
-        """Test _process_decision_outcome with missing decision_id"""
+        """Test _process_decision_outcome with missing decision_id."""
 
         data = {
             "was_correct": True,
@@ -524,7 +526,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test exception handling in _process_decision_outcome - Lines 1097-1099
     @pytest.mark.asyncio
     async def test_process_decision_outcome_exception_handling(self, accounting_agent):
-        """Test _process_decision_outcome with exception handling"""
+        """Test _process_decision_outcome with exception handling."""
 
         data = {
             "decision_id": "test_id",
@@ -545,7 +547,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test edge case in _analyze_decision_patterns with insufficient data - Line 1105
     @pytest.mark.asyncio
     async def test_analyze_decision_patterns_insufficient_data(self, accounting_agent):
-        """Test _analyze_decision_patterns with insufficient data"""
+        """Test _analyze_decision_patterns with insufficient data."""
 
         # Set up insufficient decision outcomes (less than 5)
         accounting_agent.decision_outcomes = {
@@ -562,7 +564,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test _analyze_decision_patterns with low accuracy - Line 1130
     @pytest.mark.asyncio
     async def test_analyze_decision_patterns_low_accuracy(self, accounting_agent):
-        """Test _analyze_decision_patterns with low accuracy scenarios"""
+        """Test _analyze_decision_patterns with low accuracy scenarios."""
 
         # Set up decision outcomes with low accuracy
         accounting_agent.decision_outcomes = {
@@ -582,7 +584,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test exception handling in _analyze_decision_patterns - Lines 1140-1142
     @pytest.mark.asyncio
     async def test_analyze_decision_patterns_exception_handling(self, accounting_agent):
-        """Test _analyze_decision_patterns with exception handling"""
+        """Test _analyze_decision_patterns with exception handling."""
 
         # Create a custom dict class that raises exception on iteration
         class ExceptionDict(dict):
@@ -609,7 +611,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test periodic_check timing conditions - Lines 1158-1173
     @pytest.mark.asyncio
     async def test_periodic_check_timing_conditions(self, accounting_agent, mock_db_session):
-        """Test periodic_check with different timing conditions"""
+        """Test periodic_check with different timing conditions."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -651,7 +653,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test comprehensive anomaly detection with different scenarios
     @pytest.mark.asyncio
     async def test_comprehensive_anomaly_detection(self, accounting_agent, mock_db_session):
-        """Test comprehensive anomaly detection scenarios"""
+        """Test comprehensive anomaly detection scenarios."""
         mock_session_instance = Mock()
 
         transaction = TransactionModel(
@@ -685,7 +687,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test cash flow forecasting with comprehensive scenarios
     @pytest.mark.asyncio
     async def test_comprehensive_cash_flow_forecasting(self, accounting_agent, mock_db_session):
-        """Test comprehensive cash flow forecasting scenarios"""
+        """Test comprehensive cash flow forecasting scenarios."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -726,7 +728,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test various edge cases in generate_cash_flow_forecasts
     @pytest.mark.asyncio
     async def test_generate_cash_flow_forecasts_edge_cases(self, accounting_agent):
-        """Test _generate_cash_flow_forecasts with edge cases"""
+        """Test _generate_cash_flow_forecasts with edge cases."""
 
         # Test with very few data points
         daily_flows = {"2023-01-01": 100.0, "2023-01-02": 200.0}
@@ -742,7 +744,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test exception handling in generate_cash_flow_forecasts - Lines 728-730
     @pytest.mark.asyncio
     async def test_generate_cash_flow_forecasts_exception_handling(self, accounting_agent):
-        """Test _generate_cash_flow_forecasts with exception handling"""
+        """Test _generate_cash_flow_forecasts with exception handling."""
 
         # Create invalid daily_flows that will cause exception
         daily_flows = {"invalid": "data"}
@@ -756,7 +758,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test time-based anomaly detection with edge cases
     @pytest.mark.asyncio
     async def test_time_pattern_analysis_comprehensive(self, accounting_agent, mock_db_session):
-        """Test time pattern analysis with comprehensive scenarios"""
+        """Test time pattern analysis with comprehensive scenarios."""
         mock_session_instance = Mock()
 
         # Transaction at unusual time (3 AM on Sunday)
@@ -791,7 +793,7 @@ class TestAccountingAgentEnhancedCoverage:
     async def test_dynamic_confidence_calculation_comprehensive(
         self, accounting_agent, mock_db_session
     ):
-        """Test dynamic confidence calculation with comprehensive scenarios"""
+        """Test dynamic confidence calculation with comprehensive scenarios."""
         mock_session_instance = Mock()
 
         # Test with full analysis data
@@ -822,7 +824,7 @@ class TestAccountingAgentEnhancedCoverage:
     async def test_forecast_analysis_comprehensive_scenarios(
         self, accounting_agent, mock_db_session
     ):
-        """Test forecast analysis with different cash scenarios"""
+        """Test forecast analysis with different cash scenarios."""
         mock_session_instance = Mock()
 
         # Test scenario 1: Cash shortage predicted
@@ -868,7 +870,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test forecast confidence calculation with edge cases
     @pytest.mark.asyncio
     async def test_forecast_confidence_calculation_edge_cases(self, accounting_agent):
-        """Test forecast confidence calculation with edge cases"""
+        """Test forecast confidence calculation with edge cases."""
 
         # Test with single data point
         daily_flows = {"2023-01-01": 100.0}
@@ -900,7 +902,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test additional edge cases to increase coverage
     @pytest.mark.asyncio
     async def test_additional_edge_cases_for_coverage(self, accounting_agent, mock_db_session):
-        """Test additional edge cases to maximize coverage"""
+        """Test additional edge cases to maximize coverage."""
 
         # Test _analyze_aging with Claude API exception (line 308)
         mock_session_instance = Mock()
@@ -971,7 +973,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test missing lines in _analyze_financial_trends
     @pytest.mark.asyncio
     async def test_analyze_financial_trends_no_data(self, accounting_agent, mock_db_session):
-        """Test _analyze_financial_trends with no transaction data"""
+        """Test _analyze_financial_trends with no transaction data."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -986,7 +988,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test missing lines in _calculate_period_trends
     @pytest.mark.asyncio
     async def test_calculate_period_trends_edge_cases(self, accounting_agent):
-        """Test _calculate_period_trends with edge cases"""
+        """Test _calculate_period_trends with edge cases."""
 
         # Test with transactions that have None category (line 956-957)
         transactions = [
@@ -1006,7 +1008,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test missing lines in periodic_check timing
     @pytest.mark.asyncio
     async def test_periodic_check_all_timing_branches(self, accounting_agent, mock_db_session):
-        """Test periodic_check with all timing scenarios"""
+        """Test periodic_check with all timing scenarios."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -1049,7 +1051,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test _process_decision_outcome with needs_adjustment (line 1095)
     @pytest.mark.asyncio
     async def test_process_decision_outcome_needs_adjustment(self, accounting_agent):
-        """Test _process_decision_outcome when adjustment is needed"""
+        """Test _process_decision_outcome when adjustment is needed."""
 
         data = {
             "decision_id": "test_id",
@@ -1073,7 +1075,7 @@ class TestAccountingAgentEnhancedCoverage:
     # Test _analyze_decision_patterns with low accuracy (line 1130)
     @pytest.mark.asyncio
     async def test_analyze_decision_patterns_low_accuracy_case(self, accounting_agent):
-        """Test _analyze_decision_patterns with specific low accuracy case"""
+        """Test _analyze_decision_patterns with specific low accuracy case."""
 
         # Set up decision outcomes with good accuracy (no adjustment needed)
         accounting_agent.decision_outcomes = {

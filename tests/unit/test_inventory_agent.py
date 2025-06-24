@@ -1,6 +1,4 @@
-"""
-Unit tests for InventoryAgent class
-"""
+"""Unit tests for InventoryAgent class."""
 
 import os
 import sys
@@ -21,11 +19,11 @@ from models.inventory import (
 
 
 class TestInventoryAgent:
-    """Test cases for InventoryAgent"""
+    """Test cases for InventoryAgent."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [Mock(text="Inventory analysis: Reorder recommended")]
@@ -34,7 +32,7 @@ class TestInventoryAgent:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -44,7 +42,7 @@ class TestInventoryAgent:
 
     @pytest.fixture
     def agent_config(self):
-        """Inventory agent configuration"""
+        """Inventory agent configuration."""
         return {
             "check_interval": 300,
             "low_stock_multiplier": 1.2,
@@ -54,7 +52,7 @@ class TestInventoryAgent:
 
     @pytest.fixture
     def inventory_agent(self, mock_anthropic, mock_db_session, agent_config):
-        """Create inventory agent instance"""
+        """Create inventory agent instance."""
         return InventoryAgent(
             agent_id="inventory_agent",
             api_key="test_api_key",
@@ -64,7 +62,7 @@ class TestInventoryAgent:
 
     @pytest.fixture
     def sample_item(self):
-        """Create a sample item for testing"""
+        """Create a sample item for testing."""
         return Mock(
             id=1,
             name="Test Item",
@@ -79,14 +77,14 @@ class TestInventoryAgent:
         )
 
     def test_initialization(self, inventory_agent, agent_config):
-        """Test agent initialization"""
+        """Test agent initialization."""
         assert inventory_agent.agent_id == "inventory_agent"
         assert inventory_agent.low_stock_multiplier == 1.2
         assert inventory_agent.reorder_lead_time == 7
         assert inventory_agent.consumption_analysis_days == 30
 
     def test_system_prompt(self, inventory_agent):
-        """Test system prompt content"""
+        """Test system prompt content."""
         prompt = inventory_agent.system_prompt
         assert "AI Inventory Management Agent" in prompt
         assert "stock levels" in prompt
@@ -99,7 +97,7 @@ class TestInventoryAgent:
     async def test_process_data_stock_movement_low_stock_alert(
         self, inventory_agent, mock_db_session, sample_item
     ):
-        """Test stock movement processing that triggers low stock alert"""
+        """Test stock movement processing that triggers low stock alert."""
         movement_data = {"item_id": 1, "movement_type": StockMovementType.OUT, "quantity": 35}
 
         data = {"type": "stock_movement", "movement": movement_data}
@@ -126,7 +124,7 @@ class TestInventoryAgent:
     async def test_process_data_stock_movement_unusual_consumption(
         self, inventory_agent, mock_db_session, sample_item
     ):
-        """Test stock movement processing that detects unusual consumption"""
+        """Test stock movement processing that detects unusual consumption."""
         movement_data = {
             "item_id": 1,
             "movement_type": StockMovementType.OUT,
@@ -153,7 +151,7 @@ class TestInventoryAgent:
     async def test_process_data_stock_movement_normal(
         self, inventory_agent, mock_db_session, sample_item
     ):
-        """Test normal stock movement that doesn't trigger alerts"""
+        """Test normal stock movement that doesn't trigger alerts."""
         movement_data = {
             "item_id": 1,
             "movement_type": StockMovementType.OUT,
@@ -178,7 +176,7 @@ class TestInventoryAgent:
     async def test_process_data_stock_movement_item_not_found(
         self, inventory_agent, mock_db_session
     ):
-        """Test stock movement processing when item is not found"""
+        """Test stock movement processing when item is not found."""
         movement_data = {"item_id": 999, "movement_type": StockMovementType.OUT, "quantity": 10}
 
         data = {"type": "stock_movement", "movement": movement_data}
@@ -195,7 +193,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_daily_inventory_check(self, inventory_agent, mock_db_session):
-        """Test daily inventory check"""
+        """Test daily inventory check."""
         data = {"type": "daily_inventory_check"}
 
         mock_session_instance = Mock()
@@ -231,7 +229,7 @@ class TestInventoryAgent:
     async def test_process_data_daily_inventory_check_no_issues(
         self, inventory_agent, mock_db_session
     ):
-        """Test daily inventory check with no issues"""
+        """Test daily inventory check with no issues."""
         data = {"type": "daily_inventory_check"}
 
         mock_session_instance = Mock()
@@ -249,7 +247,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_reorder_analysis(self, inventory_agent, mock_db_session):
-        """Test reorder analysis"""
+        """Test reorder analysis."""
         data = {"type": "reorder_analysis"}
 
         mock_session_instance = Mock()
@@ -284,7 +282,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_expiry_check(self, inventory_agent, mock_db_session):
-        """Test expiry check"""
+        """Test expiry check."""
         data = {"type": "expiry_check"}
 
         mock_session_instance = Mock()
@@ -315,7 +313,7 @@ class TestInventoryAgent:
     async def test_process_data_expiry_check_no_expiring_items(
         self, inventory_agent, mock_db_session
     ):
-        """Test expiry check with no expiring items"""
+        """Test expiry check with no expiring items."""
         data = {"type": "expiry_check"}
 
         mock_session_instance = Mock()
@@ -335,7 +333,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_supplier_performance(self, inventory_agent, mock_db_session):
-        """Test supplier performance analysis"""
+        """Test supplier performance analysis."""
         data = {"type": "supplier_performance"}
 
         mock_session_instance = Mock()
@@ -389,7 +387,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_generate_report(self, inventory_agent, mock_db_session):
-        """Test report generation"""
+        """Test report generation."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -442,7 +440,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_get_current_alerts(self, inventory_agent, mock_db_session):
-        """Test current alerts generation"""
+        """Test current alerts generation."""
         mock_session_instance = Mock()
 
         # Mock queries for out of stock and low stock counts
@@ -461,7 +459,8 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_analyze_reorder_needs_no_consumption(self, inventory_agent, mock_db_session):
-        """Test reorder analysis with items that have no consumption history"""
+        """Test reorder analysis with items that have no consumption
+        history."""
         mock_session_instance = Mock()
 
         # Mock items
@@ -488,7 +487,7 @@ class TestInventoryAgent:
     async def test_analyze_stock_movement_stock_in(
         self, inventory_agent, mock_db_session, sample_item
     ):
-        """Test stock movement analysis for stock in"""
+        """Test stock movement analysis for stock in."""
         movement_data = {"item_id": 1, "movement_type": StockMovementType.IN, "quantity": 100}
 
         mock_session_instance = Mock()
@@ -504,7 +503,7 @@ class TestInventoryAgent:
         assert decision is None
 
     def test_config_defaults(self):
-        """Test configuration defaults"""
+        """Test configuration defaults."""
         with patch("agents.base_agent.Anthropic"), patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ):
@@ -522,7 +521,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_edge_case_zero_current_stock(self, inventory_agent, mock_db_session):
-        """Test edge case with zero current stock"""
+        """Test edge case with zero current stock."""
         movement_data = {"item_id": 1, "movement_type": StockMovementType.OUT, "quantity": 10}
 
         zero_stock_item = Mock(
@@ -548,7 +547,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_reorder_calculation_logic(self, inventory_agent):
-        """Test reorder quantity calculation logic"""
+        """Test reorder quantity calculation logic."""
         daily_consumption = 5.0
         lead_time = 7
 
@@ -565,7 +564,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_urgency_calculation(self, inventory_agent):
-        """Test urgency level calculation"""
+        """Test urgency level calculation."""
         lead_time = 7
 
         # Critical: <= lead_time * 0.5
@@ -582,7 +581,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_error_handling_in_process_data(self, inventory_agent, mock_db_session):
-        """Test error handling in process_data"""
+        """Test error handling in process_data."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
         mock_session_instance.close.side_effect = Exception("Session close error")
@@ -639,7 +638,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_stock_movement_reorder_trigger(self, inventory_agent, mock_db_session):
-        """Test stock movement that triggers reorder alert"""
+        """Test stock movement that triggers reorder alert."""
         movement_data = {
             "item_id": 1,
             "movement_type": StockMovementType.OUT,
@@ -670,7 +669,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_daily_check_multiple_items(self, inventory_agent, mock_db_session):
-        """Test daily check with multiple items in different states"""
+        """Test daily check with multiple items in different states."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -694,7 +693,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_expiry_check_near_expiration(self, inventory_agent, mock_db_session):
-        """Test expiry check with items near expiration"""
+        """Test expiry check with items near expiration."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -729,7 +728,7 @@ class TestInventoryAgent:
     async def test_stock_movement_zero_quantity(
         self, inventory_agent, mock_db_session, sample_item
     ):
-        """Test stock movement with zero quantity"""
+        """Test stock movement with zero quantity."""
         movement_data = {
             "item_id": 1,
             "movement_type": StockMovementType.OUT,
@@ -753,7 +752,7 @@ class TestInventoryAgent:
     async def test_stock_movement_negative_adjustment(
         self, inventory_agent, mock_db_session, sample_item
     ):
-        """Test negative stock adjustment"""
+        """Test negative stock adjustment."""
         movement_data = {
             "item_id": 1,
             "movement_type": StockMovementType.ADJUSTMENT,
@@ -778,7 +777,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_claude_api_error_handling(self, inventory_agent, mock_db_session, sample_item):
-        """Test Claude API error handling"""
+        """Test Claude API error handling."""
         movement_data = {"item_id": 1, "movement_type": StockMovementType.OUT, "quantity": 20}
 
         mock_session_instance = Mock()
@@ -799,7 +798,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_consumption_calculation_edge_cases(self, inventory_agent, mock_db_session):
-        """Test consumption calculation with edge cases"""
+        """Test consumption calculation with edge cases."""
         # Test with single day consumption data
         movements = [
             Mock(movement_date=datetime.now(), quantity=-5, movement_type=StockMovementType.OUT)
@@ -816,7 +815,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_reorder_calculation_with_zero_consumption(self, inventory_agent):
-        """Test reorder calculation with zero daily consumption"""
+        """Test reorder calculation with zero daily consumption."""
         # Edge case: no consumption in analysis period
         daily_consumption = 0.0
         lead_time = 7
@@ -830,7 +829,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_urgency_calculation_critical_stock(self, inventory_agent):
-        """Test urgency calculation for critical stock levels"""
+        """Test urgency calculation for critical stock levels."""
         # Test critical stock scenario
         current_stock = 2
         daily_consumption = 5.0
@@ -846,7 +845,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_item_not_found_handling(self, inventory_agent, mock_db_session):
-        """Test handling when item is not found in database"""
+        """Test handling when item is not found in database."""
         movement_data = {
             "item_id": 999,  # Non-existent item
             "movement_type": StockMovementType.OUT,
@@ -867,7 +866,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_supplier_analysis_multiple_suppliers(self, inventory_agent, mock_db_session):
-        """Test supplier analysis with multiple suppliers"""
+        """Test supplier analysis with multiple suppliers."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -891,7 +890,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_confidence_score_edge_cases(self, inventory_agent):
-        """Test confidence score calculation with edge cases"""
+        """Test confidence score calculation with edge cases."""
         # Test with no historical data
         analysis_data = {"historical_accuracy": 0.0, "data_points": 0, "pattern_consistency": 0.0}
 
@@ -910,7 +909,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_large_quantity_movements(self, inventory_agent, mock_db_session, sample_item):
-        """Test handling of very large quantity movements"""
+        """Test handling of very large quantity movements."""
         movement_data = {
             "item_id": 1,
             "movement_type": StockMovementType.IN,
@@ -934,7 +933,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_demand_forecast(self, inventory_agent, mock_db_session):
-        """Test demand forecast analysis data type"""
+        """Test demand forecast analysis data type."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -957,7 +956,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_reorder_optimization(self, inventory_agent, mock_db_session):
-        """Test reorder optimization data type"""
+        """Test reorder optimization data type."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -982,7 +981,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_bulk_analysis(self, inventory_agent, mock_db_session):
-        """Test bulk purchase analysis data type"""
+        """Test bulk purchase analysis data type."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -1003,7 +1002,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_claude_api_timeout_handling(self, inventory_agent, mock_db_session, sample_item):
-        """Test Claude API timeout handling"""
+        """Test Claude API timeout handling."""
         movement_data = {"item_id": 1, "movement_type": StockMovementType.OUT, "quantity": 10}
 
         mock_session_instance = Mock()
@@ -1028,7 +1027,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_forecasting_with_insufficient_data(self, inventory_agent, mock_db_session):
-        """Test demand forecasting with insufficient historical data"""
+        """Test demand forecasting with insufficient historical data."""
         # Mock very limited movement data (less than minimum required)
         limited_movements = [
             Mock(movement_date=datetime.now(), quantity=-2, movement_type=StockMovementType.OUT)
@@ -1042,7 +1041,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_movement_with_missing_item_data(self, inventory_agent, mock_db_session):
-        """Test stock movement analysis with missing item attributes"""
+        """Test stock movement analysis with missing item attributes."""
         movement_data = {"item_id": 1, "movement_type": StockMovementType.OUT, "quantity": 5}
 
         # Mock item with missing optional attributes
@@ -1071,7 +1070,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_expiry_analysis_with_no_expiry_dates(self, inventory_agent, mock_db_session):
-        """Test expiry analysis when items have no expiry dates"""
+        """Test expiry analysis when items have no expiry dates."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -1094,7 +1093,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_reorder_calculation_with_zero_lead_time(self, inventory_agent):
-        """Test reorder calculations with zero lead time"""
+        """Test reorder calculations with zero lead time."""
         # Edge case: supplier with zero lead time
         daily_consumption = 5.0
         lead_time = 0  # Same day delivery
@@ -1108,7 +1107,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_supplier_performance_with_no_orders(self, inventory_agent, mock_db_session):
-        """Test supplier performance analysis with no purchase orders"""
+        """Test supplier performance analysis with no purchase orders."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -1125,7 +1124,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_batch_processing_large_inventory(self, inventory_agent, mock_db_session):
-        """Test processing large numbers of inventory items"""
+        """Test processing large numbers of inventory items."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -1148,7 +1147,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_movement_date_edge_cases(self, inventory_agent, mock_db_session, sample_item):
-        """Test stock movements with edge case dates"""
+        """Test stock movements with edge case dates."""
         # Test movement from future date
         future_movement = {
             "item_id": 1,
@@ -1171,7 +1170,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_configuration_edge_cases_inventory(self, mock_anthropic, mock_db_session):
-        """Test inventory agent with edge case configurations"""
+        """Test inventory agent with edge case configurations."""
         # Test with extreme configuration values
         extreme_config = {
             "low_stock_multiplier": 0.0,  # Zero multiplier
@@ -1195,7 +1194,7 @@ class TestInventoryAgent:
 
     @pytest.mark.asyncio
     async def test_concurrent_stock_movements(self, inventory_agent, mock_db_session, sample_item):
-        """Test handling concurrent stock movements for same item"""
+        """Test handling concurrent stock movements for same item."""
         concurrent_movements = [
             {
                 "item_id": 1,

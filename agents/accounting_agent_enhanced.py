@@ -160,8 +160,7 @@ class EnhancedAccountingAgent(BaseAgent):
     async def _detect_transaction_anomalies(
         self, session, transaction: TransactionModel, similar_transactions: List[Transaction]
     ) -> Dict[str, Any]:
-        """
-        Enhanced anomaly detection using multiple algorithms.
+        """Enhanced anomaly detection using multiple algorithms.
 
         Args:
             session: Database session
@@ -600,7 +599,8 @@ class EnhancedAccountingAgent(BaseAgent):
     async def _calculate_forecast_confidence(
         self, daily_flows: Dict[str, float], forecasts: Dict[str, Any]
     ) -> float:
-        """Calculate confidence in the forecast based on data quality and consistency."""
+        """Calculate confidence in the forecast based on data quality and
+        consistency."""
         try:
             # Factor 1: Data consistency (lower variance = higher confidence)
             flow_values = list(daily_flows.values())
@@ -895,7 +895,7 @@ class EnhancedAccountingAgent(BaseAgent):
         return {}
 
     async def periodic_check(self):
-        """Enhanced periodic check with new scheduling"""
+        """Enhanced periodic check with new scheduling."""
         session = self.SessionLocal()
         try:
             current_hour = datetime.now().hour

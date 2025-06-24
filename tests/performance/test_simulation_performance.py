@@ -1,5 +1,4 @@
-"""
-Simulation Performance Tests
+"""Simulation Performance Tests.
 
 Tests for measuring and benchmarking simulation data generation speed,
 memory usage, and efficiency under various conditions.

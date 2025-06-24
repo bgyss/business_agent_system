@@ -1,7 +1,5 @@
-"""
-Test coverage for missing InventoryAgent functionality
-Focuses on testing the untested methods and code paths
-"""
+"""Test coverage for missing InventoryAgent functionality Focuses on testing
+the untested methods and code paths."""
 
 import os
 import sys
@@ -28,11 +26,11 @@ from models.inventory import Item
 
 
 class TestInventoryAgentMissingCoverage:
-    """Test cases for missing coverage in InventoryAgent"""
+    """Test cases for missing coverage in InventoryAgent."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [Mock(text="Advanced inventory analysis completed")]
@@ -41,7 +39,7 @@ class TestInventoryAgentMissingCoverage:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -51,7 +49,7 @@ class TestInventoryAgentMissingCoverage:
 
     @pytest.fixture
     def agent_config(self):
-        """Extended agent configuration"""
+        """Extended agent configuration."""
         return {
             "check_interval": 300,
             "low_stock_multiplier": 1.2,
@@ -64,7 +62,7 @@ class TestInventoryAgentMissingCoverage:
 
     @pytest.fixture
     def agent(self, mock_anthropic, mock_db_session, agent_config):
-        """Create InventoryAgent instance"""
+        """Create InventoryAgent instance."""
         return InventoryAgent(
             agent_id="test_inventory_agent",
             api_key="test_api_key",
@@ -75,7 +73,7 @@ class TestInventoryAgentMissingCoverage:
     # Test NamedTuple structures that exist but aren't tested
 
     def test_demand_forecast_structure(self):
-        """Test DemandForecast NamedTuple structure"""
+        """Test DemandForecast NamedTuple structure."""
         forecast = DemandForecast(
             item_id="ITEM-001",
             predicted_demand=100.5,
@@ -95,7 +93,7 @@ class TestInventoryAgentMissingCoverage:
         assert forecast.forecast_accuracy == 0.85
 
     def test_optimal_reorder_point_structure(self):
-        """Test OptimalReorderPoint NamedTuple structure"""
+        """Test OptimalReorderPoint NamedTuple structure."""
         reorder_point = OptimalReorderPoint(
             item_id="ITEM-001",
             optimal_reorder_point=50,
@@ -117,7 +115,7 @@ class TestInventoryAgentMissingCoverage:
         assert reorder_point.total_cost == Decimal("1500.00")
 
     def test_bulk_purchase_optimization_structure(self):
-        """Test BulkPurchaseOptimization NamedTuple structure"""
+        """Test BulkPurchaseOptimization NamedTuple structure."""
         optimization = BulkPurchaseOptimization(
             item_id="ITEM-001",
             optimal_order_quantity=500,
@@ -137,7 +135,7 @@ class TestInventoryAgentMissingCoverage:
         assert optimization.recommended_purchase_timing == datetime(2023, 12, 1)
 
     def test_supplier_performance_metrics_structure(self):
-        """Test SupplierPerformanceMetrics NamedTuple structure"""
+        """Test SupplierPerformanceMetrics NamedTuple structure."""
         metrics = SupplierPerformanceMetrics(
             supplier_id="SUP-001",
             on_time_delivery_rate=0.92,
@@ -159,7 +157,7 @@ class TestInventoryAgentMissingCoverage:
         assert metrics.recommended_action == "maintain_partnership"
 
     def test_seasonality_analysis_structure(self):
-        """Test SeasonalityAnalysis NamedTuple structure"""
+        """Test SeasonalityAnalysis NamedTuple structure."""
         analysis = SeasonalityAnalysis(
             item_id="ITEM-001",
             seasonal_periods=[7, 30, 365],
@@ -179,7 +177,7 @@ class TestInventoryAgentMissingCoverage:
         assert analysis.confidence == 0.80
 
     def test_item_correlation_analysis_structure(self):
-        """Test ItemCorrelationAnalysis NamedTuple structure"""
+        """Test ItemCorrelationAnalysis NamedTuple structure."""
         analysis = ItemCorrelationAnalysis(
             primary_item_id="ITEM-001",
             correlated_items=[("ITEM-002", 0.8), ("ITEM-003", 0.6)],
@@ -197,7 +195,7 @@ class TestInventoryAgentMissingCoverage:
         assert len(analysis.bundle_opportunities) == 1
 
     def test_supplier_diversification_analysis_structure(self):
-        """Test SupplierDiversificationAnalysis NamedTuple structure"""
+        """Test SupplierDiversificationAnalysis NamedTuple structure."""
         analysis = SupplierDiversificationAnalysis(
             item_id="ITEM-001",
             current_supplier_concentration=0.8,
@@ -219,7 +217,7 @@ class TestInventoryAgentMissingCoverage:
     # Test advanced process data types that aren't covered
 
     async def test_process_data_advanced_reorder_analysis(self, agent, mock_db_session):
-        """Test advanced_reorder_analysis process type"""
+        """Test advanced_reorder_analysis process type."""
         data = {"type": "advanced_reorder_analysis", "item_id": "ITEM-001"}
 
         # Mock the _perform_advanced_reorder_analysis method
@@ -240,7 +238,7 @@ class TestInventoryAgentMissingCoverage:
         mock_method.assert_called_once()
 
     async def test_process_data_demand_forecast_analysis(self, agent, mock_db_session):
-        """Test demand_forecast_analysis process type"""
+        """Test demand_forecast_analysis process type."""
         data = {"type": "demand_forecast_analysis", "item_id": "ITEM-001"}
 
         with patch.object(agent, "_perform_demand_forecast_analysis") as mock_method:
@@ -260,7 +258,7 @@ class TestInventoryAgentMissingCoverage:
         mock_method.assert_called_once()
 
     async def test_process_data_bulk_purchase_analysis(self, agent, mock_db_session):
-        """Test bulk_purchase_analysis process type"""
+        """Test bulk_purchase_analysis process type."""
         data = {"type": "bulk_purchase_analysis", "item_id": "ITEM-001"}
 
         with patch.object(agent, "_perform_bulk_purchase_analysis") as mock_method:
@@ -280,7 +278,7 @@ class TestInventoryAgentMissingCoverage:
         mock_method.assert_called_once()
 
     async def test_process_data_expiry_waste_analysis(self, agent, mock_db_session):
-        """Test expiry_waste_analysis process type"""
+        """Test expiry_waste_analysis process type."""
         data = {"type": "expiry_waste_analysis", "item_id": "ITEM-001"}
 
         with patch.object(agent, "_perform_expiry_waste_analysis") as mock_method:
@@ -300,7 +298,7 @@ class TestInventoryAgentMissingCoverage:
         mock_method.assert_called_once()
 
     async def test_process_data_comprehensive_analytics(self, agent, mock_db_session):
-        """Test comprehensive_analytics process type"""
+        """Test comprehensive_analytics process type."""
         data = {"type": "comprehensive_analytics", "item_id": "ITEM-001"}
 
         with patch.object(agent, "_perform_comprehensive_analytics_analysis") as mock_method:
@@ -322,7 +320,7 @@ class TestInventoryAgentMissingCoverage:
     # Test methods directly where possible to increase coverage
 
     def test_aggregate_daily_consumption(self, agent):
-        """Test _aggregate_daily_consumption method"""
+        """Test _aggregate_daily_consumption method."""
         # Create mock stock movements
         movements = [
             Mock(quantity=10, movement_date=datetime.now() - timedelta(days=1)),
@@ -338,7 +336,7 @@ class TestInventoryAgentMissingCoverage:
         assert all(isinstance(x, float) for x in result)
 
     async def test_calculate_simple_reorder_point(self, agent, mock_db_session):
-        """Test _calculate_simple_reorder_point method"""
+        """Test _calculate_simple_reorder_point method."""
         # Create mock item
         mock_item = Mock()
         mock_item.id = 1
@@ -358,7 +356,7 @@ class TestInventoryAgentMissingCoverage:
         assert result.item_id == 1
 
     def test_estimate_demand_standard_deviation(self, agent, mock_db_session):
-        """Test _estimate_demand_standard_deviation method"""
+        """Test _estimate_demand_standard_deviation method."""
         # Mock stock movements
         mock_movements = [
             Mock(quantity=10, movement_date=datetime.now() - timedelta(days=i)) for i in range(10)
@@ -376,7 +374,7 @@ class TestInventoryAgentMissingCoverage:
             assert isinstance(result, float)
 
     def test_get_z_score_for_service_level(self, agent):
-        """Test _get_z_score_for_service_level method"""
+        """Test _get_z_score_for_service_level method."""
         try:
             # Test various service levels
             service_levels = [0.90, 0.95, 0.99]
@@ -388,7 +386,7 @@ class TestInventoryAgentMissingCoverage:
             pytest.skip("Method _get_z_score_for_service_level not accessible")
 
     def test_calculate_total_inventory_cost(self, agent):
-        """Test _calculate_total_inventory_cost method"""
+        """Test _calculate_total_inventory_cost method."""
         annual_demand = 1000.0
         order_quantity = 100
         unit_cost = 10.0
@@ -405,7 +403,7 @@ class TestInventoryAgentMissingCoverage:
     # Test error handling paths
 
     async def test_process_data_invalid_analysis_type(self, agent, mock_db_session):
-        """Test process_data with invalid analysis type"""
+        """Test process_data with invalid analysis type."""
         data = {"type": "invalid_analysis_type", "item_id": "ITEM-001"}
 
         result = await agent.process_data(data)
@@ -414,7 +412,7 @@ class TestInventoryAgentMissingCoverage:
         assert result is None or isinstance(result, AgentDecision)
 
     async def test_process_data_missing_item_id(self, agent, mock_db_session):
-        """Test process_data with missing item_id"""
+        """Test process_data with missing item_id."""
         data = {
             "type": "stock_movement"
             # Missing item_id
@@ -426,7 +424,7 @@ class TestInventoryAgentMissingCoverage:
         assert result is None or isinstance(result, AgentDecision)
 
     async def test_process_data_database_error(self, agent, mock_db_session):
-        """Test process_data with database errors"""
+        """Test process_data with database errors."""
         # Make database queries fail
         mock_db_session.query.side_effect = Exception("Database connection failed")
 
@@ -443,7 +441,7 @@ class TestInventoryAgentMissingCoverage:
     # Test configuration edge cases
 
     def test_config_with_missing_values(self, mock_anthropic, mock_db_session):
-        """Test agent with minimal configuration"""
+        """Test agent with minimal configuration."""
         minimal_config = {
             "check_interval": 300
             # Missing many optional config values
@@ -462,7 +460,7 @@ class TestInventoryAgentMissingCoverage:
         assert hasattr(agent, "consumption_analysis_days")
 
     def test_config_with_invalid_values(self, mock_anthropic, mock_db_session):
-        """Test agent with invalid configuration values"""
+        """Test agent with invalid configuration values."""
         invalid_config = {
             "check_interval": 300,
             "low_stock_multiplier": -1.0,  # Invalid negative
@@ -486,7 +484,7 @@ class TestInventoryAgentMissingCoverage:
     # Test system prompt coverage
 
     def test_system_prompt_contains_key_elements(self, agent):
-        """Test that system prompt contains expected elements"""
+        """Test that system prompt contains expected elements."""
         prompt = agent.system_prompt
 
         assert isinstance(prompt, str)
@@ -497,7 +495,7 @@ class TestInventoryAgentMissingCoverage:
     # Test generate_report method coverage
 
     async def test_generate_report_basic(self, agent, mock_db_session):
-        """Test generate_report method"""
+        """Test generate_report method."""
         # Mock basic inventory data
         mock_item1 = Mock()
         mock_item1.id = 1

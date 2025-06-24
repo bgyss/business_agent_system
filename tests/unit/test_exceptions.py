@@ -1,6 +1,4 @@
-"""
-Test suite for exceptions.py module
-"""
+"""Test suite for exceptions.py module."""
 
 from datetime import datetime
 
@@ -49,10 +47,10 @@ from exceptions import (
 
 
 class TestBusinessAgentException:
-    """Test base BusinessAgentException class"""
+    """Test base BusinessAgentException class."""
 
     def test_basic_initialization(self):
-        """Test basic exception initialization"""
+        """Test basic exception initialization."""
         message = "Test error message"
         exc = BusinessAgentException(message)
 
@@ -63,7 +61,7 @@ class TestBusinessAgentException:
         assert isinstance(exc.timestamp, datetime)
 
     def test_initialization_with_error_code(self):
-        """Test exception initialization with custom error code"""
+        """Test exception initialization with custom error code."""
         message = "Test error"
         error_code = "CUSTOM_ERROR"
         exc = BusinessAgentException(message, error_code=error_code)
@@ -71,7 +69,7 @@ class TestBusinessAgentException:
         assert exc.error_code == error_code
 
     def test_initialization_with_context(self):
-        """Test exception initialization with context"""
+        """Test exception initialization with context."""
         message = "Test error"
         context = {"key": "value", "number": 42}
         exc = BusinessAgentException(message, context=context)
@@ -79,7 +77,7 @@ class TestBusinessAgentException:
         assert exc.context == context
 
     def test_to_dict(self):
-        """Test exception serialization to dictionary"""
+        """Test exception serialization to dictionary."""
         message = "Test error"
         error_code = "TEST_ERROR"
         context = {"test": True}
@@ -97,34 +95,34 @@ class TestBusinessAgentException:
 
 
 class TestAgentExceptions:
-    """Test agent-related exceptions"""
+    """Test agent-related exceptions."""
 
     def test_agent_error_inheritance(self):
-        """Test AgentError inherits from BusinessAgentException"""
+        """Test AgentError inherits from BusinessAgentException."""
         exc = AgentError("test")
         assert isinstance(exc, BusinessAgentException)
         assert exc.error_code == "AgentError"
 
     def test_agent_initialization_error(self):
-        """Test AgentInitializationError"""
+        """Test AgentInitializationError."""
         exc = AgentInitializationError("Failed to initialize")
         assert isinstance(exc, AgentError)
         assert "Failed to initialize" in str(exc)
 
     def test_agent_decision_error(self):
-        """Test AgentDecisionError"""
+        """Test AgentDecisionError."""
         exc = AgentDecisionError("Decision failed")
         assert isinstance(exc, AgentError)
         assert "Decision failed" in str(exc)
 
     def test_agent_communication_error(self):
-        """Test AgentCommunicationError"""
+        """Test AgentCommunicationError."""
         exc = AgentCommunicationError("Communication failed")
         assert isinstance(exc, AgentError)
         assert "Communication failed" in str(exc)
 
     def test_claude_api_error(self):
-        """Test ClaudeAPIError with API response and retry count"""
+        """Test ClaudeAPIError with API response and retry count."""
         api_response = {"error": "rate_limit", "retry_after": 30}
         retry_count = 3
         exc = ClaudeAPIError("API call failed", api_response=api_response, retry_count=retry_count)
@@ -138,20 +136,20 @@ class TestAgentExceptions:
 
 
 class TestDatabaseExceptions:
-    """Test database-related exceptions"""
+    """Test database-related exceptions."""
 
     def test_database_error_inheritance(self):
-        """Test DatabaseError inherits from BusinessAgentException"""
+        """Test DatabaseError inherits from BusinessAgentException."""
         exc = DatabaseError("test")
         assert isinstance(exc, BusinessAgentException)
 
     def test_database_connection_error(self):
-        """Test DatabaseConnectionError"""
+        """Test DatabaseConnectionError."""
         exc = DatabaseConnectionError("Connection failed")
         assert isinstance(exc, DatabaseError)
 
     def test_database_transaction_error(self):
-        """Test DatabaseTransactionError with operation and table"""
+        """Test DatabaseTransactionError with operation and table."""
         operation = "INSERT"
         table = "transactions"
         exc = DatabaseTransactionError("Transaction failed", operation=operation, table=table)
@@ -164,12 +162,12 @@ class TestDatabaseExceptions:
         assert exc.context["table"] == table
 
     def test_database_integrity_error(self):
-        """Test DatabaseIntegrityError"""
+        """Test DatabaseIntegrityError."""
         exc = DatabaseIntegrityError("Integrity constraint violated")
         assert isinstance(exc, DatabaseError)
 
     def test_data_validation_error(self):
-        """Test DataValidationError with field and value"""
+        """Test DataValidationError with field and value."""
         field = "email"
         value = "invalid-email"
         exc = DataValidationError("Invalid email format", field=field, value=value)
@@ -183,20 +181,20 @@ class TestDatabaseExceptions:
 
 
 class TestConfigurationExceptions:
-    """Test configuration-related exceptions"""
+    """Test configuration-related exceptions."""
 
     def test_configuration_error_inheritance(self):
-        """Test ConfigurationError inherits from BusinessAgentException"""
+        """Test ConfigurationError inherits from BusinessAgentException."""
         exc = ConfigurationError("test")
         assert isinstance(exc, BusinessAgentException)
 
     def test_config_file_not_found_error(self):
-        """Test ConfigFileNotFoundError"""
+        """Test ConfigFileNotFoundError."""
         exc = ConfigFileNotFoundError("Config file missing")
         assert isinstance(exc, ConfigurationError)
 
     def test_config_validation_error(self):
-        """Test ConfigValidationError with section and missing keys"""
+        """Test ConfigValidationError with section and missing keys."""
         section = "database"
         missing_keys = ["url", "password"]
         exc = ConfigValidationError(
@@ -211,7 +209,7 @@ class TestConfigurationExceptions:
         assert exc.context["missing_keys"] == missing_keys
 
     def test_environment_variable_error(self):
-        """Test EnvironmentVariableError"""
+        """Test EnvironmentVariableError."""
         var_name = "ANTHROPIC_API_KEY"
         exc = EnvironmentVariableError("Missing env var", variable_name=var_name)
 
@@ -222,20 +220,20 @@ class TestConfigurationExceptions:
 
 
 class TestSimulationExceptions:
-    """Test simulation-related exceptions"""
+    """Test simulation-related exceptions."""
 
     def test_simulation_error_inheritance(self):
-        """Test SimulationError inherits from BusinessAgentException"""
+        """Test SimulationError inherits from BusinessAgentException."""
         exc = SimulationError("test")
         assert isinstance(exc, BusinessAgentException)
 
     def test_simulation_initialization_error(self):
-        """Test SimulationInitializationError"""
+        """Test SimulationInitializationError."""
         exc = SimulationInitializationError("Simulation init failed")
         assert isinstance(exc, SimulationError)
 
     def test_data_generation_error(self):
-        """Test DataGenerationError with data type and period"""
+        """Test DataGenerationError with data type and period."""
         data_type = "financial"
         period = "2023-Q1"
         exc = DataGenerationError("Data generation failed", data_type=data_type, period=period)
@@ -248,21 +246,21 @@ class TestSimulationExceptions:
         assert exc.context["period"] == period
 
     def test_business_profile_error(self):
-        """Test BusinessProfileError"""
+        """Test BusinessProfileError."""
         exc = BusinessProfileError("Invalid business profile")
         assert isinstance(exc, SimulationError)
 
 
 class TestExternalServiceExceptions:
-    """Test external service exceptions"""
+    """Test external service exceptions."""
 
     def test_external_service_error_inheritance(self):
-        """Test ExternalServiceError inherits from BusinessAgentException"""
+        """Test ExternalServiceError inherits from BusinessAgentException."""
         exc = ExternalServiceError("test")
         assert isinstance(exc, BusinessAgentException)
 
     def test_api_rate_limit_error(self):
-        """Test APIRateLimitError with service and retry_after"""
+        """Test APIRateLimitError with service and retry_after."""
         service = "anthropic"
         retry_after = 60
         exc = APIRateLimitError("Rate limit exceeded", service=service, retry_after=retry_after)
@@ -275,7 +273,7 @@ class TestExternalServiceExceptions:
         assert exc.context["retry_after"] == retry_after
 
     def test_service_unavailable_error(self):
-        """Test ServiceUnavailableError with service and status code"""
+        """Test ServiceUnavailableError with service and status code."""
         service = "database"
         status_code = 503
         exc = ServiceUnavailableError("Service down", service=service, status_code=status_code)
@@ -289,15 +287,15 @@ class TestExternalServiceExceptions:
 
 
 class TestBusinessLogicExceptions:
-    """Test business logic exceptions"""
+    """Test business logic exceptions."""
 
     def test_business_logic_error_inheritance(self):
-        """Test BusinessLogicError inherits from BusinessAgentException"""
+        """Test BusinessLogicError inherits from BusinessAgentException."""
         exc = BusinessLogicError("test")
         assert isinstance(exc, BusinessAgentException)
 
     def test_insufficient_data_error(self):
-        """Test InsufficientDataError with data type and counts"""
+        """Test InsufficientDataError with data type and counts."""
         data_type = "transactions"
         required_count = 10
         actual_count = 3
@@ -318,7 +316,7 @@ class TestBusinessLogicExceptions:
         assert exc.context["actual_count"] == actual_count
 
     def test_business_rule_violation_error(self):
-        """Test BusinessRuleViolationError with rule name and value"""
+        """Test BusinessRuleViolationError with rule name and value."""
         rule_name = "max_transaction_amount"
         rule_value = 10000
         exc = BusinessRuleViolationError(
@@ -333,7 +331,7 @@ class TestBusinessLogicExceptions:
         assert exc.context["rule_value"] == str(rule_value)
 
     def test_inventory_error(self):
-        """Test InventoryError with SKU and stock"""
+        """Test InventoryError with SKU and stock."""
         item_sku = "SKU-001"
         current_stock = 5
         exc = InventoryError("Low stock", item_sku=item_sku, current_stock=current_stock)
@@ -347,15 +345,15 @@ class TestBusinessLogicExceptions:
 
 
 class TestFinancialExceptions:
-    """Test financial exceptions"""
+    """Test financial exceptions."""
 
     def test_financial_error_inheritance(self):
-        """Test FinancialError inherits from BusinessLogicError"""
+        """Test FinancialError inherits from BusinessLogicError."""
         exc = FinancialError("test")
         assert isinstance(exc, BusinessLogicError)
 
     def test_insufficient_funds_error(self):
-        """Test InsufficientFundsError with amounts"""
+        """Test InsufficientFundsError with amounts."""
         available_amount = 100.50
         required_amount = 200.75
         exc = InsufficientFundsError(
@@ -370,12 +368,12 @@ class TestFinancialExceptions:
         assert exc.context["required_amount"] == required_amount
 
     def test_cash_flow_error(self):
-        """Test CashFlowError"""
+        """Test CashFlowError."""
         exc = CashFlowError("Cash flow issue")
         assert isinstance(exc, FinancialError)
 
     def test_accounting_anomaly_error(self):
-        """Test AccountingAnomalyError with transaction ID and score"""
+        """Test AccountingAnomalyError with transaction ID and score."""
         transaction_id = "TXN-12345"
         anomaly_score = 0.95
         exc = AccountingAnomalyError(
@@ -391,15 +389,15 @@ class TestFinancialExceptions:
 
 
 class TestDashboardExceptions:
-    """Test dashboard exceptions"""
+    """Test dashboard exceptions."""
 
     def test_dashboard_error_inheritance(self):
-        """Test DashboardError inherits from BusinessAgentException"""
+        """Test DashboardError inherits from BusinessAgentException."""
         exc = DashboardError("test")
         assert isinstance(exc, BusinessAgentException)
 
     def test_data_visualization_error(self):
-        """Test DataVisualizationError with chart type and data count"""
+        """Test DataVisualizationError with chart type and data count."""
         chart_type = "line_chart"
         data_count = 100
         exc = DataVisualizationError("Viz failed", chart_type=chart_type, data_count=data_count)
@@ -412,21 +410,21 @@ class TestDashboardExceptions:
         assert exc.context["data_count"] == data_count
 
     def test_report_generation_error(self):
-        """Test ReportGenerationError"""
+        """Test ReportGenerationError."""
         exc = ReportGenerationError("Report failed")
         assert isinstance(exc, DashboardError)
 
 
 class TestSystemExceptions:
-    """Test system-level exceptions"""
+    """Test system-level exceptions."""
 
     def test_system_error_inheritance(self):
-        """Test SystemError inherits from BusinessAgentException"""
+        """Test SystemError inherits from BusinessAgentException."""
         exc = SystemError("test")
         assert isinstance(exc, BusinessAgentException)
 
     def test_resource_exhaustion_error(self):
-        """Test ResourceExhaustionError with resource info"""
+        """Test ResourceExhaustionError with resource info."""
         resource_type = "memory"
         current_usage = 95.5
         limit = 100.0
@@ -447,7 +445,7 @@ class TestSystemExceptions:
         assert exc.context["limit"] == limit
 
     def test_timeout_error(self):
-        """Test TimeoutError with operation and timeout"""
+        """Test TimeoutError with operation and timeout."""
         operation = "database_query"
         timeout_seconds = 30
         exc = TimeoutError(
@@ -463,10 +461,10 @@ class TestSystemExceptions:
 
 
 class TestRecoveryExceptions:
-    """Test recovery and retry related exceptions"""
+    """Test recovery and retry related exceptions."""
 
     def test_recoverable_error(self):
-        """Test RecoverableError with retry parameters"""
+        """Test RecoverableError with retry parameters."""
         max_retries = 5
         backoff_seconds = 2
         exc = RecoverableError(
@@ -480,16 +478,16 @@ class TestRecoveryExceptions:
         assert exc.context["backoff_seconds"] == backoff_seconds
 
     def test_non_recoverable_error(self):
-        """Test NonRecoverableError"""
+        """Test NonRecoverableError."""
         exc = NonRecoverableError("Fatal error")
         assert isinstance(exc, BusinessAgentException)
 
 
 class TestExceptionMapping:
-    """Test exception mapping and factory functions"""
+    """Test exception mapping and factory functions."""
 
     def test_error_type_mapping_contents(self):
-        """Test ERROR_TYPE_MAPPING contains expected mappings"""
+        """Test ERROR_TYPE_MAPPING contains expected mappings."""
         expected_mappings = {
             "database": DatabaseError,
             "agent": AgentError,
@@ -504,7 +502,7 @@ class TestExceptionMapping:
         assert ERROR_TYPE_MAPPING == expected_mappings
 
     def test_create_exception_known_type(self):
-        """Test create_exception with known error type"""
+        """Test create_exception with known error type."""
         message = "Database connection failed"
         exc = create_exception("database", message)
 
@@ -512,7 +510,7 @@ class TestExceptionMapping:
         assert str(exc) == message
 
     def test_create_exception_unknown_type(self):
-        """Test create_exception with unknown error type falls back to base"""
+        """Test create_exception with unknown error type falls back to base."""
         message = "Unknown error"
         exc = create_exception("unknown_type", message)
 
@@ -520,7 +518,7 @@ class TestExceptionMapping:
         assert str(exc) == message
 
     def test_create_exception_with_kwargs(self):
-        """Test create_exception passes through kwargs"""
+        """Test create_exception passes through kwargs."""
         message = "Database error"
         error_code = "CUSTOM_DB_ERROR"
         context = {"table": "users"}
@@ -532,10 +530,10 @@ class TestExceptionMapping:
 
 
 class TestExceptionEdgeCases:
-    """Test edge cases and error conditions"""
+    """Test edge cases and error conditions."""
 
     def test_exception_with_none_values(self):
-        """Test exceptions handle None values gracefully"""
+        """Test exceptions handle None values gracefully."""
         exc = DataValidationError("Error", field=None, value=None)
         assert exc.field is None
         assert exc.value is None
@@ -544,7 +542,7 @@ class TestExceptionEdgeCases:
         assert "value" not in exc.context
 
     def test_exception_with_zero_values(self):
-        """Test exceptions handle zero values correctly"""
+        """Test exceptions handle zero values correctly."""
         exc = InsufficientDataError("Error", required_count=0, actual_count=0)
         assert exc.required_count == 0
         assert exc.actual_count == 0
@@ -553,7 +551,7 @@ class TestExceptionEdgeCases:
         assert exc.context["actual_count"] == 0
 
     def test_exception_context_update_preserves_existing(self):
-        """Test that context updates preserve existing context"""
+        """Test that context updates preserve existing context."""
         initial_context = {"existing_key": "existing_value"}
         exc = BusinessAgentException("Error", context=initial_context)
 
@@ -564,13 +562,13 @@ class TestExceptionEdgeCases:
         assert exc.context["new_key"] == "new_value"
 
     def test_exception_str_representation(self):
-        """Test string representation of exceptions"""
+        """Test string representation of exceptions."""
         message = "Test error message"
         exc = BusinessAgentException(message)
         assert str(exc) == message
 
     def test_exception_inheritance_chain(self):
-        """Test inheritance chain is correct"""
+        """Test inheritance chain is correct."""
         exc = InventoryError("Test")
 
         assert isinstance(exc, InventoryError)
@@ -579,7 +577,7 @@ class TestExceptionEdgeCases:
         assert isinstance(exc, Exception)
 
     def test_timestamp_is_recent(self):
-        """Test that exception timestamp is recent"""
+        """Test that exception timestamp is recent."""
         before = datetime.now()
         exc = BusinessAgentException("Test")
         after = datetime.now()
@@ -587,7 +585,7 @@ class TestExceptionEdgeCases:
         assert before <= exc.timestamp <= after
 
     def test_to_dict_handles_complex_context(self):
-        """Test to_dict handles complex context values"""
+        """Test to_dict handles complex context values."""
         complex_context = {
             "list": [1, 2, 3],
             "dict": {"nested": "value"},

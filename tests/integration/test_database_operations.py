@@ -1,6 +1,4 @@
-"""
-Integration tests for database operations and data persistence.
-"""
+"""Integration tests for database operations and data persistence."""
 
 from datetime import datetime, timedelta
 from decimal import Decimal

@@ -1,5 +1,4 @@
-"""
-Performance testing suite for the Business Agent System.
+"""Performance testing suite for the Business Agent System.
 
 This module contains comprehensive performance tests and benchmarks for:
 - Agent decision processing speed and memory usage

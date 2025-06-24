@@ -1,7 +1,5 @@
-"""
-Specific coverage tests for InventoryAgent targeting actual methods
-This file focuses on testing methods that actually exist in the inventory agent
-"""
+"""Specific coverage tests for InventoryAgent targeting actual methods This
+file focuses on testing methods that actually exist in the inventory agent."""
 
 import os
 import sys
@@ -26,11 +24,11 @@ from agents.inventory_agent import (
 
 
 class TestInventoryAgentSpecificCoverage:
-    """Test specific methods that exist in InventoryAgent"""
+    """Test specific methods that exist in InventoryAgent."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [Mock(text="Analysis completed")]
@@ -39,7 +37,7 @@ class TestInventoryAgentSpecificCoverage:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         session = Mock()
         query_mock = Mock()
         filter_mock = Mock()
@@ -58,7 +56,7 @@ class TestInventoryAgentSpecificCoverage:
 
     @pytest.fixture
     def inventory_agent(self, mock_anthropic, mock_db_session):
-        """Create inventory agent"""
+        """Create inventory agent."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -84,7 +82,7 @@ class TestInventoryAgentSpecificCoverage:
 
     # Test the Z-score calculation method that actually exists
     def test_get_z_score_for_service_level(self, inventory_agent):
-        """Test Z-score calculation for service levels"""
+        """Test Z-score calculation for service levels."""
         # Test exact matches
         assert inventory_agent._get_z_score_for_service_level(0.50) == 0.00
         assert inventory_agent._get_z_score_for_service_level(0.95) == 1.65
@@ -105,7 +103,7 @@ class TestInventoryAgentSpecificCoverage:
     # Test process_data branches that actually exist
     @pytest.mark.asyncio
     async def test_process_data_stock_movement(self, inventory_agent, mock_db_session):
-        """Test stock movement processing"""
+        """Test stock movement processing."""
         data = {
             "type": "stock_movement",
             "movement": {"item_id": "test-item", "quantity": 10, "movement_type": "in"},
@@ -118,7 +116,7 @@ class TestInventoryAgentSpecificCoverage:
 
     @pytest.mark.asyncio
     async def test_process_data_daily_inventory_check(self, inventory_agent, mock_db_session):
-        """Test daily inventory check processing"""
+        """Test daily inventory check processing."""
         data = {"type": "daily_inventory_check"}
 
         # Mock the _perform_daily_inventory_check method
@@ -128,7 +126,7 @@ class TestInventoryAgentSpecificCoverage:
 
     @pytest.mark.asyncio
     async def test_process_data_reorder_analysis(self, inventory_agent, mock_db_session):
-        """Test reorder analysis processing"""
+        """Test reorder analysis processing."""
         data = {"type": "reorder_analysis"}
 
         # Mock the _analyze_reorder_needs method
@@ -138,7 +136,7 @@ class TestInventoryAgentSpecificCoverage:
 
     @pytest.mark.asyncio
     async def test_process_data_expiry_check(self, inventory_agent, mock_db_session):
-        """Test expiry check processing"""
+        """Test expiry check processing."""
         data = {"type": "expiry_check"}
 
         # Mock the _check_expiring_items method
@@ -148,7 +146,7 @@ class TestInventoryAgentSpecificCoverage:
 
     @pytest.mark.asyncio
     async def test_process_data_supplier_performance(self, inventory_agent, mock_db_session):
-        """Test supplier performance processing"""
+        """Test supplier performance processing."""
         data = {"type": "supplier_performance"}
 
         # Mock the _analyze_supplier_performance method
@@ -161,7 +159,7 @@ class TestInventoryAgentSpecificCoverage:
     async def test_process_data_seasonality_analysis_no_item_id(
         self, inventory_agent, mock_db_session
     ):
-        """Test seasonality analysis without item_id"""
+        """Test seasonality analysis without item_id."""
         data = {"type": "seasonality_analysis"}
 
         result = await inventory_agent.process_data(data)
@@ -171,7 +169,7 @@ class TestInventoryAgentSpecificCoverage:
     async def test_process_data_seasonality_analysis_no_results(
         self, inventory_agent, mock_db_session
     ):
-        """Test seasonality analysis with no seasonality found"""
+        """Test seasonality analysis with no seasonality found."""
         data = {"type": "seasonality_analysis", "item_id": "test-item"}
 
         # Mock analyze_seasonality_patterns to return None
@@ -183,7 +181,7 @@ class TestInventoryAgentSpecificCoverage:
     async def test_process_data_seasonality_analysis_with_results(
         self, inventory_agent, mock_db_session
     ):
-        """Test seasonality analysis with successful results"""
+        """Test seasonality analysis with successful results."""
         data = {"type": "seasonality_analysis", "item_id": "test-item"}
 
         mock_seasonality = SeasonalityAnalysis(
@@ -211,7 +209,7 @@ class TestInventoryAgentSpecificCoverage:
     async def test_process_data_correlation_analysis_no_item_id(
         self, inventory_agent, mock_db_session
     ):
-        """Test correlation analysis without item_id"""
+        """Test correlation analysis without item_id."""
         data = {"type": "correlation_analysis"}
 
         result = await inventory_agent.process_data(data)
@@ -221,7 +219,7 @@ class TestInventoryAgentSpecificCoverage:
     async def test_process_data_correlation_analysis_no_results(
         self, inventory_agent, mock_db_session
     ):
-        """Test correlation analysis with no correlations found"""
+        """Test correlation analysis with no correlations found."""
         data = {"type": "correlation_analysis", "item_id": "test-item"}
 
         # Mock analyze_item_correlations to return None
@@ -234,7 +232,7 @@ class TestInventoryAgentSpecificCoverage:
     async def test_process_data_supplier_diversification_no_item_id(
         self, inventory_agent, mock_db_session
     ):
-        """Test supplier diversification analysis without item_id"""
+        """Test supplier diversification analysis without item_id."""
         data = {"type": "supplier_diversification_analysis"}
 
         result = await inventory_agent.process_data(data)
@@ -244,7 +242,7 @@ class TestInventoryAgentSpecificCoverage:
     async def test_process_data_supplier_diversification_no_results(
         self, inventory_agent, mock_db_session
     ):
-        """Test supplier diversification analysis with no results"""
+        """Test supplier diversification analysis with no results."""
         data = {"type": "supplier_diversification_analysis", "item_id": "test-item"}
 
         # Mock analyze_supplier_diversification to return None
@@ -255,7 +253,7 @@ class TestInventoryAgentSpecificCoverage:
     # Test unknown data type
     @pytest.mark.asyncio
     async def test_process_data_unknown_type(self, inventory_agent, mock_db_session):
-        """Test processing unknown data type"""
+        """Test processing unknown data type."""
         data = {"type": "unknown_analysis_type"}
 
         result = await inventory_agent.process_data(data)
@@ -264,13 +262,13 @@ class TestInventoryAgentSpecificCoverage:
     # Test empty data
     @pytest.mark.asyncio
     async def test_process_data_empty_data(self, inventory_agent, mock_db_session):
-        """Test processing empty data"""
+        """Test processing empty data."""
         result = await inventory_agent.process_data({})
         assert result is None
 
     # Test the system prompt property
     def test_system_prompt_property(self, inventory_agent):
-        """Test system prompt property"""
+        """Test system prompt property."""
         prompt = inventory_agent.system_prompt
 
         assert isinstance(prompt, str)
@@ -281,7 +279,7 @@ class TestInventoryAgentSpecificCoverage:
 
     # Test configuration initialization with all parameters
     def test_full_configuration_initialization(self):
-        """Test configuration initialization with all parameters"""
+        """Test configuration initialization with all parameters."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ), patch("agents.base_agent.Anthropic"):
@@ -319,7 +317,7 @@ class TestInventoryAgentSpecificCoverage:
 
     # Test configuration defaults
     def test_configuration_defaults(self):
-        """Test configuration defaults when config is empty"""
+        """Test configuration defaults when config is empty."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ), patch("agents.base_agent.Anthropic"):
@@ -344,7 +342,7 @@ class TestInventoryAgentSpecificCoverage:
     # Test exception handling in process_data
     @pytest.mark.asyncio
     async def test_process_data_exception_handling(self, inventory_agent, mock_db_session):
-        """Test exception handling in process_data"""
+        """Test exception handling in process_data."""
         mock_db_session.query.side_effect = Exception("Database error")
 
         # Should handle exceptions gracefully
@@ -353,7 +351,7 @@ class TestInventoryAgentSpecificCoverage:
 
     # Test the NamedTuple classes to ensure they're instantiated correctly
     def test_demand_forecast_namedtuple(self):
-        """Test DemandForecast NamedTuple creation"""
+        """Test DemandForecast NamedTuple creation."""
         forecast = DemandForecast(
             item_id="test-item",
             predicted_demand=25.0,
@@ -369,7 +367,7 @@ class TestInventoryAgentSpecificCoverage:
         assert forecast.forecast_accuracy == 0.85
 
     def test_optimal_reorder_point_namedtuple(self):
-        """Test OptimalReorderPoint NamedTuple creation"""
+        """Test OptimalReorderPoint NamedTuple creation."""
         reorder = OptimalReorderPoint(
             item_id="test-item",
             optimal_reorder_point=30,
@@ -386,7 +384,7 @@ class TestInventoryAgentSpecificCoverage:
         assert reorder.service_level == 0.95
 
     def test_bulk_purchase_optimization_namedtuple(self):
-        """Test BulkPurchaseOptimization NamedTuple creation"""
+        """Test BulkPurchaseOptimization NamedTuple creation."""
         bulk = BulkPurchaseOptimization(
             item_id="test-item",
             optimal_order_quantity=500,
@@ -402,7 +400,7 @@ class TestInventoryAgentSpecificCoverage:
         assert bulk.total_cost_savings == Decimal("250.00")
 
     def test_seasonality_analysis_namedtuple(self):
-        """Test SeasonalityAnalysis NamedTuple creation"""
+        """Test SeasonalityAnalysis NamedTuple creation."""
         seasonality = SeasonalityAnalysis(
             item_id="test-item",
             seasonal_periods=[7, 30],
@@ -418,7 +416,7 @@ class TestInventoryAgentSpecificCoverage:
         assert seasonality.confidence == 0.85
 
     def test_item_correlation_analysis_namedtuple(self):
-        """Test ItemCorrelationAnalysis NamedTuple creation"""
+        """Test ItemCorrelationAnalysis NamedTuple creation."""
         correlations = ItemCorrelationAnalysis(
             primary_item_id="test-item",
             correlated_items=[("item2", 0.85), ("item3", 0.72)],
@@ -433,7 +431,7 @@ class TestInventoryAgentSpecificCoverage:
         assert correlations.impact_factor == 0.8
 
     def test_supplier_diversification_analysis_namedtuple(self):
-        """Test SupplierDiversificationAnalysis NamedTuple creation"""
+        """Test SupplierDiversificationAnalysis NamedTuple creation."""
         diversification = SupplierDiversificationAnalysis(
             item_id="test-item",
             current_supplier_concentration=0.9,
@@ -451,7 +449,7 @@ class TestInventoryAgentSpecificCoverage:
         assert diversification.risk_score == 0.7
 
     def test_supplier_performance_metrics_namedtuple(self):
-        """Test SupplierPerformanceMetrics NamedTuple creation"""
+        """Test SupplierPerformanceMetrics NamedTuple creation."""
         metrics = SupplierPerformanceMetrics(
             supplier_id="sup1",
             on_time_delivery_rate=0.95,

@@ -148,6 +148,8 @@ make test                     # Run tests
 make lint                     # Check code quality
 make format                   # Format code
 make type-check              # Type checking
+make pre-commit-install      # Install pre-commit hooks
+make pre-commit              # Run all pre-commit hooks
 
 # Run applications
 make run-restaurant          # Start restaurant system

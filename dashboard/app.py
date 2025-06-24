@@ -27,10 +27,7 @@ from models.inventory import Item, StockMovement
 
 # Try to import agent classes for decision history
 try:
-    from agents.accounting_agent import AccountingAgent
     from agents.base_agent import AgentDecision
-    from agents.hr_agent import HRAgent
-    from agents.inventory_agent import InventoryAgent
 except ImportError:
     AgentDecision = None
 
@@ -276,7 +273,7 @@ class BusinessDashboard:
             session.close()
 
     def get_recent_stock_movements(self, limit: int = 10):
-        """Get recent stock movements for inventory tracking"""
+        """Get recent stock movements for inventory tracking."""
         session = self.SessionLocal()
         try:
             # Join with Item to get item name
@@ -306,9 +303,7 @@ class BusinessDashboard:
             session.close()
 
     def load_agent_decisions(self, limit: int = 20) -> List[Dict[str, Any]]:
-        """
-        Load recent agent decisions from the database
-        """
+        """Load recent agent decisions from the database."""
         session = self.SessionLocal()
         try:
             # Get recent decisions ordered by timestamp
@@ -366,7 +361,7 @@ class BusinessDashboard:
             session.close()
 
     def get_agent_status(self) -> Dict[str, Any]:
-        """Get status of all configured agents"""
+        """Get status of all configured agents."""
         agent_status = {}
 
         # Check which agents are enabled in config
@@ -473,7 +468,7 @@ def main():
 
 
 def show_live_monitoring_view(dashboard):
-    """Display live agent monitoring with real-time updates"""
+    """Display live agent monitoring with real-time updates."""
     st.header("🔴 Live Agent Monitoring")
 
     # Auto-refresh configuration
@@ -608,7 +603,7 @@ def show_live_monitoring_view(dashboard):
 
 
 def show_historical_analytics_view(dashboard, time_period):
-    """Display historical analytics and reports"""
+    """Display historical analytics and reports."""
     st.header("📊 Historical Analytics")
 
     # Main dashboard content

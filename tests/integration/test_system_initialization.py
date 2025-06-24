@@ -1,6 +1,4 @@
-"""
-Integration tests for system initialization and configuration.
-"""
+"""Integration tests for system initialization and configuration."""
 
 import os
 import tempfile

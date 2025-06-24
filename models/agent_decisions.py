@@ -10,7 +10,7 @@ from models.financial import Base
 
 
 def serialize_context(context: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    """Convert Decimal objects to float for JSON serialization"""
+    """Convert Decimal objects to float for JSON serialization."""
     if not context:
         return context
 
@@ -30,7 +30,7 @@ def serialize_context(context: Optional[Dict[str, Any]]) -> Optional[Dict[str, A
 
 
 class AgentDecisionModel(Base):
-    """SQLAlchemy model for storing agent decisions"""
+    """SQLAlchemy model for storing agent decisions."""
 
     __tablename__ = "agent_decisions"
 
@@ -46,7 +46,7 @@ class AgentDecisionModel(Base):
 
 
 class AgentDecision(BaseModel):
-    """Pydantic model for agent decisions"""
+    """Pydantic model for agent decisions."""
 
     agent_id: str = Field(..., description="ID of the agent that made the decision")
     decision_type: str = Field(..., description="Type of decision made")
@@ -59,7 +59,7 @@ class AgentDecision(BaseModel):
     )
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for storage"""
+        """Convert to dictionary for storage."""
         return {
             "agent_id": self.agent_id,
             "decision_type": self.decision_type,
@@ -71,7 +71,7 @@ class AgentDecision(BaseModel):
         }
 
     def to_db_model(self) -> AgentDecisionModel:
-        """Convert to SQLAlchemy model for database storage"""
+        """Convert to SQLAlchemy model for database storage."""
         return AgentDecisionModel(
             agent_id=self.agent_id,
             decision_type=self.decision_type,
@@ -84,7 +84,7 @@ class AgentDecision(BaseModel):
 
     @classmethod
     def from_db_model(cls, db_model: AgentDecisionModel) -> "AgentDecision":
-        """Create from SQLAlchemy model"""
+        """Create from SQLAlchemy model."""
         return cls(
             agent_id=db_model.agent_id,
             decision_type=db_model.decision_type,
@@ -97,7 +97,7 @@ class AgentDecision(BaseModel):
 
 
 class AgentDecisionSummary(BaseModel):
-    """Summary of agent decision activity"""
+    """Summary of agent decision activity."""
 
     agent_id: str
     total_decisions: int

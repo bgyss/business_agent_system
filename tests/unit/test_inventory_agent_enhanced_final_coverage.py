@@ -1,6 +1,4 @@
-"""
-Final tests to reach 95%+ coverage for Enhanced Inventory Agent
-"""
+"""Final tests to reach 95%+ coverage for Enhanced Inventory Agent."""
 
 import os
 import sys
@@ -22,11 +20,11 @@ from models.inventory import ItemStatus, StockMovementType
 
 
 class TestEnhancedInventoryAgentFinalCoverage:
-    """Final tests to reach 95%+ coverage"""
+    """Final tests to reach 95%+ coverage."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [
@@ -37,7 +35,7 @@ class TestEnhancedInventoryAgentFinalCoverage:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -47,7 +45,7 @@ class TestEnhancedInventoryAgentFinalCoverage:
 
     @pytest.fixture
     def enhanced_config(self):
-        """Enhanced inventory agent configuration"""
+        """Enhanced inventory agent configuration."""
         return {
             "check_interval": 300,
             "low_stock_multiplier": 1.2,
@@ -65,7 +63,7 @@ class TestEnhancedInventoryAgentFinalCoverage:
 
     @pytest.fixture
     def enhanced_inventory_agent(self, mock_anthropic, mock_db_session, enhanced_config):
-        """Create enhanced inventory agent instance"""
+        """Create enhanced inventory agent instance."""
         return EnhancedInventoryAgent(
             agent_id="enhanced_inventory_agent",
             api_key="test_api_key",
@@ -75,7 +73,7 @@ class TestEnhancedInventoryAgentFinalCoverage:
 
     @pytest.fixture
     def sample_item(self):
-        """Create sample inventory item"""
+        """Create sample inventory item."""
         return Mock(
             id="ITEM001",
             name="Test Item",
@@ -93,7 +91,8 @@ class TestEnhancedInventoryAgentFinalCoverage:
     async def test_forecast_item_demand_less_than_14_consumption_series(
         self, enhanced_inventory_agent
     ):
-        """Test forecast_item_demand with consumption series less than 14 days"""
+        """Test forecast_item_demand with consumption series less than 14
+        days."""
         mock_session = Mock()
 
         # Create 10 days of movements
@@ -127,7 +126,7 @@ class TestEnhancedInventoryAgentFinalCoverage:
 
     @pytest.mark.asyncio
     async def test_forecast_item_demand_with_infinite_trend_coef(self, enhanced_inventory_agent):
-        """Test forecast_item_demand with problematic trend calculation"""
+        """Test forecast_item_demand with problematic trend calculation."""
         mock_session = Mock()
 
         # Create movements with problematic data for trend calculation
@@ -164,7 +163,8 @@ class TestEnhancedInventoryAgentFinalCoverage:
     async def test_forecast_item_demand_without_sufficient_seasonal_data(
         self, enhanced_inventory_agent
     ):
-        """Test forecast_item_demand with insufficient data for seasonality (less than 28 days)"""
+        """Test forecast_item_demand with insufficient data for seasonality
+        (less than 28 days)"""
         mock_session = Mock()
 
         # Create exactly 20 days of movements (less than 28 needed for weekly seasonality)
@@ -198,7 +198,8 @@ class TestEnhancedInventoryAgentFinalCoverage:
 
     @pytest.mark.asyncio
     async def test_forecast_item_demand_edge_case_single_point(self, enhanced_inventory_agent):
-        """Test forecast_item_demand with edge case where trend analysis fails"""
+        """Test forecast_item_demand with edge case where trend analysis
+        fails."""
         mock_session = Mock()
 
         # Create movements that might cause numpy edge cases
@@ -234,7 +235,8 @@ class TestEnhancedInventoryAgentFinalCoverage:
     async def test_bulk_purchase_optimization_minimal_savings(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test bulk purchase optimization with minimal demand to skip large tiers"""
+        """Test bulk purchase optimization with minimal demand to skip large
+        tiers."""
         mock_session = Mock()
 
         # Mock forecast with very low demand that makes large tiers skip
@@ -268,7 +270,7 @@ class TestEnhancedInventoryAgentFinalCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_expiry_intelligence_no_consumption(self, enhanced_inventory_agent):
-        """Test expiry intelligence with no consumption forecast"""
+        """Test expiry intelligence with no consumption forecast."""
         mock_session = Mock()
 
         perishable_item = Mock(
@@ -304,7 +306,8 @@ class TestEnhancedInventoryAgentFinalCoverage:
 
     @pytest.mark.asyncio
     async def test_analyze_expiry_intelligence_normal_consumption(self, enhanced_inventory_agent):
-        """Test expiry intelligence with normal consumption that prevents waste"""
+        """Test expiry intelligence with normal consumption that prevents
+        waste."""
         mock_session = Mock()
 
         perishable_item = Mock(id="ITEM001", name="Normal Item", current_stock=20, maximum_stock=40)
@@ -338,7 +341,7 @@ class TestEnhancedInventoryAgentFinalCoverage:
     async def test_analyze_individual_supplier_performance_edge_cases(
         self, enhanced_inventory_agent
     ):
-        """Test individual supplier performance with edge cases"""
+        """Test individual supplier performance with edge cases."""
         mock_session = Mock()
 
         supplier = Mock(id="SUP001", name="Edge Case Supplier")
@@ -379,7 +382,8 @@ class TestEnhancedInventoryAgentFinalCoverage:
     async def test_comprehensive_inventory_analysis_multiple_issue_combinations(
         self, enhanced_inventory_agent
     ):
-        """Test comprehensive inventory analysis with multiple issue combinations"""
+        """Test comprehensive inventory analysis with multiple issue
+        combinations."""
         mock_session = Mock()
 
         # Simulate multiple serious issues
@@ -403,7 +407,8 @@ class TestEnhancedInventoryAgentFinalCoverage:
 
     @pytest.mark.asyncio
     async def test_periodic_check_exact_minute_boundaries(self, enhanced_inventory_agent):
-        """Test periodic check at exact minute boundaries for different schedules"""
+        """Test periodic check at exact minute boundaries for different
+        schedules."""
         with patch.object(enhanced_inventory_agent, "_queue_analysis_message") as mock_queue:
 
             # Test exactly at 4:00 AM (comprehensive analysis)
@@ -432,7 +437,8 @@ class TestEnhancedInventoryAgentFinalCoverage:
     async def test_analyze_reorder_needs_enhanced_no_forecast_available(
         self, enhanced_inventory_agent
     ):
-        """Test enhanced reorder analysis when no forecast is available for items"""
+        """Test enhanced reorder analysis when no forecast is available for
+        items."""
         mock_session = Mock()
 
         # Items near reorder point
@@ -456,7 +462,7 @@ class TestEnhancedInventoryAgentFinalCoverage:
             assert priority_items[0]["urgency_score"] == 0.5
 
     def test_weekly_seasonality_with_empty_values(self, enhanced_inventory_agent):
-        """Test weekly seasonality calculation with edge cases"""
+        """Test weekly seasonality calculation with edge cases."""
         # Test with series that has empty consumption days
         consumption_series = [0, 0, 0, 0, 0, 0, 0] * 4  # 4 weeks of zeros
 
@@ -467,7 +473,7 @@ class TestEnhancedInventoryAgentFinalCoverage:
         assert all(factor == 1.0 for factor in seasonality.values())
 
     def test_weekly_seasonality_exception_handling(self, enhanced_inventory_agent):
-        """Test weekly seasonality calculation exception handling"""
+        """Test weekly seasonality calculation exception handling."""
         # Test with invalid data that causes exceptions
         with patch("numpy.mean", side_effect=Exception("Numpy error")):
             seasonality = enhanced_inventory_agent._calculate_weekly_seasonality(
@@ -480,7 +486,7 @@ class TestEnhancedInventoryAgentFinalCoverage:
 
     @pytest.mark.asyncio
     async def test_revenue_correlation_with_exact_edge_values(self, enhanced_inventory_agent):
-        """Test revenue correlation calculation with exact edge values"""
+        """Test revenue correlation calculation with exact edge values."""
         mock_session = Mock()
 
         # Test with movements that have exactly zero mean
@@ -493,7 +499,7 @@ class TestEnhancedInventoryAgentFinalCoverage:
         assert 0.1 <= correlation <= 0.9
 
     def test_system_prompt_includes_agent_id(self, enhanced_inventory_agent):
-        """Test that system prompt correctly includes agent ID"""
+        """Test that system prompt correctly includes agent ID."""
         prompt = enhanced_inventory_agent.system_prompt
 
         # Should include the agent ID in the prompt
@@ -501,7 +507,8 @@ class TestEnhancedInventoryAgentFinalCoverage:
         assert "enhanced_inventory_agent" in prompt
 
     def test_forecast_accuracy_with_perfect_predictions(self, enhanced_inventory_agent):
-        """Test forecast accuracy calculation with perfect predictions scenario"""
+        """Test forecast accuracy calculation with perfect predictions
+        scenario."""
         # Create data where prediction would be perfect
         consumption_series = [5] * 21  # Perfectly consistent consumption
 
@@ -514,7 +521,7 @@ class TestEnhancedInventoryAgentFinalCoverage:
     async def test_process_data_empty_movement_data(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test process_data with empty movement data"""
+        """Test process_data with empty movement data."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -527,7 +534,8 @@ class TestEnhancedInventoryAgentFinalCoverage:
 
     @pytest.mark.asyncio
     async def test_forecast_item_demand_complete_path(self, enhanced_inventory_agent):
-        """Test forecast_item_demand with complete execution path to cover lines 293-363"""
+        """Test forecast_item_demand with complete execution path to cover
+        lines 293-363."""
         mock_session = Mock()
 
         # Create 30 days of realistic movements to trigger all forecast logic
@@ -563,7 +571,8 @@ class TestEnhancedInventoryAgentFinalCoverage:
 
     @pytest.mark.asyncio
     async def test_perform_expiry_intelligence_no_items_with_expiry(self, enhanced_inventory_agent):
-        """Test expiry intelligence when items exist but none have expiry_days (line 793)"""
+        """Test expiry intelligence when items exist but none have expiry_days
+        (line 793)"""
         mock_session = Mock()
 
         # Mock items that exist but don't have expiry considerations
@@ -582,7 +591,8 @@ class TestEnhancedInventoryAgentFinalCoverage:
     async def test_analyze_individual_supplier_performance_poor_score(
         self, enhanced_inventory_agent
     ):
-        """Test individual supplier performance with poor overall score (line 1077)"""
+        """Test individual supplier performance with poor overall score (line
+        1077)"""
         mock_session = Mock()
 
         supplier = Mock(id="SUP001", name="Poor Supplier")
@@ -645,7 +655,8 @@ class TestEnhancedInventoryAgentFinalCoverage:
     async def test_analyze_adjustment_movement_exception_path(
         self, enhanced_inventory_agent, sample_item
     ):
-        """Test adjustment movement analysis exception handling (lines 1370-1372)"""
+        """Test adjustment movement analysis exception handling (lines
+        1370-1372)"""
         mock_session = Mock()
 
         # Create a scenario that will cause an exception in the calculation

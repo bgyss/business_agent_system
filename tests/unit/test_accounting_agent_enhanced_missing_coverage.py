@@ -1,7 +1,5 @@
-"""
-Comprehensive test coverage for Enhanced AccountingAgent to bridge coverage gaps
-Targeting 95%+ coverage by testing uncovered lines and edge cases.
-"""
+"""Comprehensive test coverage for Enhanced AccountingAgent to bridge coverage
+gaps Targeting 95%+ coverage by testing uncovered lines and edge cases."""
 
 import os
 import sys
@@ -21,11 +19,11 @@ from models.financial import (
 
 
 class TestEnhancedAccountingAgentMissingCoverage:
-    """Test cases to achieve 95% coverage for Enhanced AccountingAgent"""
+    """Test cases to achieve 95% coverage for Enhanced AccountingAgent."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [Mock(text="Advanced financial analysis completed")]
@@ -34,7 +32,7 @@ class TestEnhancedAccountingAgentMissingCoverage:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -44,7 +42,7 @@ class TestEnhancedAccountingAgentMissingCoverage:
 
     @pytest.fixture
     def enhanced_agent_config(self):
-        """Enhanced accounting agent configuration"""
+        """Enhanced accounting agent configuration."""
         return {
             "check_interval": 300,
             "anomaly_threshold": 0.25,
@@ -68,7 +66,7 @@ class TestEnhancedAccountingAgentMissingCoverage:
 
     @pytest.fixture
     def enhanced_accounting_agent(self, mock_anthropic, mock_db_session, enhanced_agent_config):
-        """Create enhanced accounting agent instance"""
+        """Create enhanced accounting agent instance."""
         return AccountingAgent(
             agent_id="enhanced_accounting_agent",
             api_key="test_api_key",
@@ -711,7 +709,7 @@ class TestEnhancedAccountingAgentMissingCoverage:
     async def test_detect_transaction_anomalies_few_transactions(
         self, enhanced_accounting_agent, mock_db_session
     ):
-        """Test anomaly detection with few transactions for IQR calculation"""
+        """Test anomaly detection with few transactions for IQR calculation."""
         transaction = TransactionModel(
             id="1",
             description="Test transaction",
@@ -739,7 +737,8 @@ class TestEnhancedAccountingAgentMissingCoverage:
     async def test_detect_transaction_anomalies_single_transaction(
         self, enhanced_accounting_agent, mock_db_session
     ):
-        """Test anomaly detection with single transaction for statistical analysis"""
+        """Test anomaly detection with single transaction for statistical
+        analysis."""
         transaction = TransactionModel(
             id="1",
             description="Test transaction",
@@ -815,7 +814,7 @@ class TestEnhancedAccountingAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_identify_significant_trends_high_thresholds(self, enhanced_accounting_agent):
-        """Test significant trends with various threshold conditions"""
+        """Test significant trends with various threshold conditions."""
         trend_analysis = {
             "7_days": {
                 "income_trend": -60,  # Should trigger declining income (> 50)
@@ -838,7 +837,7 @@ class TestEnhancedAccountingAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_process_decision_outcome_learning_patterns(self, enhanced_accounting_agent):
-        """Test decision outcome learning with patterns analysis"""
+        """Test decision outcome learning with patterns analysis."""
         # Set up some initial outcomes to test pattern analysis
         enhanced_accounting_agent.decision_outcomes = {
             "d1": {"decision_type": "transaction_anomaly", "was_correct": False},
@@ -856,7 +855,7 @@ class TestEnhancedAccountingAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_process_data_with_missing_session_setup(self, enhanced_accounting_agent):
-        """Test various process_data branches for better coverage"""
+        """Test various process_data branches for better coverage."""
         # Test with cash flow forecast that will trigger forecast analysis
         data = {"type": "cash_flow_forecast", "forecast_days": 15}
 
@@ -881,7 +880,7 @@ class TestEnhancedAccountingAgentMissingCoverage:
     async def test_missing_line_coverage_specific_branches(
         self, enhanced_accounting_agent, mock_db_session
     ):
-        """Test specific uncovered lines and branches"""
+        """Test specific uncovered lines and branches."""
 
         # Test line 602 in _calculate_forecast_confidence with single forecast value
         daily_flows = {"2024-01-01": 100.0}
@@ -921,7 +920,7 @@ class TestEnhancedAccountingAgentMissingCoverage:
 
     @pytest.mark.asyncio
     async def test_remaining_exception_paths(self, enhanced_accounting_agent):
-        """Test remaining exception handling paths"""
+        """Test remaining exception handling paths."""
 
         # Test lines 509-511 _apply_seasonal_adjustment exception
         with patch.object(

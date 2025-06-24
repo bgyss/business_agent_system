@@ -1,10 +1,29 @@
-name: CI
+name: CI (Legacy - Comprehensive)
+
+# This workflow provides comprehensive testing as a backup to the incremental CI
+# Use this for full validation when incremental CI is not sufficient
 
 on:
   push:
     branches: [ main, develop ]
+    paths:
+      - '.github/workflows/ci.yml'  # Only run when this workflow is modified
   pull_request:
     branches: [ main ]
+    paths:
+      - '.github/workflows/ci.yml'  # Only run when this workflow is modified
+  workflow_dispatch:  # Allow manual triggering
+    inputs:
+      run_comprehensive:
+        description: 'Run comprehensive validation'
+        required: false
+        default: 'true'
+        type: boolean
+
+# Cancel previous runs when a new commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # TODO: Re-enable Nix build once performance issues are resolved
@@ -31,7 +50,7 @@ jobs:
   #   - name: Run checks
   #     run: nix run .#checks
 
-  uv-test:
+  comprehensive-validation:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -51,14 +70,15 @@ jobs:
     - name: Install dependencies
       run: uv sync --all-extras
     
-    - name: Run linting
+    - name: Run quality gate (comprehensive)
+      env:
+        PYTHONPATH: ${{ github.workspace }}
       run: |
-        uv run ruff check agents/ models/ simulation/ dashboard/ main.py tests/ --select=W292
-        uv run black --check agents/ models/ simulation/ dashboard/ main.py tests/
-        uv run isort --check-only agents/ models/ simulation/ dashboard/ main.py tests/
-    
-    - name: Run type checking  
-      run: uv run mypy agents/ models/ simulation/ --ignore-missing-imports || echo "Type checking issues detected - see logs for details"
+        echo "🚪 Running comprehensive quality gate..."
+        uv run python scripts/quality-gate.py \
+          --mode strict \
+          --output quality-gate-results.json \
+          --no-color
     
     - name: Run unit tests
       run: |
@@ -84,6 +104,7 @@ jobs:
         path: |
           test-results-*.xml
           coverage.xml
+          quality-gate-results.json
     
     - name: Upload coverage
       uses: codecov/codecov-action@v4

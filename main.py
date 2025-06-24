@@ -107,7 +107,7 @@ class BusinessAgentSystem:
             logger.addHandler(file_handler)
 
     def initialize_agents(self):
-        """Initialize all enabled agents"""
+        """Initialize all enabled agents."""
         agent_configs = self.config.get("agents", {})
 
         # Validate database configuration
@@ -149,7 +149,7 @@ class BusinessAgentSystem:
         self.logger.info(f"Initialized {len(self.agents)} agents")
 
     def initialize_simulator(self):
-        """Initialize the business simulator if enabled"""
+        """Initialize the business simulator if enabled."""
         sim_config = self.config.get("simulation", {})
         if not sim_config.get("enabled", False):
             self.logger.info("Simulation disabled")
@@ -171,7 +171,7 @@ class BusinessAgentSystem:
         self.logger.info(f"Simulator initialized in {mode} mode")
 
     async def start_agents(self):
-        """Start all agents"""
+        """Start all agents."""
         for agent_name, agent in self.agents.items():
             # Set the shared message queue
             agent.message_queue = self.message_queue
@@ -185,7 +185,7 @@ class BusinessAgentSystem:
         await asyncio.sleep(0.1)
 
     async def start_simulator(self):
-        """Start the real-time simulator if enabled"""
+        """Start the real-time simulator if enabled."""
         if not self.simulator:
             return
 
@@ -198,7 +198,7 @@ class BusinessAgentSystem:
             self.logger.info("Started real-time simulation")
 
     async def message_router(self):
-        """Route messages between agents"""
+        """Route messages between agents."""
         while self.is_running:
             try:
                 # Get message with timeout
@@ -232,7 +232,7 @@ class BusinessAgentSystem:
                 await asyncio.sleep(1)
 
     async def run(self):
-        """Main run loop"""
+        """Main run loop."""
         self.is_running = True
         self.logger.info("Starting Business Agent System")
 
@@ -267,7 +267,7 @@ class BusinessAgentSystem:
             await self.shutdown()
 
     async def monitor_system(self):
-        """Monitor system health and performance"""
+        """Monitor system health and performance."""
         monitor_interval = 30  # Check every 30 seconds
 
         while self.is_running:
@@ -302,7 +302,7 @@ class BusinessAgentSystem:
                 await asyncio.sleep(10)
 
     async def shutdown(self):
-        """Graceful shutdown"""
+        """Graceful shutdown."""
         self.logger.info("Shutting down Business Agent System")
         self.is_running = False
 
@@ -327,7 +327,7 @@ class BusinessAgentSystem:
         self.logger.info("Shutdown complete")
 
     def get_system_status(self) -> Dict[str, Any]:
-        """Get current system status"""
+        """Get current system status."""
         agent_status = {}
         for name, agent in self.agents.items():
             agent_status[name] = {
@@ -383,7 +383,7 @@ class BusinessAgentSystem:
 
 
 def signal_handler(system: BusinessAgentSystem):
-    """Handle shutdown signals"""
+    """Handle shutdown signals."""
 
     def handler(signum, frame):
         print(f"\nReceived signal {signum}, shutting down...")

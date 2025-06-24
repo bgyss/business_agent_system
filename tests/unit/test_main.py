@@ -1,6 +1,4 @@
-"""
-Test suite for main.py module
-"""
+"""Test suite for main.py module."""
 
 import asyncio
 import os
@@ -16,11 +14,11 @@ from main import BusinessAgentSystem, signal_handler
 
 
 class TestBusinessAgentSystem:
-    """Test BusinessAgentSystem class"""
+    """Test BusinessAgentSystem class."""
 
     @pytest.fixture
     def mock_config(self):
-        """Create a mock configuration"""
+        """Create a mock configuration."""
         return {
             "business": {"name": "Test Business", "type": "restaurant"},
             "database": {"url": "sqlite:///test.db"},
@@ -42,19 +40,19 @@ class TestBusinessAgentSystem:
 
     @pytest.fixture
     def config_file(self, mock_config):
-        """Create a temporary config file"""
+        """Create a temporary config file."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             yaml.dump(mock_config, f)
             return f.name
 
     @pytest.fixture
     def system(self, config_file):
-        """Create BusinessAgentSystem instance for testing"""
+        """Create BusinessAgentSystem instance for testing."""
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
             return BusinessAgentSystem(config_file)
 
     def test_initialization_success(self, config_file):
-        """Test successful initialization"""
+        """Test successful initialization."""
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
             system = BusinessAgentSystem(config_file)
 
@@ -67,7 +65,7 @@ class TestBusinessAgentSystem:
             assert system.api_key == "test-key"
 
     def test_initialization_missing_api_key(self, config_file):
-        """Test initialization fails without API key"""
+        """Test initialization fails without API key."""
         with patch.dict(os.environ, {}, clear=True):
             with pytest.raises(
                 ValueError, match="ANTHROPIC_API_KEY environment variable is required"
@@ -75,17 +73,17 @@ class TestBusinessAgentSystem:
                 BusinessAgentSystem(config_file)
 
     def test_load_config(self, system, mock_config):
-        """Test config loading"""
+        """Test config loading."""
         assert system.config == mock_config
 
     def test_load_config_file_not_found(self):
-        """Test config loading with non-existent file"""
+        """Test config loading with non-existent file."""
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
             with pytest.raises(FileNotFoundError):
                 BusinessAgentSystem("/non/existent/file.yaml")
 
     def test_setup_logging(self, system):
-        """Test logging setup"""
+        """Test logging setup."""
         # The logging setup is called during initialization
         # Just verify logger was created
         assert system.logger is not None
@@ -95,7 +93,7 @@ class TestBusinessAgentSystem:
     @patch("main.InventoryAgent")
     @patch("main.HRAgent")
     def test_initialize_agents(self, mock_hr, mock_inventory, mock_accounting, system):
-        """Test agent initialization"""
+        """Test agent initialization."""
         system.initialize_agents()
 
         # Check that agents were created
@@ -110,7 +108,7 @@ class TestBusinessAgentSystem:
 
     @patch("main.BusinessSimulator")
     def test_initialize_simulator(self, mock_simulator_class, system):
-        """Test simulator initialization"""
+        """Test simulator initialization."""
         mock_simulator = MagicMock()
         mock_simulator.initialize_business = MagicMock()
         mock_simulator.simulate_historical_data = MagicMock()
@@ -129,7 +127,7 @@ class TestBusinessAgentSystem:
     async def test_run_simulation_mode(
         self, mock_hr, mock_inventory, mock_accounting, mock_simulator_class, system
     ):
-        """Test running in simulation mode"""
+        """Test running in simulation mode."""
         # Setup mocks
         mock_simulator = MagicMock()
         mock_simulator.initialize_business = MagicMock()
@@ -167,7 +165,7 @@ class TestBusinessAgentSystem:
         mock_hr.assert_called_once()
 
     async def test_shutdown(self, system):
-        """Test system shutdown"""
+        """Test system shutdown."""
 
         # Create mock tasks that are actual asyncio tasks
         async def dummy_task():
@@ -198,7 +196,7 @@ class TestBusinessAgentSystem:
         mock_simulator.stop_simulation.assert_called_once()
 
     async def test_message_router(self, system):
-        """Test message router"""
+        """Test message router."""
         # Setup system to stop after processing one message
         system.is_running = True
 
@@ -226,7 +224,7 @@ class TestBusinessAgentSystem:
         assert True
 
     def test_get_system_status(self, system):
-        """Test system status reporting"""
+        """Test system status reporting."""
         system.is_running = True
 
         # Create mock agents
@@ -251,17 +249,17 @@ class TestBusinessAgentSystem:
 
 
 class TestSignalHandler:
-    """Test signal handler functionality"""
+    """Test signal handler functionality."""
 
     def test_signal_handler_creation(self):
-        """Test signal handler creation"""
+        """Test signal handler creation."""
         mock_system = MagicMock()
         handler = signal_handler(mock_system)
 
         assert callable(handler)
 
     def test_signal_handler_execution(self):
-        """Test signal handler execution"""
+        """Test signal handler execution."""
         mock_system = MagicMock()
         mock_system.shutdown = AsyncMock()
 
@@ -274,11 +272,11 @@ class TestSignalHandler:
 
 
 class TestMainFunction:
-    """Test main function and CLI functionality"""
+    """Test main function and CLI functionality."""
 
     @pytest.fixture
     def mock_config_file(self):
-        """Create a mock config file"""
+        """Create a mock config file."""
         config = {
             "business": {"name": "Test", "type": "restaurant"},
             "agents": {},
@@ -293,7 +291,7 @@ class TestMainFunction:
     @patch("sys.argv", ["main.py", "--config", "test_config.yaml"])
     @patch("os.path.exists")
     async def test_main_simulation_mode(self, mock_exists, mock_signal, mock_system_class):
-        """Test main function in simulation mode"""
+        """Test main function in simulation mode."""
         mock_exists.return_value = True
         mock_system = MagicMock()
         mock_system.run = AsyncMock()
@@ -310,7 +308,7 @@ class TestMainFunction:
     @patch("sys.argv", ["main.py", "--config", "test_config.yaml", "--generate-historical", "30"])
     @patch("os.path.exists")
     async def test_main_historical_generation(self, mock_exists, mock_system_class):
-        """Test main function with historical data generation"""
+        """Test main function with historical data generation."""
         mock_exists.return_value = True
         mock_system = MagicMock()
         mock_system.initialize_simulator = MagicMock()
@@ -324,7 +322,7 @@ class TestMainFunction:
     @patch("os.path.exists")
     @patch("builtins.print")
     async def test_main_config_not_found(self, mock_print, mock_exists):
-        """Test main function with missing config file"""
+        """Test main function with missing config file."""
         mock_exists.return_value = False
 
         # The function should exit before trying to create BusinessAgentSystem
@@ -341,7 +339,7 @@ class TestMainFunction:
     @patch("os.path.exists")
     @patch("builtins.print")
     async def test_main_with_exception(self, mock_print, mock_exists, mock_system_class):
-        """Test main function handling exceptions"""
+        """Test main function handling exceptions."""
         mock_exists.return_value = True
         mock_system = MagicMock()
         mock_system.run = AsyncMock(side_effect=Exception("Test error"))
@@ -355,16 +353,16 @@ class TestMainFunction:
 
 
 class TestMainModule:
-    """Test module-level functionality"""
+    """Test module-level functionality."""
 
     def test_load_dotenv_called(self):
-        """Test that load_dotenv is called on import"""
+        """Test that load_dotenv is called on import."""
         # This is implicitly tested by the fact that the module imports successfully
         # and we can access environment variables in tests
         assert True
 
     def test_module_imports(self):
-        """Test that all required imports are available"""
+        """Test that all required imports are available."""
         # Test that all necessary classes are imported
         assert hasattr(main, "BusinessAgentSystem")
         assert hasattr(main, "AccountingAgent")

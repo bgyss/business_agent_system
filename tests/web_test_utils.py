@@ -1,6 +1,4 @@
-"""
-Utility functions and classes for web testing
-"""
+"""Utility functions and classes for web testing."""
 
 import subprocess
 import time
@@ -15,11 +13,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 class DashboardTestData:
-    """Test data provider for dashboard testing"""
+    """Test data provider for dashboard testing."""
 
     @staticmethod
     def get_sample_financial_data() -> Dict[str, Any]:
-        """Get sample financial data for testing"""
+        """Get sample financial data for testing."""
         return {
             "revenue": 25000.00,
             "expenses": 18000.00,
@@ -29,7 +27,7 @@ class DashboardTestData:
 
     @staticmethod
     def get_sample_inventory_data() -> Dict[str, Any]:
-        """Get sample inventory data for testing"""
+        """Get sample inventory data for testing."""
         return {
             "total_items": 150,
             "total_value": 12000.00,
@@ -39,12 +37,12 @@ class DashboardTestData:
 
     @staticmethod
     def get_sample_hr_data() -> Dict[str, Any]:
-        """Get sample HR data for testing"""
+        """Get sample HR data for testing."""
         return {"total_employees": 12, "active_employees": 10, "recent_time_entries": 45}
 
 
 class StreamlitPageObject:
-    """Page Object Model for Streamlit dashboard"""
+    """Page Object Model for Streamlit dashboard."""
 
     def __init__(self, driver: WebDriver):
         self.driver = driver
@@ -52,7 +50,7 @@ class StreamlitPageObject:
 
     # Navigation methods
     def navigate_to_live_monitoring(self):
-        """Navigate to live monitoring view"""
+        """Navigate to live monitoring view."""
         radio_button = self.wait.until(
             EC.element_to_be_clickable(
                 (By.XPATH, "//label[contains(text(), 'Live Agent Monitoring')]")
@@ -62,7 +60,7 @@ class StreamlitPageObject:
         time.sleep(2)
 
     def navigate_to_historical_analytics(self):
-        """Navigate to historical analytics view"""
+        """Navigate to historical analytics view."""
         radio_button = self.wait.until(
             EC.element_to_be_clickable(
                 (By.XPATH, "//label[contains(text(), 'Historical Analytics')]")
@@ -72,7 +70,7 @@ class StreamlitPageObject:
         time.sleep(2)
 
     def select_business_config(self, config_name: str):
-        """Select a business configuration from dropdown"""
+        """Select a business configuration from dropdown."""
         dropdown = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "select")))
 
         for option in dropdown.find_elements(By.TAG_NAME, "option"):
@@ -82,7 +80,7 @@ class StreamlitPageObject:
                 break
 
     def select_time_period(self, days: int):
-        """Select time period for analysis"""
+        """Select time period for analysis."""
         time_dropdown = self.wait.until(
             EC.element_to_be_clickable(
                 (
@@ -100,7 +98,7 @@ class StreamlitPageObject:
 
     # Content verification methods
     def is_live_monitoring_active(self) -> bool:
-        """Check if live monitoring view is active"""
+        """Check if live monitoring view is active."""
         try:
             self.wait.until(
                 EC.presence_of_element_located(
@@ -112,7 +110,7 @@ class StreamlitPageObject:
             return False
 
     def is_historical_analytics_active(self) -> bool:
-        """Check if historical analytics view is active"""
+        """Check if historical analytics view is active."""
         try:
             self.wait.until(
                 EC.presence_of_element_located(
@@ -124,7 +122,7 @@ class StreamlitPageObject:
             return False
 
     def get_financial_metrics(self) -> Dict[str, str]:
-        """Extract financial metrics from the dashboard"""
+        """Extract financial metrics from the dashboard."""
         metrics = {}
 
         try:
@@ -150,7 +148,7 @@ class StreamlitPageObject:
         return metrics
 
     def get_agent_status_info(self) -> List[Dict[str, str]]:
-        """Get agent status information"""
+        """Get agent status information."""
         agents = []
 
         try:
@@ -178,7 +176,7 @@ class StreamlitPageObject:
         return agents
 
     def get_chart_titles(self) -> List[str]:
-        """Get titles of all charts on the page"""
+        """Get titles of all charts on the page."""
         titles = []
 
         try:
@@ -204,7 +202,7 @@ class StreamlitPageObject:
         return titles
 
     def refresh_dashboard(self):
-        """Click the refresh button"""
+        """Click the refresh button."""
         try:
             refresh_button = self.wait.until(
                 EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Refresh')]"))
@@ -217,7 +215,7 @@ class StreamlitPageObject:
             time.sleep(5)
 
     def wait_for_loading_complete(self, timeout: int = 30):
-        """Wait for the dashboard to finish loading"""
+        """Wait for the dashboard to finish loading."""
         # Wait for Streamlit to finish loading
         try:
             self.wait.until(EC.presence_of_element_located((By.TAG_NAME, "h1")))
@@ -245,13 +243,13 @@ class StreamlitPageObject:
 
 
 class WebTestReporter:
-    """Utility for generating test reports and capturing screenshots"""
+    """Utility for generating test reports and capturing screenshots."""
 
     def __init__(self, driver: WebDriver):
         self.driver = driver
 
     def capture_screenshot(self, filename: str) -> str:
-        """Capture a screenshot and save to file"""
+        """Capture a screenshot and save to file."""
         try:
             full_path = f"test_screenshots/{filename}"
             self.driver.save_screenshot(full_path)
@@ -261,7 +259,7 @@ class WebTestReporter:
             return ""
 
     def capture_page_source(self, filename: str) -> str:
-        """Capture page source and save to file"""
+        """Capture page source and save to file."""
         try:
             full_path = f"test_artifacts/{filename}"
             with open(full_path, "w", encoding="utf-8") as f:
@@ -272,7 +270,7 @@ class WebTestReporter:
             return ""
 
     def get_page_performance_info(self) -> Dict[str, Any]:
-        """Get basic page performance information"""
+        """Get basic page performance information."""
         try:
             # Execute JavaScript to get performance information
             perf_data = self.driver.execute_script(
@@ -291,11 +289,11 @@ class WebTestReporter:
 
 
 class StreamlitProcessManager:
-    """Utility for managing Streamlit process during testing"""
+    """Utility for managing Streamlit process during testing."""
 
     @staticmethod
     def find_streamlit_processes() -> List[psutil.Process]:
-        """Find running Streamlit processes"""
+        """Find running Streamlit processes."""
         processes = []
         for proc in psutil.process_iter(["pid", "name", "cmdline"]):
             try:
@@ -311,7 +309,7 @@ class StreamlitProcessManager:
 
     @staticmethod
     def kill_streamlit_processes():
-        """Kill all running Streamlit processes"""
+        """Kill all running Streamlit processes."""
         processes = StreamlitProcessManager.find_streamlit_processes()
         for proc in processes:
             try:
@@ -327,7 +325,7 @@ class StreamlitProcessManager:
     def start_streamlit_for_testing(
         port: int = 8502, config_file: str = "config/restaurant_config.yaml"
     ) -> subprocess.Popen:
-        """Start Streamlit process for testing"""
+        """Start Streamlit process for testing."""
         cmd = [
             "streamlit",
             "run",

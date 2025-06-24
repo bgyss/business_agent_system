@@ -1,6 +1,4 @@
-"""
-Test runner for integration tests with proper setup and teardown.
-"""
+"""Test runner for integration tests with proper setup and teardown."""
 
 import logging
 import os

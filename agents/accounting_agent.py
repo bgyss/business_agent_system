@@ -461,8 +461,7 @@ class AccountingAgent(BaseAgent):
     async def _detect_transaction_anomalies(
         self, session, transaction: TransactionModel, similar_transactions: List[Transaction]
     ) -> Dict[str, Any]:
-        """
-        Enhanced anomaly detection using multiple algorithms.
+        """Enhanced anomaly detection using multiple algorithms.
 
         Args:
             session: Database session
@@ -901,7 +900,8 @@ class AccountingAgent(BaseAgent):
     async def _calculate_forecast_confidence(
         self, daily_flows: Dict[str, float], forecasts: Dict[str, Any]
     ) -> float:
-        """Calculate confidence in the forecast based on data quality and consistency."""
+        """Calculate confidence in the forecast based on data quality and
+        consistency."""
         try:
             # Factor 1: Data consistency (lower variance = higher confidence)
             flow_values = list(daily_flows.values())
@@ -1184,7 +1184,8 @@ class AccountingAgent(BaseAgent):
             return None
 
     async def _analyze_decision_patterns(self) -> Dict[str, Any]:
-        """Analyze patterns in decision outcomes to identify improvement opportunities."""
+        """Analyze patterns in decision outcomes to identify improvement
+        opportunities."""
         try:
             if len(self.decision_outcomes) < 5:
                 return {"needs_adjustment": False, "recommendation": "Insufficient data"}
@@ -1227,7 +1228,7 @@ class AccountingAgent(BaseAgent):
             return {"needs_adjustment": False, "recommendation": "Error in pattern analysis"}
 
     async def periodic_check(self):
-        """Perform periodic accounting analysis with enhanced capabilities"""
+        """Perform periodic accounting analysis with enhanced capabilities."""
         session = self.SessionLocal()
         try:
             current_hour = datetime.now().hour

@@ -1,0 +1,82 @@
+# Pre-commit configuration for Business Agent Management System
+# This configuration replaces the custom .git/hooks/pre-commit script
+# with a standardized pre-commit framework setup
+
+repos:
+  # Black code formatting
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        args: [--line-length=100]
+        files: ^(agents/|models/|simulation/|dashboard/|main\.py|tests/|.*\.py$)
+
+  # isort import sorting
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile=black, --line-length=100]
+        files: ^(agents/|models/|simulation/|dashboard/|main\.py|tests/|.*\.py$)
+
+  # Ruff linting with auto-fix
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.15
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        files: ^(agents/|models/|simulation/|dashboard/|main\.py|tests/|.*\.py$)
+
+  # MyPy type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        args: [--ignore-missing-imports]
+        files: ^(agents/|models/|simulation/).*\.py$
+        additional_dependencies: [
+          types-pyyaml,
+          types-redis,
+          anthropic,
+          sqlalchemy,
+          pydantic,
+          streamlit,
+          fastapi,
+          pandas,
+          numpy,
+          python-dateutil,
+          pyyaml,
+          aiofiles,
+          redis,
+          plotly,
+        ]
+
+  # Optional: autoflake for removing unused imports (matches current hook)
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.2.1
+    hooks:
+      - id: autoflake
+        args: [--remove-all-unused-imports, --recursive, --in-place]
+        files: ^(agents/|models/|simulation/|dashboard/|main\.py|tests/|.*\.py$)
+
+  # Note: docformatter temporarily removed due to pre-commit compatibility issues
+  # It can still be run manually via: uv run docformatter --in-place --recursive .
+
+# Configuration for the pre-commit framework
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
+
+# Exclude patterns (matches pyproject.toml black configuration)
+exclude: |
+  (?x)^(
+    \.eggs/.*|
+    \.git/.*|
+    \.hg/.*|
+    \.mypy_cache/.*|
+    \.tox/.*|
+    \.venv/.*|
+    _build/.*|
+    buck-out/.*|
+    build/.*|
+    dist/.*
+  )$

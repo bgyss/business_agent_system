@@ -1,8 +1,8 @@
-"""
-Database Performance Tests
+"""Database Performance Tests.
 
 Tests for measuring and benchmarking database query performance,
-insert/update operations, and optimization opportunities under various load conditions.
+insert/update operations, and optimization opportunities under various
+load conditions.
 """
 
 import os

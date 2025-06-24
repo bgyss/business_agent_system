@@ -1,6 +1,4 @@
-"""
-Unit tests for FinancialDataGenerator class
-"""
+"""Unit tests for FinancialDataGenerator class."""
 
 import os
 import sys
@@ -21,10 +19,10 @@ from simulation.financial_generator import (
 
 
 class TestBusinessProfile:
-    """Test cases for BusinessProfile dataclass"""
+    """Test cases for BusinessProfile dataclass."""
 
     def test_business_profile_creation(self):
-        """Test BusinessProfile creation with all fields"""
+        """Test BusinessProfile creation with all fields."""
         profile = BusinessProfile(
             name="Test Business",
             business_type="restaurant",
@@ -47,11 +45,11 @@ class TestBusinessProfile:
 
 
 class TestFinancialDataGenerator:
-    """Test cases for FinancialDataGenerator"""
+    """Test cases for FinancialDataGenerator."""
 
     @pytest.fixture
     def sample_business_profile(self):
-        """Create a sample business profile for testing"""
+        """Create a sample business profile for testing."""
         return BusinessProfile(
             name="Test Restaurant",
             business_type="restaurant",
@@ -65,12 +63,12 @@ class TestFinancialDataGenerator:
 
     @pytest.fixture
     def financial_generator(self, sample_business_profile):
-        """Create FinancialDataGenerator instance for testing"""
+        """Create FinancialDataGenerator instance for testing."""
         start_date = datetime(2024, 1, 1)
         return FinancialDataGenerator(sample_business_profile, start_date)
 
     def test_initialization(self, sample_business_profile):
-        """Test FinancialDataGenerator initialization"""
+        """Test FinancialDataGenerator initialization."""
         start_date = datetime(2024, 1, 1)
         generator = FinancialDataGenerator(sample_business_profile, start_date)
 
@@ -82,7 +80,7 @@ class TestFinancialDataGenerator:
         assert len(generator.vendors) > 0
 
     def test_initialization_default_start_date(self, sample_business_profile):
-        """Test initialization with default start date"""
+        """Test initialization with default start date."""
         generator = FinancialDataGenerator(sample_business_profile)
 
         # Start date should be approximately 90 days ago
@@ -90,7 +88,7 @@ class TestFinancialDataGenerator:
         assert abs((generator.start_date - expected_start).days) <= 1
 
     def test_generate_customers_restaurant(self, sample_business_profile):
-        """Test customer generation for restaurant business"""
+        """Test customer generation for restaurant business."""
         generator = FinancialDataGenerator(sample_business_profile)
 
         customers = generator._generate_customers()
@@ -102,7 +100,7 @@ class TestFinancialDataGenerator:
         assert "Uber Eats" in customers
 
     def test_generate_customers_retail(self):
-        """Test customer generation for retail business"""
+        """Test customer generation for retail business."""
         profile = BusinessProfile(
             name="Retail Store",
             business_type="retail",
@@ -123,7 +121,7 @@ class TestFinancialDataGenerator:
         assert "Online Order" in customers
 
     def test_generate_customers_other_business_type(self):
-        """Test customer generation for other business types"""
+        """Test customer generation for other business types."""
         profile = BusinessProfile(
             name="Service Business",
             business_type="service",
@@ -143,7 +141,7 @@ class TestFinancialDataGenerator:
         assert "Online Sale" in customers
 
     def test_generate_vendors_restaurant(self, sample_business_profile):
-        """Test vendor generation for restaurant business"""
+        """Test vendor generation for restaurant business."""
         generator = FinancialDataGenerator(sample_business_profile)
 
         vendors = generator._generate_vendors()
@@ -160,7 +158,7 @@ class TestFinancialDataGenerator:
         assert vendor["category"] == "food_supplies"
 
     def test_generate_vendors_retail(self):
-        """Test vendor generation for retail business"""
+        """Test vendor generation for retail business."""
         profile = BusinessProfile(
             name="Retail Store",
             business_type="retail",
@@ -184,7 +182,7 @@ class TestFinancialDataGenerator:
     def test_generate_daily_transactions_basic(
         self, mock_choice, mock_normalvariate, financial_generator
     ):
-        """Test basic daily transaction generation"""
+        """Test basic daily transaction generation."""
         test_date = datetime(2024, 6, 15)  # June 15, Friday
 
         # Mock random functions with return values instead of side_effect to avoid running out
@@ -218,7 +216,7 @@ class TestFinancialDataGenerator:
         assert "reference_number" in transaction
 
     def test_generate_daily_transactions_seasonal_factors(self, financial_generator):
-        """Test that seasonal factors affect revenue generation"""
+        """Test that seasonal factors affect revenue generation."""
         # June (factor 1.2) vs January (factor 0.8)
         june_date = datetime(2024, 6, 15)
         january_date = datetime(2024, 1, 15)
@@ -252,7 +250,7 @@ class TestFinancialDataGenerator:
         assert june_avg > january_avg
 
     def test_generate_daily_transactions_day_of_week_factors(self, financial_generator):
-        """Test that day-of-week factors affect revenue generation"""
+        """Test that day-of-week factors affect revenue generation."""
         # Friday (factor 1.3) vs Monday (factor 0.7)
         friday_date = datetime(2024, 6, 14)  # Friday
         monday_date = datetime(2024, 6, 10)  # Monday
@@ -287,7 +285,7 @@ class TestFinancialDataGenerator:
 
     @patch("simulation.financial_generator.random.random")
     def test_generate_daily_transactions_large_expenses(self, mock_random, financial_generator):
-        """Test generation of occasional large expenses"""
+        """Test generation of occasional large expenses."""
         test_date = datetime(2024, 6, 15)
 
         # Mock random to trigger large expense generation
@@ -307,7 +305,7 @@ class TestFinancialDataGenerator:
             assert len(large_expenses) > 0
 
     def test_get_vendor_for_category(self, financial_generator):
-        """Test vendor selection for categories"""
+        """Test vendor selection for categories."""
         # Test with existing category
         vendor = financial_generator._get_vendor_for_category("food_supplies")
         assert vendor == "Fresh Foods Distributor"
@@ -318,7 +316,7 @@ class TestFinancialDataGenerator:
 
     @patch("simulation.financial_generator.random.random")
     def test_generate_accounts_receivable(self, mock_random, financial_generator):
-        """Test accounts receivable generation"""
+        """Test accounts receivable generation."""
         test_date = datetime(2024, 6, 15)
 
         # Mock random to trigger receivable generation
@@ -347,7 +345,7 @@ class TestFinancialDataGenerator:
 
     @patch("simulation.financial_generator.random.random")
     def test_generate_accounts_receivable_no_generation(self, mock_random, financial_generator):
-        """Test that receivables are not always generated"""
+        """Test that receivables are not always generated."""
         test_date = datetime(2024, 6, 15)
 
         # Mock random to prevent receivable generation
@@ -360,7 +358,7 @@ class TestFinancialDataGenerator:
 
     @patch("simulation.financial_generator.random.random")
     def test_generate_accounts_payable(self, mock_random, financial_generator):
-        """Test accounts payable generation"""
+        """Test accounts payable generation."""
         test_date = datetime(2024, 6, 1)  # First of month for rent/insurance
 
         # Mock random to trigger payable generation
@@ -384,7 +382,8 @@ class TestFinancialDataGenerator:
             assert payable["status"] == "unpaid"
 
     def test_generate_accounts_payable_monthly_bills(self, financial_generator):
-        """Test that monthly bills are only generated on the first of the month"""
+        """Test that monthly bills are only generated on the first of the
+        month."""
         first_of_month = datetime(2024, 6, 1)
         mid_month = datetime(2024, 6, 15)
 
@@ -401,7 +400,7 @@ class TestFinancialDataGenerator:
                 assert isinstance(mid_payables, list)
 
     def test_generate_period_data(self, financial_generator):
-        """Test period data generation"""
+        """Test period data generation."""
         start_date = datetime(2024, 6, 1)
         end_date = datetime(2024, 6, 3)  # 3 days
 
@@ -420,7 +419,7 @@ class TestFinancialDataGenerator:
         assert len(period_data["transactions"]) > 0
 
     def test_generate_period_data_skip_sundays(self, financial_generator):
-        """Test that Sundays are skipped for non-restaurant businesses"""
+        """Test that Sundays are skipped for non-restaurant businesses."""
         # Change business type to retail
         financial_generator.profile.business_type = "retail"
 
@@ -435,7 +434,7 @@ class TestFinancialDataGenerator:
         assert len(period_data["transactions"]) >= 0
 
     def test_generate_period_data_restaurant_includes_sundays(self, financial_generator):
-        """Test that restaurants include Sundays"""
+        """Test that restaurants include Sundays."""
         # Ensure business type is restaurant
         assert financial_generator.profile.business_type == "restaurant"
 
@@ -449,7 +448,7 @@ class TestFinancialDataGenerator:
         assert len(period_data["transactions"]) > 0
 
     def test_generate_anomalies_basic(self, financial_generator):
-        """Test basic anomaly generation"""
+        """Test basic anomaly generation."""
         base_transactions = [
             {
                 "amount": 100,
@@ -474,7 +473,7 @@ class TestFinancialDataGenerator:
             assert "[ANOMALY:" in anomaly["description"]
 
     def test_generate_anomalies_unusual_amount(self, financial_generator):
-        """Test unusual amount anomaly generation"""
+        """Test unusual amount anomaly generation."""
         base_transactions = [
             {"amount": 100, "transaction_date": datetime.now(), "description": "Normal transaction"}
         ]
@@ -491,7 +490,7 @@ class TestFinancialDataGenerator:
             assert "[ANOMALY: Unusual Amount]" in anomaly["description"]
 
     def test_generate_anomalies_unusual_time(self, financial_generator):
-        """Test unusual time anomaly generation"""
+        """Test unusual time anomaly generation."""
         base_transactions = [
             {
                 "amount": 100,
@@ -513,7 +512,7 @@ class TestFinancialDataGenerator:
             assert "[ANOMALY: Unusual Time]" in anomaly["description"]
 
     def test_generate_anomalies_duplicate(self, financial_generator):
-        """Test duplicate anomaly generation"""
+        """Test duplicate anomaly generation."""
         base_transactions = [
             {
                 "amount": 100,
@@ -534,7 +533,7 @@ class TestFinancialDataGenerator:
             assert "[ANOMALY: Potential Duplicate]" in anomaly["description"]
 
     def test_generate_anomalies_missing_reference(self, financial_generator):
-        """Test missing reference anomaly generation"""
+        """Test missing reference anomaly generation."""
         base_transactions = [
             {
                 "amount": 100,
@@ -556,14 +555,14 @@ class TestFinancialDataGenerator:
             assert "[ANOMALY: Missing Reference]" in anomaly["description"]
 
     def test_generate_anomalies_empty_input(self, financial_generator):
-        """Test anomaly generation with empty input"""
+        """Test anomaly generation with empty input."""
         anomalies = financial_generator.generate_anomalies([], anomaly_rate=0.1)
 
         assert isinstance(anomalies, list)
         assert len(anomalies) == 0  # No anomalies can be generated from empty input
 
     def test_generate_anomalies_rate_zero(self, financial_generator):
-        """Test anomaly generation with zero rate"""
+        """Test anomaly generation with zero rate."""
         base_transactions = [
             {"amount": 100, "transaction_date": datetime.now(), "description": "Normal transaction"}
         ]
@@ -575,10 +574,10 @@ class TestFinancialDataGenerator:
 
 
 class TestPredefinedProfiles:
-    """Test cases for predefined business profiles"""
+    """Test cases for predefined business profiles."""
 
     def test_get_restaurant_profile(self):
-        """Test restaurant profile generation"""
+        """Test restaurant profile generation."""
         profile = get_restaurant_profile()
 
         assert isinstance(profile, BusinessProfile)
@@ -605,7 +604,7 @@ class TestPredefinedProfiles:
         assert "friday" in profile.customer_patterns
 
     def test_get_retail_profile(self):
-        """Test retail profile generation"""
+        """Test retail profile generation."""
         profile = get_retail_profile()
 
         assert isinstance(profile, BusinessProfile)
@@ -629,7 +628,7 @@ class TestPredefinedProfiles:
         assert profile.avg_transaction_size != restaurant_profile.avg_transaction_size
 
     def test_profile_consistency(self):
-        """Test that profiles are consistent across calls"""
+        """Test that profiles are consistent across calls."""
         profile1 = get_restaurant_profile()
         profile2 = get_restaurant_profile()
 

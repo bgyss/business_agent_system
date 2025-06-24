@@ -1,8 +1,7 @@
-"""
-Performance Test Runner
+"""Performance Test Runner.
 
-Main script for running performance tests, generating reports,
-and tracking performance trends over time.
+Main script for running performance tests, generating reports, and
+tracking performance trends over time.
 """
 
 import argparse

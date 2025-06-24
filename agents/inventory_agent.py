@@ -22,7 +22,7 @@ from models.inventory import (
 
 
 class DemandForecast(NamedTuple):
-    """Demand forecast result"""
+    """Demand forecast result."""
 
     item_id: str
     predicted_demand: float
@@ -34,7 +34,7 @@ class DemandForecast(NamedTuple):
 
 
 class OptimalReorderPoint(NamedTuple):
-    """Optimal reorder point calculation result"""
+    """Optimal reorder point calculation result."""
 
     item_id: str
     optimal_reorder_point: int
@@ -47,7 +47,7 @@ class OptimalReorderPoint(NamedTuple):
 
 
 class BulkPurchaseOptimization(NamedTuple):
-    """Bulk purchase optimization result"""
+    """Bulk purchase optimization result."""
 
     item_id: str
     optimal_order_quantity: int
@@ -59,7 +59,7 @@ class BulkPurchaseOptimization(NamedTuple):
 
 
 class SupplierPerformanceMetrics(NamedTuple):
-    """Comprehensive supplier performance metrics"""
+    """Comprehensive supplier performance metrics."""
 
     supplier_id: str
     on_time_delivery_rate: float
@@ -72,7 +72,7 @@ class SupplierPerformanceMetrics(NamedTuple):
 
 
 class SeasonalityAnalysis(NamedTuple):
-    """Seasonal pattern analysis results"""
+    """Seasonal pattern analysis results."""
 
     item_id: str
     seasonal_periods: List[int]  # Detected periods (e.g., [7, 30, 365] for weekly, monthly, yearly)
@@ -84,7 +84,7 @@ class SeasonalityAnalysis(NamedTuple):
 
 
 class ItemCorrelationAnalysis(NamedTuple):
-    """Cross-item correlation analysis"""
+    """Cross-item correlation analysis."""
 
     primary_item_id: str
     correlated_items: List[Tuple[str, float]]  # (item_id, correlation_coefficient)
@@ -95,7 +95,7 @@ class ItemCorrelationAnalysis(NamedTuple):
 
 
 class SupplierDiversificationAnalysis(NamedTuple):
-    """Supplier risk and diversification analysis"""
+    """Supplier risk and diversification analysis."""
 
     item_id: str
     current_supplier_concentration: float  # 0-1, higher = more concentrated risk
@@ -742,8 +742,8 @@ class InventoryAgent(BaseAgent):
     async def predict_demand(
         self, session: Session, item_id: str, forecast_days: int = None
     ) -> Optional[DemandForecast]:
-        """
-        Predict demand using Triple Exponential Smoothing (Holt-Winters) with seasonal patterns.
+        """Predict demand using Triple Exponential Smoothing (Holt-Winters)
+        with seasonal patterns.
 
         Args:
             session: Database session
@@ -834,8 +834,8 @@ class InventoryAgent(BaseAgent):
     def _apply_holt_winters_forecast(
         self, data: List[float], forecast_periods: int
     ) -> Optional[Tuple[float, Tuple[float, float], float, float, float]]:
-        """
-        Apply Holt-Winters Triple Exponential Smoothing for demand forecasting.
+        """Apply Holt-Winters Triple Exponential Smoothing for demand
+        forecasting.
 
         Returns:
             Tuple of (predicted_demand, confidence_interval, seasonality_factor, trend_factor, accuracy)
@@ -964,7 +964,8 @@ class InventoryAgent(BaseAgent):
             return None
 
     def _calculate_forecast_accuracy(self, actual: np.ndarray, predicted: np.ndarray) -> float:
-        """Calculate Mean Absolute Percentage Error (MAPE) for forecast accuracy."""
+        """Calculate Mean Absolute Percentage Error (MAPE) for forecast
+        accuracy."""
         try:
             # Remove zeros to avoid division by zero
             non_zero_mask = actual != 0
@@ -987,8 +988,8 @@ class InventoryAgent(BaseAgent):
     async def calculate_optimal_reorder_point(
         self, session: Session, item_id: str
     ) -> Optional[OptimalReorderPoint]:
-        """
-        Calculate optimal reorder point using service level targets and demand variability.
+        """Calculate optimal reorder point using service level targets and
+        demand variability.
 
         Uses statistical inventory theory to optimize reorder points considering:
         - Demand variability and lead time uncertainty
@@ -1207,7 +1208,8 @@ class InventoryAgent(BaseAgent):
         service_level: float,
         safety_stock: float,
     ) -> float:
-        """Calculate total inventory cost including ordering, holding, and shortage costs."""
+        """Calculate total inventory cost including ordering, holding, and
+        shortage costs."""
         try:
             if annual_demand <= 0 or order_quantity <= 0:
                 return 0.0
@@ -1233,8 +1235,8 @@ class InventoryAgent(BaseAgent):
     async def optimize_bulk_purchase(
         self, session: Session, item_id: str, volume_discounts: List[Tuple[int, float]] = None
     ) -> Optional[BulkPurchaseOptimization]:
-        """
-        Optimize bulk purchase decisions considering volume discounts and holding costs.
+        """Optimize bulk purchase decisions considering volume discounts and
+        holding costs.
 
         Args:
             session: Database session
@@ -1390,8 +1392,8 @@ class InventoryAgent(BaseAgent):
     async def predict_expiry_waste(
         self, session: Session, item_id: str
     ) -> Optional[Dict[str, Any]]:
-        """
-        Predict and minimize waste from expiring inventory using advanced analytics.
+        """Predict and minimize waste from expiring inventory using advanced
+        analytics.
 
         Args:
             session: Database session
@@ -1610,8 +1612,7 @@ class InventoryAgent(BaseAgent):
     async def analyze_seasonality_patterns(
         self, session: Session, item_id: str, analysis_periods: List[int] = None
     ) -> Optional[SeasonalityAnalysis]:
-        """
-        Advanced seasonality detection using multiple period analysis.
+        """Advanced seasonality detection using multiple period analysis.
 
         Args:
             session: Database session
@@ -1756,8 +1757,7 @@ class InventoryAgent(BaseAgent):
     async def analyze_item_correlations(
         self, session: Session, item_id: str, correlation_window_days: int = 90
     ) -> Optional[ItemCorrelationAnalysis]:
-        """
-        Analyze correlations between items for demand planning.
+        """Analyze correlations between items for demand planning.
 
         Args:
             session: Database session
@@ -1901,8 +1901,8 @@ class InventoryAgent(BaseAgent):
     async def analyze_supplier_diversification(
         self, session: Session, item_id: str
     ) -> Optional[SupplierDiversificationAnalysis]:
-        """
-        Analyze supplier concentration risk and diversification opportunities.
+        """Analyze supplier concentration risk and diversification
+        opportunities.
 
         Args:
             session: Database session
@@ -2117,8 +2117,7 @@ class InventoryAgent(BaseAgent):
     async def analyze_supplier_performance_advanced(
         self, session: Session, supplier_id: str = None
     ) -> List[SupplierPerformanceMetrics]:
-        """
-        Advanced supplier performance analysis with multi-factor evaluation.
+        """Advanced supplier performance analysis with multi-factor evaluation.
 
         Args:
             session: Database session
@@ -2783,11 +2782,11 @@ class InventoryAgent(BaseAgent):
     async def generate_comprehensive_reorder_recommendation(
         self, session: Session, item_id: str
     ) -> Optional[Dict[str, Any]]:
-        """
-        Generate comprehensive reorder recommendation using all available analytics.
+        """Generate comprehensive reorder recommendation using all available
+        analytics.
 
-        Combines demand forecasting, seasonality, correlations, and supplier analysis
-        for optimal reorder decisions.
+        Combines demand forecasting, seasonality, correlations, and
+        supplier analysis for optimal reorder decisions.
         """
         try:
             # Gather all analytics
@@ -2925,9 +2924,8 @@ class InventoryAgent(BaseAgent):
     async def _perform_comprehensive_analytics_analysis(
         self, session: Session
     ) -> Optional[AgentDecision]:
-        """
-        Perform comprehensive analytics analysis combining all advanced methods.
-        """
+        """Perform comprehensive analytics analysis combining all advanced
+        methods."""
         try:
             # Get high-value items for comprehensive analysis
             high_value_items = (

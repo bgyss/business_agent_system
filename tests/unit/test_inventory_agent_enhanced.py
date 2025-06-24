@@ -1,6 +1,5 @@
-"""
-Unit tests for enhanced InventoryAgent predictive analytics functionality
-"""
+"""Unit tests for enhanced InventoryAgent predictive analytics
+functionality."""
 
 import os
 import sys
@@ -25,11 +24,11 @@ from models.inventory import ItemStatus, StockMovementType
 
 
 class TestInventoryAgentEnhanced:
-    """Test cases for enhanced InventoryAgent analytics"""
+    """Test cases for enhanced InventoryAgent analytics."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [
@@ -40,7 +39,7 @@ class TestInventoryAgentEnhanced:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -50,7 +49,7 @@ class TestInventoryAgentEnhanced:
 
     @pytest.fixture
     def enhanced_agent_config(self):
-        """Enhanced inventory agent configuration"""
+        """Enhanced inventory agent configuration."""
         return {
             "check_interval": 300,
             "low_stock_multiplier": 1.2,
@@ -69,7 +68,7 @@ class TestInventoryAgentEnhanced:
 
     @pytest.fixture
     def enhanced_inventory_agent(self, mock_anthropic, mock_db_session, enhanced_agent_config):
-        """Create enhanced inventory agent instance"""
+        """Create enhanced inventory agent instance."""
         return InventoryAgent(
             agent_id="enhanced_inventory_agent",
             api_key="test_api_key",
@@ -79,7 +78,7 @@ class TestInventoryAgentEnhanced:
 
     @pytest.fixture
     def sample_seasonal_data(self):
-        """Create sample seasonal consumption data"""
+        """Create sample seasonal consumption data."""
         base_date = datetime.now() - timedelta(days=365)
         movements = []
 
@@ -114,7 +113,7 @@ class TestInventoryAgentEnhanced:
 
     @pytest.fixture
     def sample_correlated_items_data(self):
-        """Create sample data for item correlation analysis"""
+        """Create sample data for item correlation analysis."""
         base_date = datetime.now() - timedelta(days=90)
 
         # Simulate correlated consumption patterns
@@ -160,7 +159,7 @@ class TestInventoryAgentEnhanced:
     async def test_analyze_seasonality_patterns_success(
         self, enhanced_inventory_agent, mock_db_session, sample_seasonal_data
     ):
-        """Test successful seasonality pattern analysis"""
+        """Test successful seasonality pattern analysis."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -186,7 +185,7 @@ class TestInventoryAgentEnhanced:
     async def test_analyze_seasonality_patterns_insufficient_data(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test seasonality analysis with insufficient data"""
+        """Test seasonality analysis with insufficient data."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -202,7 +201,7 @@ class TestInventoryAgentEnhanced:
         assert result is None
 
     def test_analyze_seasonal_period(self, enhanced_inventory_agent):
-        """Test seasonal period analysis"""
+        """Test seasonal period analysis."""
         # Create data with clear weekly pattern
         data = []
         for i in range(28):  # 4 weeks
@@ -222,7 +221,7 @@ class TestInventoryAgentEnhanced:
         assert any(l >= 5 for l in lows)  # At least one weekend low
 
     def test_calculate_seasonal_adjustment(self, enhanced_inventory_agent):
-        """Test seasonal adjustment calculation"""
+        """Test seasonal adjustment calculation."""
         # Create simple pattern: high on day 0, low on day 3
         data = [10.0, 8.0, 6.0, 4.0, 6.0, 8.0, 10.0] * 4  # 4 cycles of 7 days
 
@@ -238,7 +237,7 @@ class TestInventoryAgentEnhanced:
     async def test_analyze_item_correlations_success(
         self, enhanced_inventory_agent, mock_db_session, sample_correlated_items_data
     ):
-        """Test successful item correlation analysis"""
+        """Test successful item correlation analysis."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -273,7 +272,7 @@ class TestInventoryAgentEnhanced:
     async def test_analyze_item_correlations_insufficient_data(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test item correlation analysis with insufficient data"""
+        """Test item correlation analysis with insufficient data."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -288,7 +287,7 @@ class TestInventoryAgentEnhanced:
         assert result is None
 
     def test_generate_bundle_opportunities(self, enhanced_inventory_agent, mock_db_session):
-        """Test bundle opportunity generation"""
+        """Test bundle opportunity generation."""
         mock_session_instance = Mock()
 
         # Mock primary item
@@ -327,7 +326,7 @@ class TestInventoryAgentEnhanced:
     async def test_analyze_supplier_diversification_success(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test successful supplier diversification analysis"""
+        """Test successful supplier diversification analysis."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -387,7 +386,7 @@ class TestInventoryAgentEnhanced:
     async def test_analyze_supplier_diversification_no_orders(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test supplier diversification analysis with no purchase orders"""
+        """Test supplier diversification analysis with no purchase orders."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -404,7 +403,7 @@ class TestInventoryAgentEnhanced:
     def test_generate_diversification_recommendations_high_concentration(
         self, enhanced_inventory_agent
     ):
-        """Test diversification recommendations for high concentration"""
+        """Test diversification recommendations for high concentration."""
         recommendations = enhanced_inventory_agent._generate_diversification_recommendations(
             concentration_index=0.8,  # High concentration
             current_supplier_count=1,  # Single supplier
@@ -422,7 +421,7 @@ class TestInventoryAgentEnhanced:
         assert len(critical_recs) > 0
 
     def test_calculate_optimal_supplier_split_high_risk(self, enhanced_inventory_agent):
-        """Test optimal supplier split calculation for high risk scenario"""
+        """Test optimal supplier split calculation for high risk scenario."""
         current_volumes = {"supplier_1": 8000.0, "supplier_2": 2000.0}  # 80% concentration  # 20%
 
         recommended_split = enhanced_inventory_agent._calculate_optimal_supplier_split(
@@ -437,7 +436,7 @@ class TestInventoryAgentEnhanced:
         assert abs(sum(recommended_split.values()) - 1.0) < 0.01
 
     def test_estimate_diversification_cost_impact(self, enhanced_inventory_agent):
-        """Test diversification cost impact estimation"""
+        """Test diversification cost impact estimation."""
         # Single supplier scenario
         cost_impact = enhanced_inventory_agent._estimate_diversification_cost_impact(1, 3)
         assert cost_impact == 0.05  # 5% increase expected
@@ -454,7 +453,7 @@ class TestInventoryAgentEnhanced:
     async def test_generate_comprehensive_reorder_recommendation_success(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test comprehensive reorder recommendation generation"""
+        """Test comprehensive reorder recommendation generation."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -524,7 +523,8 @@ class TestInventoryAgentEnhanced:
     async def test_generate_comprehensive_reorder_recommendation_no_forecast(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test comprehensive recommendation when no demand forecast is available"""
+        """Test comprehensive recommendation when no demand forecast is
+        available."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -541,7 +541,7 @@ class TestInventoryAgentEnhanced:
     async def test_process_data_new_analytics_types(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test processing of new enhanced analytics data types"""
+        """Test processing of new enhanced analytics data types."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -568,7 +568,7 @@ class TestInventoryAgentEnhanced:
     async def test_comprehensive_analytics_analysis_success(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test comprehensive analytics analysis with high-value items"""
+        """Test comprehensive analytics analysis with high-value items."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -626,7 +626,7 @@ class TestInventoryAgentEnhanced:
     async def test_comprehensive_analytics_analysis_no_items(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test comprehensive analytics analysis with no high-value items"""
+        """Test comprehensive analytics analysis with no high-value items."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -641,7 +641,7 @@ class TestInventoryAgentEnhanced:
         assert result is None
 
     def test_enhanced_configuration_validation(self, enhanced_inventory_agent):
-        """Test that enhanced configuration parameters are properly set"""
+        """Test that enhanced configuration parameters are properly set."""
         agent = enhanced_inventory_agent
 
         # Verify all enhanced configuration parameters
@@ -668,7 +668,7 @@ class TestInventoryAgentEnhanced:
     async def test_error_handling_in_enhanced_methods(
         self, enhanced_inventory_agent, mock_db_session
     ):
-        """Test error handling in enhanced analytics methods"""
+        """Test error handling in enhanced analytics methods."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -699,7 +699,7 @@ class TestInventoryAgentEnhanced:
         assert comprehensive_result is None
 
     def test_namedtuple_structures(self):
-        """Test that new NamedTuple structures are properly defined"""
+        """Test that new NamedTuple structures are properly defined."""
         # Test SeasonalityAnalysis
         seasonality = SeasonalityAnalysis(
             item_id="test",

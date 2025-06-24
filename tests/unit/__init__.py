@@ -1,3 +1,1 @@
-"""
-Unit tests for business agent system components
-"""
+"""Unit tests for business agent system components."""

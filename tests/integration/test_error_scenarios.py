@@ -1,6 +1,4 @@
-"""
-Integration tests for error scenarios and failure recovery.
-"""
+"""Integration tests for error scenarios and failure recovery."""
 
 import asyncio
 import os

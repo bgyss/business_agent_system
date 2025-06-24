@@ -1,6 +1,4 @@
-"""
-Unit tests for BusinessSimulator class
-"""
+"""Unit tests for BusinessSimulator class."""
 
 import asyncio
 import os
@@ -16,11 +14,11 @@ from simulation.business_simulator import BusinessSimulator
 
 
 class TestBusinessSimulator:
-    """Test cases for BusinessSimulator"""
+    """Test cases for BusinessSimulator."""
 
     @pytest.fixture
     def mock_database(self):
-        """Mock database components"""
+        """Mock database components."""
         with patch("simulation.business_simulator.create_engine") as mock_engine, patch(
             "simulation.business_simulator.sessionmaker"
         ) as mock_sessionmaker:
@@ -40,12 +38,12 @@ class TestBusinessSimulator:
 
     @pytest.fixture
     def business_config(self):
-        """Basic business configuration"""
+        """Basic business configuration."""
         return {"duration_minutes": 10, "speed_multiplier": 2.0, "simulation_interval": 5}
 
     @pytest.fixture
     def business_simulator(self, mock_database, business_config):
-        """Create BusinessSimulator instance for testing"""
+        """Create BusinessSimulator instance for testing."""
         with patch("simulation.business_simulator.FinancialBase"), patch(
             "simulation.business_simulator.InventoryBase"
         ), patch("simulation.business_simulator.EmployeeBase"):
@@ -54,7 +52,7 @@ class TestBusinessSimulator:
             return simulator
 
     def test_initialization(self, business_config, mock_database):
-        """Test BusinessSimulator initialization"""
+        """Test BusinessSimulator initialization."""
         with patch("simulation.business_simulator.FinancialBase"), patch(
             "simulation.business_simulator.InventoryBase"
         ), patch("simulation.business_simulator.EmployeeBase"):
@@ -72,7 +70,7 @@ class TestBusinessSimulator:
             mock_database["sessionmaker"].assert_called_once()
 
     def test_initialization_default_db_url(self, business_config, mock_database):
-        """Test BusinessSimulator initialization with default database URL"""
+        """Test BusinessSimulator initialization with default database URL."""
         with patch("simulation.business_simulator.FinancialBase"), patch(
             "simulation.business_simulator.InventoryBase"
         ), patch("simulation.business_simulator.EmployeeBase"):
@@ -82,7 +80,7 @@ class TestBusinessSimulator:
             assert simulator.db_url == "sqlite:///business_simulation.db"
 
     def test_initialize_business_restaurant(self, business_simulator):
-        """Test business initialization for restaurant type"""
+        """Test business initialization for restaurant type."""
         mock_session = Mock()
         business_simulator.SessionLocal.return_value = mock_session
 
@@ -114,7 +112,7 @@ class TestBusinessSimulator:
             mock_session.close.assert_called()
 
     def test_initialize_business_retail(self, business_simulator):
-        """Test business initialization for retail type"""
+        """Test business initialization for retail type."""
         mock_session = Mock()
         business_simulator.SessionLocal.return_value = mock_session
 
@@ -137,7 +135,7 @@ class TestBusinessSimulator:
             mock_inv_profile.assert_called_once()
 
     def test_initialize_business_existing_data(self, business_simulator):
-        """Test business initialization when data already exists"""
+        """Test business initialization when data already exists."""
         mock_session = Mock()
         business_simulator.SessionLocal.return_value = mock_session
 
@@ -159,12 +157,12 @@ class TestBusinessSimulator:
             mock_session.close.assert_called()
 
     def test_simulate_historical_data_not_initialized(self, business_simulator):
-        """Test simulate_historical_data raises error when not initialized"""
+        """Test simulate_historical_data raises error when not initialized."""
         with pytest.raises(ValueError, match="Business must be initialized first"):
             business_simulator.simulate_historical_data()
 
     def test_simulate_historical_data_success(self, business_simulator):
-        """Test successful historical data simulation"""
+        """Test successful historical data simulation."""
         # Setup mocks
         mock_financial_gen = Mock()
         mock_inventory_sim = Mock()
@@ -247,7 +245,7 @@ class TestBusinessSimulator:
         mock_session.close.assert_called_once()
 
     def test_simulate_historical_data_existing_items(self, business_simulator):
-        """Test historical data simulation with existing inventory items"""
+        """Test historical data simulation with existing inventory items."""
         # Setup mocks
         mock_financial_gen = Mock()
         mock_inventory_sim = Mock()
@@ -280,7 +278,7 @@ class TestBusinessSimulator:
 
     @pytest.mark.asyncio
     async def test_start_real_time_simulation_basic(self, business_simulator):
-        """Test basic real-time simulation startup"""
+        """Test basic real-time simulation startup."""
         mock_session = Mock()
         business_simulator.SessionLocal.return_value = mock_session
 
@@ -312,7 +310,7 @@ class TestBusinessSimulator:
 
     @pytest.mark.asyncio
     async def test_start_real_time_simulation_with_duration(self, business_simulator):
-        """Test real-time simulation with duration limit"""
+        """Test real-time simulation with duration limit."""
         # Set very short duration for testing
         business_simulator.config["duration_minutes"] = 0.01  # 0.6 seconds
 
@@ -332,7 +330,7 @@ class TestBusinessSimulator:
 
     @pytest.mark.asyncio
     async def test_start_real_time_simulation_message_generation(self, business_simulator):
-        """Test that real-time simulation generates appropriate messages"""
+        """Test that real-time simulation generates appropriate messages."""
         mock_session = Mock()
         business_simulator.SessionLocal.return_value = mock_session
 
@@ -367,7 +365,7 @@ class TestBusinessSimulator:
 
     @pytest.mark.asyncio
     async def test_start_real_time_simulation_error_handling(self, business_simulator):
-        """Test error handling in real-time simulation"""
+        """Test error handling in real-time simulation."""
         mock_session = Mock()
         business_simulator.SessionLocal.return_value = mock_session
 
@@ -393,7 +391,7 @@ class TestBusinessSimulator:
 
     @pytest.mark.asyncio
     async def test_stop_simulation(self, business_simulator):
-        """Test stopping simulation"""
+        """Test stopping simulation."""
         business_simulator.is_running = True
 
         await business_simulator.stop_simulation()
@@ -401,7 +399,7 @@ class TestBusinessSimulator:
         assert business_simulator.is_running is False
 
     def test_get_simulation_status_with_data(self, business_simulator):
-        """Test getting simulation status with data"""
+        """Test getting simulation status with data."""
         mock_session = Mock()
         business_simulator.SessionLocal.return_value = mock_session
 
@@ -437,7 +435,7 @@ class TestBusinessSimulator:
         mock_session.close.assert_called_once()
 
     def test_get_simulation_status_no_data(self, business_simulator):
-        """Test getting simulation status with no data"""
+        """Test getting simulation status with no data."""
         mock_session = Mock()
         business_simulator.SessionLocal.return_value = mock_session
 
@@ -455,7 +453,7 @@ class TestBusinessSimulator:
         assert status["business_type"] is None
 
     def test_generate_sample_scenarios(self, business_simulator):
-        """Test generating sample scenarios"""
+        """Test generating sample scenarios."""
         scenarios = business_simulator.generate_sample_scenarios()
 
         assert isinstance(scenarios, list)
@@ -487,7 +485,7 @@ class TestBusinessSimulator:
         # No assertions needed as it's a placeholder implementation
 
     def test_database_session_error_handling(self, business_simulator):
-        """Test that database session errors are handled properly"""
+        """Test that database session errors are handled properly."""
         mock_session = Mock()
         mock_session.commit.side_effect = Exception("Database error")
         business_simulator.SessionLocal.return_value = mock_session
@@ -522,7 +520,8 @@ class TestBusinessSimulator:
 
     @patch("simulation.business_simulator.random.shuffle")
     def test_simulate_historical_data_transaction_shuffling(self, mock_shuffle, business_simulator):
-        """Test that transactions are shuffled during historical data generation"""
+        """Test that transactions are shuffled during historical data
+        generation."""
         # Setup mocks
         mock_financial_gen = Mock()
         mock_inventory_sim = Mock()
@@ -552,7 +551,7 @@ class TestBusinessSimulator:
         mock_shuffle.assert_called_once()
 
     def test_config_access(self, business_simulator, business_config):
-        """Test that configuration is properly accessible"""
+        """Test that configuration is properly accessible."""
         assert business_simulator.config == business_config
         assert business_simulator.config.get("duration_minutes") == 10
         assert business_simulator.config.get("speed_multiplier") == 2.0

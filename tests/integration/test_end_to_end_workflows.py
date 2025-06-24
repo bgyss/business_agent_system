@@ -1,6 +1,4 @@
-"""
-End-to-end integration tests for complete business workflows.
-"""
+"""End-to-end integration tests for complete business workflows."""
 
 import asyncio
 from datetime import datetime
@@ -203,7 +201,8 @@ class TestCompleteBusinessWorkflows:
 
     @pytest.mark.asyncio
     async def test_hr_workflow_complete(self, running_system, integration_helper):
-        """Test complete HR workflow from schedule changes to cost optimization."""
+        """Test complete HR workflow from schedule changes to cost
+        optimization."""
         system = running_system
         hr_agent = system.agents["hr"]
 
@@ -354,7 +353,8 @@ class TestCompleteBusinessWorkflows:
 
     @pytest.mark.asyncio
     async def test_decision_persistence_workflow(self, running_system, integration_helper):
-        """Test that agent decisions are properly persisted throughout workflow."""
+        """Test that agent decisions are properly persisted throughout
+        workflow."""
         system = running_system
 
         # Force decisions by sending messages that should trigger responses

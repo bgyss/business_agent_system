@@ -1,6 +1,5 @@
-"""
-Unit tests for advanced InventoryAgent predictive analytics functionality
-"""
+"""Unit tests for advanced InventoryAgent predictive analytics
+functionality."""
 
 import os
 import sys
@@ -24,11 +23,11 @@ from models.inventory import ItemStatus, StockMovementType
 
 
 class TestInventoryAgentAdvanced:
-    """Test cases for advanced InventoryAgent analytics"""
+    """Test cases for advanced InventoryAgent analytics."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [
@@ -39,7 +38,7 @@ class TestInventoryAgentAdvanced:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -49,7 +48,7 @@ class TestInventoryAgentAdvanced:
 
     @pytest.fixture
     def advanced_agent_config(self):
-        """Advanced inventory agent configuration"""
+        """Advanced inventory agent configuration."""
         return {
             "check_interval": 300,
             "low_stock_multiplier": 1.2,
@@ -68,7 +67,7 @@ class TestInventoryAgentAdvanced:
 
     @pytest.fixture
     def advanced_inventory_agent(self, mock_anthropic, mock_db_session, advanced_agent_config):
-        """Create advanced inventory agent instance"""
+        """Create advanced inventory agent instance."""
         return InventoryAgent(
             agent_id="advanced_inventory_agent",
             api_key="test_api_key",
@@ -78,7 +77,7 @@ class TestInventoryAgentAdvanced:
 
     @pytest.fixture
     def sample_stock_movements(self):
-        """Create sample stock movements for testing forecasting"""
+        """Create sample stock movements for testing forecasting."""
         base_date = datetime.now() - timedelta(days=60)
         movements = []
 
@@ -105,7 +104,7 @@ class TestInventoryAgentAdvanced:
 
     @pytest.fixture
     def sample_item_with_expiry(self):
-        """Create sample item with expiry information"""
+        """Create sample item with expiry information."""
         return Mock(
             id="expiry_item",
             name="Perishable Item",
@@ -121,7 +120,7 @@ class TestInventoryAgentAdvanced:
 
     @pytest.fixture
     def sample_suppliers(self):
-        """Create sample suppliers for performance testing"""
+        """Create sample suppliers for performance testing."""
         return [
             Mock(
                 id="supplier_1",
@@ -147,7 +146,7 @@ class TestInventoryAgentAdvanced:
         ]
 
     def test_advanced_agent_initialization(self, advanced_inventory_agent, advanced_agent_config):
-        """Test advanced agent initialization with new config parameters"""
+        """Test advanced agent initialization with new config parameters."""
         agent = advanced_inventory_agent
         assert agent.forecast_horizon_days == 30
         assert agent.service_level_target == 0.95
@@ -162,7 +161,7 @@ class TestInventoryAgentAdvanced:
     async def test_demand_prediction_insufficient_data(
         self, advanced_inventory_agent, mock_db_session
     ):
-        """Test demand prediction with insufficient historical data"""
+        """Test demand prediction with insufficient historical data."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -179,7 +178,7 @@ class TestInventoryAgentAdvanced:
     async def test_demand_prediction_success(
         self, advanced_inventory_agent, mock_db_session, sample_stock_movements
     ):
-        """Test successful demand prediction with sufficient data"""
+        """Test successful demand prediction with sufficient data."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -199,7 +198,7 @@ class TestInventoryAgentAdvanced:
         assert 0 <= forecast.forecast_accuracy <= 1
 
     def test_aggregate_daily_consumption(self, advanced_inventory_agent, sample_stock_movements):
-        """Test daily consumption aggregation"""
+        """Test daily consumption aggregation."""
         daily_consumption = advanced_inventory_agent._aggregate_daily_consumption(
             sample_stock_movements
         )
@@ -210,7 +209,7 @@ class TestInventoryAgentAdvanced:
         assert all(x >= 0 for x in daily_consumption)
 
     def test_holt_winters_forecast_insufficient_data(self, advanced_inventory_agent):
-        """Test Holt-Winters forecasting with insufficient data"""
+        """Test Holt-Winters forecasting with insufficient data."""
         short_data = [1.0, 2.0, 3.0]  # Less than 14 points
 
         result = advanced_inventory_agent._apply_holt_winters_forecast(short_data, 7)
@@ -218,7 +217,7 @@ class TestInventoryAgentAdvanced:
         assert result is None
 
     def test_holt_winters_forecast_success(self, advanced_inventory_agent):
-        """Test successful Holt-Winters forecasting"""
+        """Test successful Holt-Winters forecasting."""
         # Generate synthetic data with trend and seasonality
         data = []
         for i in range(30):
@@ -235,7 +234,7 @@ class TestInventoryAgentAdvanced:
         assert 0 <= accuracy <= 1
 
     def test_calculate_forecast_accuracy(self, advanced_inventory_agent):
-        """Test forecast accuracy calculation"""
+        """Test forecast accuracy calculation."""
         actual = np.array([10, 12, 8, 15, 11])
         predicted = np.array([9, 13, 7, 14, 12])
 
@@ -244,7 +243,7 @@ class TestInventoryAgentAdvanced:
         assert 0 <= accuracy <= 1
 
     def test_calculate_forecast_accuracy_with_zeros(self, advanced_inventory_agent):
-        """Test forecast accuracy calculation with zero values"""
+        """Test forecast accuracy calculation with zero values."""
         actual = np.array([0, 0, 0, 0, 0])
         predicted = np.array([1, 2, 3, 4, 5])
 
@@ -256,7 +255,7 @@ class TestInventoryAgentAdvanced:
     async def test_calculate_optimal_reorder_point_no_item(
         self, advanced_inventory_agent, mock_db_session
     ):
-        """Test optimal reorder point calculation with non-existent item"""
+        """Test optimal reorder point calculation with non-existent item."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -272,7 +271,7 @@ class TestInventoryAgentAdvanced:
     async def test_calculate_optimal_reorder_point_success(
         self, advanced_inventory_agent, mock_db_session, sample_stock_movements
     ):
-        """Test successful optimal reorder point calculation"""
+        """Test successful optimal reorder point calculation."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -314,7 +313,7 @@ class TestInventoryAgentAdvanced:
         assert result.total_cost >= 0
 
     def test_get_z_score_for_service_level(self, advanced_inventory_agent):
-        """Test Z-score calculation for service levels"""
+        """Test Z-score calculation for service levels."""
         # Test exact matches
         assert advanced_inventory_agent._get_z_score_for_service_level(0.95) == 1.65
         assert advanced_inventory_agent._get_z_score_for_service_level(0.99) == 2.33
@@ -328,7 +327,7 @@ class TestInventoryAgentAdvanced:
         assert advanced_inventory_agent._get_z_score_for_service_level(1.0) == 1.65  # Default
 
     def test_calculate_total_inventory_cost(self, advanced_inventory_agent):
-        """Test total inventory cost calculation"""
+        """Test total inventory cost calculation."""
         annual_demand = 1000.0
         order_quantity = 200
         unit_cost = 10.0
@@ -343,7 +342,7 @@ class TestInventoryAgentAdvanced:
         # Cost should include ordering, holding, and shortage components
 
     def test_calculate_total_inventory_cost_edge_cases(self, advanced_inventory_agent):
-        """Test inventory cost calculation with edge cases"""
+        """Test inventory cost calculation with edge cases."""
         # Zero demand
         cost = advanced_inventory_agent._calculate_total_inventory_cost(0, 100, 10.0, 0.95, 10.0)
         assert cost == 0.0
@@ -354,7 +353,7 @@ class TestInventoryAgentAdvanced:
 
     @pytest.mark.asyncio
     async def test_optimize_bulk_purchase_no_item(self, advanced_inventory_agent, mock_db_session):
-        """Test bulk purchase optimization with non-existent item"""
+        """Test bulk purchase optimization with non-existent item."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -368,7 +367,7 @@ class TestInventoryAgentAdvanced:
 
     @pytest.mark.asyncio
     async def test_optimize_bulk_purchase_success(self, advanced_inventory_agent, mock_db_session):
-        """Test successful bulk purchase optimization"""
+        """Test successful bulk purchase optimization."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -403,7 +402,7 @@ class TestInventoryAgentAdvanced:
             assert result.break_even_point >= 0
 
     def test_calculate_bulk_purchase_total_cost(self, advanced_inventory_agent):
-        """Test bulk purchase total cost calculation"""
+        """Test bulk purchase total cost calculation."""
         annual_demand = 1000.0
         order_quantity = 200
         unit_cost = 10.0
@@ -416,7 +415,7 @@ class TestInventoryAgentAdvanced:
         assert cost < float("inf")
 
     def test_calculate_bulk_purchase_total_cost_edge_cases(self, advanced_inventory_agent):
-        """Test bulk purchase cost calculation edge cases"""
+        """Test bulk purchase cost calculation edge cases."""
         # Zero demand
         cost = advanced_inventory_agent._calculate_bulk_purchase_total_cost(0, 100, 10.0)
         assert cost == float("inf")
@@ -427,7 +426,7 @@ class TestInventoryAgentAdvanced:
 
     @pytest.mark.asyncio
     async def test_predict_expiry_waste_no_item(self, advanced_inventory_agent, mock_db_session):
-        """Test expiry waste prediction with non-existent item"""
+        """Test expiry waste prediction with non-existent item."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -443,7 +442,7 @@ class TestInventoryAgentAdvanced:
     async def test_predict_expiry_waste_no_expiry_days(
         self, advanced_inventory_agent, mock_db_session
     ):
-        """Test expiry waste prediction for non-perishable item"""
+        """Test expiry waste prediction for non-perishable item."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -461,7 +460,7 @@ class TestInventoryAgentAdvanced:
     async def test_predict_expiry_waste_high_risk(
         self, advanced_inventory_agent, mock_db_session, sample_item_with_expiry
     ):
-        """Test expiry waste prediction for high-risk item"""
+        """Test expiry waste prediction for high-risk item."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -495,7 +494,7 @@ class TestInventoryAgentAdvanced:
     def test_generate_waste_minimization_strategies_high_risk(
         self, advanced_inventory_agent, sample_item_with_expiry
     ):
-        """Test waste minimization strategy generation for high-risk items"""
+        """Test waste minimization strategy generation for high-risk items."""
         daily_consumption = 2.0
         predicted_waste = 50.0
         waste_risk = "high"
@@ -513,7 +512,8 @@ class TestInventoryAgentAdvanced:
     def test_generate_waste_minimization_strategies_medium_risk(
         self, advanced_inventory_agent, sample_item_with_expiry
     ):
-        """Test waste minimization strategy generation for medium-risk items"""
+        """Test waste minimization strategy generation for medium-risk
+        items."""
         daily_consumption = 5.0
         predicted_waste = 20.0
         waste_risk = "medium"
@@ -530,7 +530,7 @@ class TestInventoryAgentAdvanced:
     def test_calculate_optimal_reorder_timing(
         self, advanced_inventory_agent, sample_item_with_expiry
     ):
-        """Test optimal reorder timing calculation"""
+        """Test optimal reorder timing calculation."""
         daily_consumption = 5.0
         seasonality_factor = 1.2  # High season
 
@@ -547,7 +547,7 @@ class TestInventoryAgentAdvanced:
     def test_calculate_optimal_reorder_timing_no_consumption(
         self, advanced_inventory_agent, sample_item_with_expiry
     ):
-        """Test optimal reorder timing with zero consumption"""
+        """Test optimal reorder timing with zero consumption."""
         daily_consumption = 0.0
         seasonality_factor = 1.0
 
@@ -562,7 +562,7 @@ class TestInventoryAgentAdvanced:
     async def test_analyze_supplier_performance_advanced_no_suppliers(
         self, advanced_inventory_agent, mock_db_session
     ):
-        """Test advanced supplier performance analysis with no suppliers"""
+        """Test advanced supplier performance analysis with no suppliers."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -575,7 +575,7 @@ class TestInventoryAgentAdvanced:
         assert result == []
 
     def test_calculate_on_time_delivery_rate(self, advanced_inventory_agent):
-        """Test on-time delivery rate calculation"""
+        """Test on-time delivery rate calculation."""
         orders = [
             Mock(status="delivered", expected_delivery_date=datetime.now()),
             Mock(status="delivered", expected_delivery_date=datetime.now()),
@@ -589,14 +589,14 @@ class TestInventoryAgentAdvanced:
         assert rate == 1.0  # All delivered orders assumed on-time
 
     def test_calculate_on_time_delivery_rate_no_orders(self, advanced_inventory_agent):
-        """Test on-time delivery rate with no orders"""
+        """Test on-time delivery rate with no orders."""
         rate = advanced_inventory_agent._calculate_on_time_delivery_rate([])
         assert rate == 0.0
 
     def test_calculate_quality_score(
         self, advanced_inventory_agent, mock_db_session, sample_suppliers
     ):
-        """Test quality score calculation"""
+        """Test quality score calculation."""
         supplier = sample_suppliers[0]  # Excellent supplier
         orders = [
             Mock(total_amount=Decimal("1000.00")),
@@ -613,7 +613,7 @@ class TestInventoryAgentAdvanced:
         assert score > 0.5  # Should be above neutral for excellent supplier
 
     def test_calculate_reliability_index(self, advanced_inventory_agent, sample_suppliers):
-        """Test reliability index calculation"""
+        """Test reliability index calculation."""
         supplier = sample_suppliers[0]
         orders = [
             Mock(
@@ -638,7 +638,7 @@ class TestInventoryAgentAdvanced:
         assert 0 <= reliability <= 1
 
     def test_calculate_lead_time_variability(self, advanced_inventory_agent, sample_suppliers):
-        """Test lead time variability calculation"""
+        """Test lead time variability calculation."""
         supplier = sample_suppliers[0]
         orders = [
             Mock(
@@ -657,7 +657,7 @@ class TestInventoryAgentAdvanced:
         assert 0 <= variability <= 1
 
     def test_calculate_overall_performance_score(self, advanced_inventory_agent):
-        """Test overall performance score calculation"""
+        """Test overall performance score calculation."""
         score = advanced_inventory_agent._calculate_overall_performance_score(
             on_time_rate=0.95,
             quality_score=0.90,
@@ -670,7 +670,7 @@ class TestInventoryAgentAdvanced:
         assert score > 0.85  # Should be high with good metrics
 
     def test_recommend_supplier_action(self, advanced_inventory_agent):
-        """Test supplier action recommendations"""
+        """Test supplier action recommendations."""
         # Excellent supplier
         action = advanced_inventory_agent._recommend_supplier_action(
             0.90,
@@ -712,7 +712,7 @@ class TestInventoryAgentAdvanced:
 
     @pytest.mark.asyncio
     async def test_process_data_advanced_types(self, advanced_inventory_agent, mock_db_session):
-        """Test processing of new advanced data types"""
+        """Test processing of new advanced data types."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -738,7 +738,7 @@ class TestInventoryAgentAdvanced:
     async def test_estimate_demand_standard_deviation(
         self, advanced_inventory_agent, mock_db_session
     ):
-        """Test demand standard deviation estimation"""
+        """Test demand standard deviation estimation."""
         mock_session_instance = Mock()
 
         # Mock movements with varying consumption
@@ -763,7 +763,7 @@ class TestInventoryAgentAdvanced:
     async def test_estimate_demand_standard_deviation_insufficient_data(
         self, advanced_inventory_agent, mock_db_session
     ):
-        """Test demand standard deviation estimation with insufficient data"""
+        """Test demand standard deviation estimation with insufficient data."""
         mock_session_instance = Mock()
         mock_session_instance.query.return_value.filter.return_value.all.return_value = []
 
@@ -774,7 +774,7 @@ class TestInventoryAgentAdvanced:
         assert std_dev == 3.0  # 30% of daily demand fallback
 
     def test_advanced_configuration_defaults(self):
-        """Test that advanced configuration has proper defaults"""
+        """Test that advanced configuration has proper defaults."""
         with patch("agents.base_agent.Anthropic"), patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ):

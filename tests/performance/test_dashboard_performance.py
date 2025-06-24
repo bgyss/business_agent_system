@@ -1,8 +1,7 @@
-"""
-Dashboard Performance Tests
+"""Dashboard Performance Tests.
 
-Tests for measuring and benchmarking dashboard loading times,
-rendering performance, and responsiveness under various data loads.
+Tests for measuring and benchmarking dashboard loading times, rendering
+performance, and responsiveness under various data loads.
 """
 
 import os

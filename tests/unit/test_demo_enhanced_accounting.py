@@ -1,6 +1,4 @@
-"""
-Test suite for demo_enhanced_accounting.py module
-"""
+"""Test suite for demo_enhanced_accounting.py module."""
 
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -10,21 +8,21 @@ import demo_enhanced_accounting
 
 
 class TestDemoEnhancedAccounting:
-    """Test the demo_enhanced_accounting script"""
+    """Test the demo_enhanced_accounting script."""
 
     def test_module_can_be_imported(self):
-        """Test that the demo module can be imported without errors"""
+        """Test that the demo module can be imported without errors."""
         assert demo_enhanced_accounting is not None
 
     def test_demo_function_exists(self):
-        """Test that the main demo function exists"""
+        """Test that the main demo function exists."""
         assert hasattr(demo_enhanced_accounting, "demo_enhanced_accounting")
         assert callable(demo_enhanced_accounting.demo_enhanced_accounting)
 
     @patch("demo_enhanced_accounting.EnhancedAccountingAgent")
     @patch("builtins.print")
     async def test_demo_initialization(self, mock_print, mock_agent_class):
-        """Test that the demo initializes the agent correctly"""
+        """Test that the demo initializes the agent correctly."""
         # Create a mock agent that will raise an exception early to prevent full execution
         mock_agent = Mock()
         mock_agent.anomaly_threshold = 0.25
@@ -65,18 +63,18 @@ class TestDemoEnhancedAccounting:
 
     @patch("demo_enhanced_accounting.TransactionModel")
     def test_transaction_model_usage(self, mock_transaction_model):
-        """Test that TransactionModel is used correctly in the demo"""
+        """Test that TransactionModel is used correctly in the demo."""
         # Just verify the import and class availability
         assert mock_transaction_model is not None
 
     @patch("demo_enhanced_accounting.Mock")
     def test_mock_usage(self, mock_mock_class):
-        """Test that Mock is used for similar transactions"""
+        """Test that Mock is used for similar transactions."""
         # Verify Mock is available for creating similar transactions
         assert mock_mock_class is not None
 
     def test_required_imports_available(self):
-        """Test that all required imports work"""
+        """Test that all required imports work."""
         # Test imports used in the demo script
         from datetime import datetime, timedelta
         from decimal import Decimal
@@ -90,7 +88,7 @@ class TestDemoEnhancedAccounting:
 
     @patch("demo_enhanced_accounting.EnhancedAccountingAgent")
     async def test_configuration_structure(self, mock_agent_class):
-        """Test the configuration structure passed to the agent"""
+        """Test the configuration structure passed to the agent."""
         mock_agent = Mock()
         mock_agent._detect_transaction_anomalies = AsyncMock(side_effect=Exception("Stop early"))
         mock_agent_class.return_value = mock_agent

@@ -1,6 +1,4 @@
-"""
-Integration tests for agent coordination and communication.
-"""
+"""Integration tests for agent coordination and communication."""
 
 import asyncio
 from datetime import datetime

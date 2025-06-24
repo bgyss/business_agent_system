@@ -1,6 +1,4 @@
-"""
-Unit tests for BaseAgent class
-"""
+"""Unit tests for BaseAgent class."""
 
 import asyncio
 import os
@@ -17,7 +15,7 @@ from agents.base_agent import AgentDecision, AgentMessage, BaseAgent
 
 
 class ConcreteAgent(BaseAgent):
-    """Concrete implementation of BaseAgent for testing"""
+    """Concrete implementation of BaseAgent for testing."""
 
     @property
     def system_prompt(self) -> str:
@@ -44,11 +42,11 @@ class ConcreteAgent(BaseAgent):
 
 
 class TestBaseAgent:
-    """Test cases for BaseAgent"""
+    """Test cases for BaseAgent."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [Mock(text="Test Claude response")]
@@ -57,7 +55,7 @@ class TestBaseAgent:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -67,12 +65,12 @@ class TestBaseAgent:
 
     @pytest.fixture
     def agent_config(self):
-        """Agent configuration for testing"""
+        """Agent configuration for testing."""
         return {"check_interval": 60, "anomaly_threshold": 0.2, "test_param": "test_value"}
 
     @pytest.fixture
     def concrete_agent(self, mock_anthropic, mock_db_session, agent_config):
-        """Create a concrete agent instance for testing"""
+        """Create a concrete agent instance for testing."""
         return ConcreteAgent(
             agent_id="test_agent",
             api_key="test_api_key",
@@ -81,7 +79,7 @@ class TestBaseAgent:
         )
 
     def test_agent_initialization(self, concrete_agent, agent_config):
-        """Test agent initialization"""
+        """Test agent initialization."""
         assert concrete_agent.agent_id == "test_agent"
         assert concrete_agent.config == agent_config
         assert concrete_agent.is_running is False
@@ -89,12 +87,12 @@ class TestBaseAgent:
         assert concrete_agent.decisions_log == []
 
     def test_system_prompt_property(self, concrete_agent):
-        """Test system prompt property"""
+        """Test system prompt property."""
         assert concrete_agent.system_prompt == "Test system prompt for concrete agent"
 
     @pytest.mark.asyncio
     async def test_analyze_with_claude_success(self, concrete_agent, mock_anthropic):
-        """Test successful Claude API call"""
+        """Test successful Claude API call."""
         context = {"test": "data"}
         prompt = "Test prompt"
 
@@ -112,7 +110,7 @@ class TestBaseAgent:
 
     @pytest.mark.asyncio
     async def test_analyze_with_claude_error(self, concrete_agent, mock_anthropic):
-        """Test Claude API call with error"""
+        """Test Claude API call with error."""
         mock_anthropic.return_value.messages.create.side_effect = Exception("API Error")
 
         context = {"test": "data"}
@@ -124,7 +122,7 @@ class TestBaseAgent:
 
     @pytest.mark.asyncio
     async def test_send_message(self, concrete_agent):
-        """Test sending message to queue"""
+        """Test sending message to queue."""
         recipient = "other_agent"
         message_type = "test_message"
         content = {"data": "test"}
@@ -143,7 +141,7 @@ class TestBaseAgent:
 
     @pytest.mark.asyncio
     async def test_receive_messages(self, concrete_agent):
-        """Test receiving messages from queue"""
+        """Test receiving messages from queue."""
         # Add messages to queue
         message1 = AgentMessage(
             sender="other_agent",
@@ -175,7 +173,7 @@ class TestBaseAgent:
         assert messages[1].message_type == "broadcast"
 
     def test_log_decision_success(self, concrete_agent, mock_db_session):
-        """Test successful decision logging"""
+        """Test successful decision logging."""
         decision = AgentDecision(
             agent_id="test_agent",
             decision_type="test_decision",
@@ -201,7 +199,7 @@ class TestBaseAgent:
         mock_session_instance.close.assert_called_once()
 
     def test_log_decision_db_error(self, concrete_agent, mock_db_session):
-        """Test decision logging with database error"""
+        """Test decision logging with database error."""
         decision = AgentDecision(
             agent_id="test_agent",
             decision_type="test_decision",
@@ -227,7 +225,7 @@ class TestBaseAgent:
 
     @pytest.mark.asyncio
     async def test_handle_message_data_update(self, concrete_agent):
-        """Test handling data update message"""
+        """Test handling data update message."""
         message = AgentMessage(
             sender="other_agent",
             recipient="test_agent",
@@ -243,7 +241,7 @@ class TestBaseAgent:
 
     @pytest.mark.asyncio
     async def test_handle_message_report_request(self, concrete_agent):
-        """Test handling report request message"""
+        """Test handling report request message."""
         message = AgentMessage(
             sender="other_agent", recipient="test_agent", message_type="report_request", content={}
         )
@@ -261,7 +259,7 @@ class TestBaseAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_with_valid_data(self, concrete_agent):
-        """Test process_data with valid data"""
+        """Test process_data with valid data."""
         data = {"type": "test_data", "value": 123}
 
         decision = await concrete_agent.process_data(data)
@@ -273,7 +271,7 @@ class TestBaseAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_with_invalid_data(self, concrete_agent):
-        """Test process_data with invalid data"""
+        """Test process_data with invalid data."""
         data = {"type": "invalid_data", "value": 123}
 
         decision = await concrete_agent.process_data(data)
@@ -282,7 +280,7 @@ class TestBaseAgent:
 
     @pytest.mark.asyncio
     async def test_generate_report(self, concrete_agent):
-        """Test report generation"""
+        """Test report generation."""
         report = await concrete_agent.generate_report()
 
         assert isinstance(report, dict)
@@ -291,7 +289,7 @@ class TestBaseAgent:
         assert report["decisions_count"] == 0
 
     def test_get_decision_history_no_limit(self, concrete_agent):
-        """Test getting decision history without limit"""
+        """Test getting decision history without limit."""
         # Add some decisions
         for i in range(5):
             decision = AgentDecision(
@@ -310,7 +308,7 @@ class TestBaseAgent:
         assert all(isinstance(d, AgentDecision) for d in history)
 
     def test_get_decision_history_with_limit(self, concrete_agent):
-        """Test getting decision history with limit"""
+        """Test getting decision history with limit."""
         # Add some decisions
         for i in range(5):
             decision = AgentDecision(
@@ -333,7 +331,7 @@ class TestBaseAgent:
 
     @pytest.mark.asyncio
     async def test_health_check(self, concrete_agent, agent_config):
-        """Test health check"""
+        """Test health check."""
         # Add a decision to test last_decision timestamp
         decision = AgentDecision(
             agent_id="test_agent",
@@ -355,7 +353,7 @@ class TestBaseAgent:
 
     @pytest.mark.asyncio
     async def test_start_and_stop(self, concrete_agent):
-        """Test agent start and stop"""
+        """Test agent start and stop."""
         # Mock periodic_check to avoid infinite loop in testing
         concrete_agent.periodic_check = AsyncMock()
 
@@ -379,12 +377,12 @@ class TestBaseAgent:
 
     @pytest.mark.asyncio
     async def test_periodic_check_default(self, concrete_agent):
-        """Test default periodic_check implementation"""
+        """Test default periodic_check implementation."""
         # Should not raise an error
         await concrete_agent.periodic_check()
 
     def test_agent_message_creation(self):
-        """Test AgentMessage creation and attributes"""
+        """Test AgentMessage creation and attributes."""
         message = AgentMessage(
             sender="agent1", recipient="agent2", message_type="test", content={"data": "value"}
         )
@@ -396,7 +394,7 @@ class TestBaseAgent:
         assert isinstance(message.timestamp, datetime)
 
     def test_custom_message_queue(self, mock_anthropic, mock_db_session, agent_config):
-        """Test agent initialization with custom message queue"""
+        """Test agent initialization with custom message queue."""
         custom_queue = asyncio.Queue()
         agent = ConcreteAgent(
             agent_id="test_agent",
@@ -429,7 +427,8 @@ class TestBaseAgent:
 
     @pytest.mark.asyncio
     async def test_agent_loop_exception_handling(self, concrete_agent):
-        """Test agent main loop handles exceptions gracefully (lines 133-134)"""
+        """Test agent main loop handles exceptions gracefully (lines
+        133-134)"""
         # Make periodic_check raise an exception
         concrete_agent.periodic_check = AsyncMock(side_effect=Exception("Test error"))
 

@@ -1,6 +1,4 @@
-"""
-Unit tests for HRAgent class
-"""
+"""Unit tests for HRAgent class."""
 
 import os
 import sys
@@ -22,11 +20,11 @@ from models.employee import (
 
 
 class TestHRAgent:
-    """Test cases for HRAgent"""
+    """Test cases for HRAgent."""
 
     @pytest.fixture
     def mock_anthropic(self):
-        """Mock Anthropic client"""
+        """Mock Anthropic client."""
         with patch("agents.base_agent.Anthropic") as mock_client:
             mock_response = Mock()
             mock_response.content = [Mock(text="HR analysis: Schedule adjustment recommended")]
@@ -35,7 +33,7 @@ class TestHRAgent:
 
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session"""
+        """Mock database session."""
         with patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ) as mock_sessionmaker:
@@ -45,7 +43,7 @@ class TestHRAgent:
 
     @pytest.fixture
     def agent_config(self):
-        """HR agent configuration"""
+        """HR agent configuration."""
         return {
             "check_interval": 300,
             "overtime_threshold": 40,
@@ -55,7 +53,7 @@ class TestHRAgent:
 
     @pytest.fixture
     def hr_agent(self, mock_anthropic, mock_db_session, agent_config):
-        """Create HR agent instance"""
+        """Create HR agent instance."""
         return HRAgent(
             agent_id="hr_agent",
             api_key="test_api_key",
@@ -65,7 +63,7 @@ class TestHRAgent:
 
     @pytest.fixture
     def sample_employee(self):
-        """Create a sample employee for testing"""
+        """Create a sample employee for testing."""
         return Mock(
             id=1,
             first_name="John",
@@ -77,14 +75,14 @@ class TestHRAgent:
         )
 
     def test_initialization(self, hr_agent, agent_config):
-        """Test agent initialization"""
+        """Test agent initialization."""
         assert hr_agent.agent_id == "hr_agent"
         assert hr_agent.overtime_threshold == 40
         assert hr_agent.max_labor_cost_percentage == 0.30
         assert hr_agent.scheduling_buffer_hours == 2
 
     def test_system_prompt(self, hr_agent):
-        """Test system prompt content"""
+        """Test system prompt content."""
         prompt = hr_agent.system_prompt
         assert "AI HR Management Agent" in prompt
         assert "employee schedules" in prompt
@@ -97,7 +95,7 @@ class TestHRAgent:
     async def test_process_data_time_record_unusual_clock_in(
         self, hr_agent, mock_db_session, sample_employee
     ):
-        """Test time record processing for unusual clock-in time"""
+        """Test time record processing for unusual clock-in time."""
         record_data = {
             "employee_id": 1,
             "record_type": TimeRecordType.CLOCK_IN,
@@ -124,7 +122,7 @@ class TestHRAgent:
     async def test_process_data_time_record_normal_clock_in(
         self, hr_agent, mock_db_session, sample_employee
     ):
-        """Test time record processing for normal clock-in time"""
+        """Test time record processing for normal clock-in time."""
         record_data = {
             "employee_id": 1,
             "record_type": TimeRecordType.CLOCK_IN,
@@ -147,7 +145,7 @@ class TestHRAgent:
     async def test_process_data_time_record_overtime_clock_out(
         self, hr_agent, mock_db_session, sample_employee
     ):
-        """Test time record processing for overtime clock-out"""
+        """Test time record processing for overtime clock-out."""
         record_data = {
             "employee_id": 1,
             "record_type": TimeRecordType.CLOCK_OUT,
@@ -190,7 +188,7 @@ class TestHRAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_time_record_employee_not_found(self, hr_agent, mock_db_session):
-        """Test time record processing when employee is not found"""
+        """Test time record processing when employee is not found."""
         record_data = {
             "employee_id": 999,
             "record_type": TimeRecordType.CLOCK_IN,
@@ -209,7 +207,7 @@ class TestHRAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_daily_labor_analysis(self, hr_agent, mock_db_session):
-        """Test daily labor analysis"""
+        """Test daily labor analysis."""
         data = {"type": "daily_labor_analysis"}
 
         mock_session_instance = Mock()
@@ -276,7 +274,7 @@ class TestHRAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_daily_labor_analysis_high_cost(self, hr_agent, mock_db_session):
-        """Test daily labor analysis with high labor cost"""
+        """Test daily labor analysis with high labor cost."""
         data = {"type": "daily_labor_analysis"}
 
         mock_session_instance = Mock()
@@ -321,7 +319,7 @@ class TestHRAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_overtime_check(self, hr_agent, mock_db_session):
-        """Test overtime pattern check"""
+        """Test overtime pattern check."""
         data = {"type": "overtime_check"}
 
         mock_session_instance = Mock()
@@ -367,7 +365,7 @@ class TestHRAgent:
 
     @pytest.mark.asyncio
     async def test_process_data_staffing_analysis(self, hr_agent, mock_db_session):
-        """Test staffing needs analysis"""
+        """Test staffing needs analysis."""
         data = {"type": "staffing_analysis", "revenue_data": {"daily_average": 2500}}
 
         mock_session_instance = Mock()
@@ -401,7 +399,7 @@ class TestHRAgent:
     async def test_process_data_leave_request_sick_leave(
         self, hr_agent, mock_db_session, sample_employee
     ):
-        """Test leave request analysis for sick leave"""
+        """Test leave request analysis for sick leave."""
         request_data = {
             "employee_id": 1,
             "start_date": "2024-02-01",
@@ -432,7 +430,7 @@ class TestHRAgent:
     async def test_process_data_leave_request_vacation(
         self, hr_agent, mock_db_session, sample_employee
     ):
-        """Test leave request analysis for vacation"""
+        """Test leave request analysis for vacation."""
         request_data = {
             "employee_id": 1,
             "start_date": "2024-02-01",
@@ -471,7 +469,7 @@ class TestHRAgent:
         )
 
     def test_calculate_daily_hours(self, hr_agent):
-        """Test daily hours calculation"""
+        """Test daily hours calculation."""
         # Test with normal work day
         time_records = [
             {"timestamp": "2024-01-01T09:00:00", "record_type": TimeRecordType.CLOCK_IN},
@@ -502,7 +500,7 @@ class TestHRAgent:
         assert hours == 7.0  # 3 hours + 4 hours
 
     def test_calculate_daily_hours_with_database_objects(self, hr_agent):
-        """Test daily hours calculation with database objects"""
+        """Test daily hours calculation with database objects."""
         # Test with TimeRecord objects (not dictionaries)
         time_records = [
             Mock(timestamp=datetime(2024, 1, 1, 9, 0), record_type=TimeRecordType.CLOCK_IN),
@@ -514,7 +512,7 @@ class TestHRAgent:
 
     @pytest.mark.asyncio
     async def test_generate_report(self, hr_agent, mock_db_session):
-        """Test report generation"""
+        """Test report generation."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
 
@@ -566,7 +564,7 @@ class TestHRAgent:
 
     @pytest.mark.asyncio
     async def test_get_current_alerts(self, hr_agent, mock_db_session):
-        """Test current alerts generation"""
+        """Test current alerts generation."""
         mock_session_instance = Mock()
 
         # Mock pending leave requests
@@ -584,7 +582,7 @@ class TestHRAgent:
         assert alerts[1]["severity"] == "low"
 
     def test_config_defaults(self):
-        """Test configuration defaults"""
+        """Test configuration defaults."""
         with patch("agents.base_agent.Anthropic"), patch("agents.base_agent.create_engine"), patch(
             "agents.base_agent.sessionmaker"
         ):
@@ -602,7 +600,7 @@ class TestHRAgent:
 
     @pytest.mark.asyncio
     async def test_staffing_business_multipliers(self, hr_agent):
-        """Test business multiplier logic for staffing"""
+        """Test business multiplier logic for staffing."""
         business_multipliers = {
             "monday": 0.7,
             "tuesday": 0.8,
@@ -625,7 +623,7 @@ class TestHRAgent:
 
     @pytest.mark.asyncio
     async def test_labor_cost_percentage_calculation(self, hr_agent):
-        """Test labor cost percentage calculation"""
+        """Test labor cost percentage calculation."""
         total_labor_cost = 750.0  # $750 in labor
         estimated_revenue = 2500.0  # $2500 in revenue
 
@@ -643,7 +641,7 @@ class TestHRAgent:
 
     @pytest.mark.asyncio
     async def test_overtime_cost_calculation(self, hr_agent):
-        """Test overtime cost calculation"""
+        """Test overtime cost calculation."""
         regular_hours = 8
         total_hours = 10
         overtime_hours = total_hours - regular_hours
@@ -659,7 +657,7 @@ class TestHRAgent:
 
     @pytest.mark.asyncio
     async def test_edge_case_no_time_records(self, hr_agent, mock_db_session):
-        """Test edge case with no time records"""
+        """Test edge case with no time records."""
         data = {"type": "daily_labor_analysis"}
 
         mock_session_instance = Mock()
@@ -672,7 +670,7 @@ class TestHRAgent:
 
     @pytest.mark.asyncio
     async def test_edge_case_empty_schedules(self, hr_agent, mock_db_session):
-        """Test edge case with no upcoming schedules"""
+        """Test edge case with no upcoming schedules."""
         data = {"type": "staffing_analysis"}
 
         mock_session_instance = Mock()
@@ -686,7 +684,7 @@ class TestHRAgent:
 
     @pytest.mark.asyncio
     async def test_error_handling_in_process_data(self, hr_agent, mock_db_session):
-        """Test error handling in process_data"""
+        """Test error handling in process_data."""
         mock_session_instance = Mock()
         mock_db_session.return_value = mock_session_instance
         mock_session_instance.close.side_effect = Exception("Session close error")
