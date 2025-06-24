@@ -7,6 +7,7 @@ import os
 import sys
 from pathlib import Path
 
+import subprocess
 import pytest
 
 # Add project root to path
@@ -34,27 +35,62 @@ def run_integration_tests():
 
     # Set test environment variables
     os.environ["PYTHONPATH"] = str(project_root)
+    
+    # Ensure ANTHROPIC_API_KEY is set for testing
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        os.environ["ANTHROPIC_API_KEY"] = "test-api-key-for-testing"
 
-    # Run integration tests
+    # Run integration tests using uv run pytest
     test_args = [
+        "uv", "run", "pytest",
         str(Path(__file__).parent),  # Test directory
         "-v",  # Verbose output
         "--tb=short",  # Shorter tracebacks
-        "-x",  # Stop on first failure
         "--asyncio-mode=auto",  # Handle async tests
+        "--durations=10",  # Report slowest 10 tests
     ]
 
     print("Running Business Agent System Integration Tests...")
     print("=" * 60)
+    print(f"Test directory: {Path(__file__).parent}")
+    print(f"Project root: {project_root}")
+    print(f"Command: {' '.join(test_args)}")
+    print("=" * 60)
 
-    exit_code = pytest.main(test_args)
+    # Change to project root directory for uv run
+    os.chdir(project_root)
+    
+    try:
+        result = subprocess.run(
+            test_args, 
+            capture_output=True, 
+            text=True, 
+            timeout=300  # 5 minute total timeout
+        )
+        
+        # Print captured output
+        if result.stdout:
+            print("STDOUT:")
+            print(result.stdout)
+        if result.stderr:
+            print("STDERR:")
+            print(result.stderr)
+            
+        exit_code = result.returncode
+        
+    except subprocess.TimeoutExpired:
+        print("❌ Tests timed out after 5 minutes!")
+        return 1
+    except Exception as e:
+        print(f"❌ Error running tests: {e}")
+        return 1
 
     if exit_code == 0:
         print("\n" + "=" * 60)
         print("✅ All integration tests passed!")
     else:
         print("\n" + "=" * 60)
-        print("❌ Some integration tests failed!")
+        print(f"❌ Integration tests failed with exit code {exit_code}")
 
     return exit_code
 
@@ -65,10 +101,15 @@ def run_specific_test_file(test_file: str):
 
     test_path = Path(__file__).parent / test_file
     if not test_path.exists():
-        print(f"Test file {test_file} not found!")
+        print(f"❌ Test file {test_file} not found at {test_path}!")
         return 1
+    
+    # Ensure ANTHROPIC_API_KEY is set for testing
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        os.environ["ANTHROPIC_API_KEY"] = "test-api-key-for-testing"
 
     test_args = [
+        "uv", "run", "pytest",
         str(test_path),
         "-v",
         "--tb=short",
@@ -78,7 +119,26 @@ def run_specific_test_file(test_file: str):
     print(f"Running {test_file}...")
     print("=" * 60)
 
-    return pytest.main(test_args)
+    # Change to project root directory for uv run
+    os.chdir(project_root)
+    
+    try:
+        result = subprocess.run(test_args, capture_output=True, text=True, timeout=180)
+        
+        if result.stdout:
+            print(result.stdout)
+        if result.stderr:
+            print("STDERR:")
+            print(result.stderr)
+            
+        return result.returncode
+        
+    except subprocess.TimeoutExpired:
+        print(f"❌ Test {test_file} timed out!")
+        return 1
+    except Exception as e:
+        print(f"❌ Error running test {test_file}: {e}")
+        return 1
 
 
 def run_quick_smoke_test():
@@ -86,6 +146,7 @@ def run_quick_smoke_test():
     setup_test_logging()
 
     test_args = [
+        "uv", "run", "pytest",
         str(Path(__file__).parent / "test_system_initialization.py"),
         "-v",
         "--tb=short",
@@ -97,7 +158,9 @@ def run_quick_smoke_test():
     print("Running quick smoke test...")
     print("=" * 40)
 
-    return pytest.main(test_args)
+    # Change to project root directory for uv run
+    os.chdir(project_root)
+    return subprocess.run(test_args).returncode
 
 
 if __name__ == "__main__":

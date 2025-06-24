@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String, Text
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
@@ -41,9 +41,14 @@ class Item(Base):
     reorder_quantity = Column(Integer, default=0)
     unit_of_measure = Column(String(50), default="each")
     status = Column(String(50), default="active")
+    supplier_id = Column(String, ForeignKey("suppliers.id"), nullable=True)
     expiry_days = Column(Integer)  # Days until expiry (for perishables)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    supplier = relationship("Supplier", back_populates="items")
+    stock_movements = relationship("StockMovement", back_populates="item")
 
 
 class StockMovement(Base):
@@ -57,7 +62,26 @@ class StockMovement(Base):
     reference_number = Column(String(100))
     notes = Column(Text)
     movement_date = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)  # For compatibility
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    item = relationship("Item", back_populates="stock_movements")
+    
+    def __init__(self, **kwargs):
+        # Handle backward compatibility for 'reference' -> 'reference_number'
+        if 'reference' in kwargs:
+            kwargs['reference_number'] = kwargs.pop('reference')
+        
+        # Handle backward compatibility for 'timestamp' -> 'movement_date'
+        if 'timestamp' in kwargs and 'movement_date' not in kwargs:
+            kwargs['movement_date'] = kwargs['timestamp']
+        
+        # Set default movement_date if not provided
+        if 'movement_date' not in kwargs:
+            kwargs['movement_date'] = datetime.utcnow()
+            
+        super().__init__(**kwargs)
 
 
 class Supplier(Base):
@@ -76,6 +100,9 @@ class Supplier(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    items = relationship("Item", back_populates="supplier")
 
 
 class PurchaseOrder(Base):

@@ -143,8 +143,25 @@ class TestAgentCoordination:
         except asyncio.TimeoutError:
             monitor_task.cancel()
 
-        # Monitoring should complete without errors
-        assert not monitor_task.done() or not monitor_task.exception()
+        # Wait for cancellation to complete
+        try:
+            await monitor_task
+        except asyncio.CancelledError:
+            pass  # Cancellation is expected
+
+        # Monitoring should either complete normally or be cancelled
+        # Both are acceptable outcomes for this test
+        assert monitor_task.done()
+        
+        # Check if task completed with an exception (but not CancelledError)
+        try:
+            exception = monitor_task.exception()
+            if exception is not None:
+                # Only allow CancelledError as an acceptable exception
+                assert isinstance(exception, asyncio.CancelledError)
+        except asyncio.CancelledError:
+            # This is also acceptable - the task was cancelled
+            pass
 
     @pytest.mark.asyncio
     async def test_agent_error_isolation(self, running_system):

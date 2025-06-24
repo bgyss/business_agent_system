@@ -114,6 +114,7 @@ class FinancialDataGenerator:
                         "category": "sales",
                         "transaction_date": date
                         + timedelta(hours=random.randint(9, 21), minutes=random.randint(0, 59)),
+                        "account_id": "revenue_account",
                         "from_account_id": None,
                         "to_account_id": "revenue_account",
                         "reference_number": f"SALE-{date.strftime('%Y%m%d')}-{len(transactions)+1:04d}",
@@ -135,6 +136,7 @@ class FinancialDataGenerator:
                         "category": category,
                         "transaction_date": date
                         + timedelta(hours=random.randint(8, 18), minutes=random.randint(0, 59)),
+                        "account_id": "checking_account",
                         "from_account_id": "checking_account",
                         "to_account_id": None,
                         "reference_number": f"EXP-{date.strftime('%Y%m%d')}-{category.upper()}-{random.randint(1000, 9999)}",
@@ -160,6 +162,7 @@ class FinancialDataGenerator:
                     "category": expense[1],
                     "transaction_date": date
                     + timedelta(hours=random.randint(9, 17), minutes=random.randint(0, 59)),
+                    "account_id": "checking_account",
                     "from_account_id": "checking_account",
                     "to_account_id": None,
                     "reference_number": f"EXP-{date.strftime('%Y%m%d')}-SPECIAL-{random.randint(1000, 9999)}",

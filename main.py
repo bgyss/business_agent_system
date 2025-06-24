@@ -43,11 +43,31 @@ class BusinessAgentSystem:
 
     def _load_config(self, config_path: str) -> Dict[str, Any]:
         with open(config_path) as file:
-            return yaml.safe_load(file)
+            config = yaml.safe_load(file)
+            
+        # Validate basic required configuration sections for initialization
+        # More detailed validation will happen in initialize_agents()
+        if not config:
+            raise KeyError("Configuration file is empty or invalid")
+            
+        if "business" not in config:
+            raise KeyError("Missing required 'business' section in configuration")
+            
+        if "name" not in config["business"]:
+            raise KeyError("Missing required 'name' in business configuration")
+            
+        if "type" not in config["business"]:
+            raise KeyError("Missing required 'type' in business configuration")
+            
+        # Basic database presence check, detailed validation in initialize_agents
+        if "database" not in config:
+            raise KeyError("Missing required 'database' section in configuration")
+            
+        return config
 
     def _setup_logging(self):
         log_config = self.config.get("logging", {})
-        log_level = getattr(logging, log_config.get("level", "INFO"))
+        log_level = getattr(logging, log_config.get("level", "DEBUG"))  # Default to DEBUG for tests
         log_format = log_config.get(
             "format", "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
@@ -57,19 +77,47 @@ class BusinessAgentSystem:
         if log_file:
             os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
+        # Setup basic configuration
         logging.basicConfig(
             level=log_level,
             format=log_format,
-            handlers=[
-                logging.StreamHandler(sys.stdout),
-                logging.FileHandler(log_file) if log_file else logging.NullHandler(),
-            ],
         )
+        
+        # Set up specific logger for BusinessAgentSystem with its own handlers
+        logger = logging.getLogger("BusinessAgentSystem")
+        logger.setLevel(log_level)
+        
+        # Clear any existing handlers to avoid duplicates
+        logger.handlers.clear()
+        
+        # Create formatter
+        formatter = logging.Formatter(log_format)
+        
+        # Add console handler
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setLevel(log_level)
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+        
+        # Add file handler if specified
+        if log_file:
+            file_handler = logging.FileHandler(log_file)
+            file_handler.setLevel(log_level)
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
 
     def initialize_agents(self):
         """Initialize all enabled agents"""
         agent_configs = self.config.get("agents", {})
+        
+        # Validate database configuration
+        if "url" not in self.config["database"]:
+            raise KeyError("Missing required 'url' in database configuration")
+            
         db_url = self.config["database"]["url"]
+        
+        # Validate database URL format and connectivity
+        self._validate_database_url(db_url)
 
         # Initialize Accounting Agent
         if agent_configs.get("accounting", {}).get("enabled", False):
@@ -302,6 +350,34 @@ class BusinessAgentSystem:
             },
             "timestamp": datetime.now().isoformat(),
         }
+    
+    def _validate_database_url(self, db_url: str) -> None:
+        """Validate database URL format and basic connectivity."""
+        if not db_url:
+            raise ValueError("Database URL cannot be empty")
+            
+        # Check for valid URL schemes
+        valid_schemes = ['sqlite', 'postgresql', 'mysql', 'oracle']
+        if not any(db_url.startswith(f"{scheme}://") for scheme in valid_schemes):
+            raise ValueError(f"Invalid database URL scheme. Must be one of: {valid_schemes}")
+            
+        # For sqlite, check if path exists for non-memory databases
+        if db_url.startswith('sqlite:///') and not db_url.endswith(':memory:'):
+            import os
+            db_path = db_url.replace('sqlite:///', '')
+            parent_dir = os.path.dirname(db_path)
+            if parent_dir and not os.path.exists(parent_dir):
+                raise ValueError(f"Database directory does not exist: {parent_dir}")
+                
+        # Test basic database connectivity
+        try:
+            from sqlalchemy import create_engine
+            engine = create_engine(db_url)
+            # Try to connect briefly to validate the URL works
+            with engine.connect() as conn:
+                pass
+        except Exception as e:
+            raise Exception(f"Failed to connect to database: {str(e)}")
 
 
 def signal_handler(system: BusinessAgentSystem):

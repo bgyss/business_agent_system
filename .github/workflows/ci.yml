@@ -53,12 +53,12 @@ jobs:
     
     - name: Run linting
       run: |
-        uv run ruff check . --select=W292 || true
-        uv run black --check . || true
-        uv run isort --check-only . || true
+        uv run ruff check . --select=W292
+        uv run black --check .
+        uv run isort --check-only .
     
-    - name: Run type checking
-      run: uv run mypy agents/ models/ simulation/ || true
+    - name: Run type checking  
+      run: uv run mypy agents/ models/ simulation/ --ignore-missing-imports
     
     - name: Run unit tests
       run: |
@@ -69,9 +69,12 @@ jobs:
     
     - name: Run integration tests
       if: matrix.python-version == '3.11'
+      env:
+        ANTHROPIC_API_KEY: test-api-key-for-testing
       run: |
         uv run pytest tests/integration/ -v \
-          --junit-xml=test-results-integration.xml || true
+          --asyncio-mode=auto \
+          --junit-xml=test-results-integration.xml
     
     - name: Upload test artifacts
       uses: actions/upload-artifact@v4
