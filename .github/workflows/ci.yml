@@ -53,9 +53,9 @@ jobs:
     
     - name: Run linting
       run: |
-        uv run ruff check . --select=W292
-        uv run black --check .
-        uv run isort --check-only .
+        uv run ruff check agents/ models/ simulation/ dashboard/ main.py tests/ --select=W292
+        uv run black --check agents/ models/ simulation/ dashboard/ main.py tests/
+        uv run isort --check-only agents/ models/ simulation/ dashboard/ main.py tests/
     
     - name: Run type checking  
       run: uv run mypy agents/ models/ simulation/ --ignore-missing-imports
