@@ -152,7 +152,7 @@ class TestAgentCoordination:
         # Monitoring should either complete normally or be cancelled
         # Both are acceptable outcomes for this test
         assert monitor_task.done()
-        
+
         # Check if task completed with an exception (but not CancelledError)
         try:
             exception = monitor_task.exception()

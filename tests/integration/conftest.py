@@ -14,13 +14,13 @@ from sqlalchemy import create_engine, event
 
 # Import system components
 from main import BusinessAgentSystem
-from simulation.business_simulator import BusinessSimulator
+from models.agent_decisions import Base as AgentBase
 
 # Import all models to ensure tables are created
-from models.employee import Base as EmployeeBase, Employee, TimeRecord, Schedule
-from models.financial import Base as FinancialBase, Account, Transaction, AccountsReceivable, AccountsPayable
-from models.inventory import Base as InventoryBase, Item, StockMovement, Supplier, PurchaseOrder, PurchaseOrderItem
-from models.agent_decisions import Base as AgentBase, AgentDecision
+from models.employee import Base as EmployeeBase
+from models.financial import Base as FinancialBase
+from models.inventory import Base as InventoryBase
+from simulation.business_simulator import BusinessSimulator
 
 
 @pytest.fixture
@@ -32,15 +32,16 @@ def temp_db():
 
     # Create engine and tables with foreign key support for SQLite
     engine = create_engine(db_url, echo=False)
-    
+
     # Enable foreign key support for SQLite
-    if db_url.startswith('sqlite'):
+    if db_url.startswith("sqlite"):
+
         @event.listens_for(engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
             cursor = dbapi_connection.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()
-    
+
     # Create all tables from all model bases
     FinancialBase.metadata.create_all(bind=engine)
     InventoryBase.metadata.create_all(bind=engine)
@@ -145,11 +146,12 @@ def temp_config_file(test_config):
 @pytest.fixture
 def mock_anthropic_client():
     """Mock the Anthropic client to avoid API calls during testing."""
+
     def create_mock_response(prompt_text=""):
         """Create appropriate mock response based on prompt content."""
         mock_response = Mock()
         mock_response.content = [Mock()]
-        
+
         # Provide context-aware responses based on prompt keywords
         if "anomaly" in prompt_text.lower() or "financial" in prompt_text.lower():
             mock_response.content[0].text = (
@@ -175,12 +177,12 @@ def mock_anthropic_client():
                 "CONFIDENCE: 0.85\n"
                 "REASONING: System operating within normal parameters."
             )
-        
+
         return mock_response
 
     mock_client = Mock()
     mock_client.messages.create.side_effect = lambda **kwargs: create_mock_response(
-        str(kwargs.get('messages', [{}])[-1].get('content', ''))
+        str(kwargs.get("messages", [{}])[-1].get("content", ""))
     )
 
     with patch("agents.base_agent.Anthropic") as mock_anthropic:
@@ -214,25 +216,25 @@ async def running_system(business_system):
     """Start the business system and yield it running."""
     # Set system as running (like run() method does)
     business_system.is_running = True
-    
+
     # Start agents but not the full run loop (which would run indefinitely)
     try:
         await business_system.start_agents()
-        
+
         # Start simulator if enabled
         business_system.initialize_simulator()
-        
+
         yield business_system
-        
+
     finally:
         # Cleanup - ensure proper shutdown even if test fails
         business_system.is_running = False
-        if hasattr(business_system, 'shutdown'):
+        if hasattr(business_system, "shutdown"):
             await business_system.shutdown()
         else:
             # Fallback cleanup for agents
             for agent in business_system.agents.values():
-                if hasattr(agent, 'is_running'):
+                if hasattr(agent, "is_running"):
                     agent.is_running = False
 
 
@@ -256,15 +258,15 @@ class IntegrationTestHelper:
         start_time = asyncio.get_event_loop().time()
         check_interval = 0.1
         max_checks = int(timeout / check_interval)
-        
+
         for _ in range(max_checks):
-            current_decisions = getattr(agent, 'decisions_log', [])
+            current_decisions = getattr(agent, "decisions_log", [])
             if len(current_decisions) >= expected_count:
                 return current_decisions[-expected_count:]
             await asyncio.sleep(check_interval)
-            
+
         # Final check and informative error
-        current_count = len(getattr(agent, 'decisions_log', []))
+        current_count = len(getattr(agent, "decisions_log", []))
         raise TimeoutError(
             f"Agent {agent.agent_id} made {current_count} decisions, expected {expected_count} within {timeout}s"
         )

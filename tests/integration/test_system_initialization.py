@@ -45,10 +45,12 @@ class TestSystemInitialization:
         """Test error handling for missing API key."""
         import os
         from unittest.mock import patch
-        
+
         # Clear the ANTHROPIC_API_KEY environment variable for this test
         with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(ValueError, match="ANTHROPIC_API_KEY environment variable is required"):
+            with pytest.raises(
+                ValueError, match="ANTHROPIC_API_KEY environment variable is required"
+            ):
                 BusinessAgentSystem(temp_config_file)
 
     def test_agent_initialization_all_enabled(self, business_system):

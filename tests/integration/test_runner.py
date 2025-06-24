@@ -4,11 +4,9 @@ Test runner for integration tests with proper setup and teardown.
 
 import logging
 import os
+import subprocess
 import sys
 from pathlib import Path
-
-import subprocess
-import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -35,14 +33,16 @@ def run_integration_tests():
 
     # Set test environment variables
     os.environ["PYTHONPATH"] = str(project_root)
-    
+
     # Ensure ANTHROPIC_API_KEY is set for testing
     if not os.environ.get("ANTHROPIC_API_KEY"):
         os.environ["ANTHROPIC_API_KEY"] = "test-api-key-for-testing"
 
     # Run integration tests using uv run pytest
     test_args = [
-        "uv", "run", "pytest",
+        "uv",
+        "run",
+        "pytest",
         str(Path(__file__).parent),  # Test directory
         "-v",  # Verbose output
         "--tb=short",  # Shorter tracebacks
@@ -59,15 +59,12 @@ def run_integration_tests():
 
     # Change to project root directory for uv run
     os.chdir(project_root)
-    
+
     try:
         result = subprocess.run(
-            test_args, 
-            capture_output=True, 
-            text=True, 
-            timeout=300  # 5 minute total timeout
+            test_args, capture_output=True, text=True, timeout=300  # 5 minute total timeout
         )
-        
+
         # Print captured output
         if result.stdout:
             print("STDOUT:")
@@ -75,9 +72,9 @@ def run_integration_tests():
         if result.stderr:
             print("STDERR:")
             print(result.stderr)
-            
+
         exit_code = result.returncode
-        
+
     except subprocess.TimeoutExpired:
         print("❌ Tests timed out after 5 minutes!")
         return 1
@@ -103,13 +100,15 @@ def run_specific_test_file(test_file: str):
     if not test_path.exists():
         print(f"❌ Test file {test_file} not found at {test_path}!")
         return 1
-    
+
     # Ensure ANTHROPIC_API_KEY is set for testing
     if not os.environ.get("ANTHROPIC_API_KEY"):
         os.environ["ANTHROPIC_API_KEY"] = "test-api-key-for-testing"
 
     test_args = [
-        "uv", "run", "pytest",
+        "uv",
+        "run",
+        "pytest",
         str(test_path),
         "-v",
         "--tb=short",
@@ -121,18 +120,18 @@ def run_specific_test_file(test_file: str):
 
     # Change to project root directory for uv run
     os.chdir(project_root)
-    
+
     try:
         result = subprocess.run(test_args, capture_output=True, text=True, timeout=180)
-        
+
         if result.stdout:
             print(result.stdout)
         if result.stderr:
             print("STDERR:")
             print(result.stderr)
-            
+
         return result.returncode
-        
+
     except subprocess.TimeoutExpired:
         print(f"❌ Test {test_file} timed out!")
         return 1
@@ -146,7 +145,9 @@ def run_quick_smoke_test():
     setup_test_logging()
 
     test_args = [
-        "uv", "run", "pytest",
+        "uv",
+        "run",
+        "pytest",
         str(Path(__file__).parent / "test_system_initialization.py"),
         "-v",
         "--tb=short",

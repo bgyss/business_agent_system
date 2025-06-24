@@ -5,7 +5,16 @@ from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import Boolean, Column, Date, DateTime, Numeric, String, Text, ForeignKey, CheckConstraint
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -39,9 +48,11 @@ class Account(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = Column(Boolean, default=True)
-    
+
     # Relationships
-    transactions = relationship("Transaction", back_populates="account", cascade="all, delete-orphan")
+    transactions = relationship(
+        "Transaction", back_populates="account", cascade="all, delete-orphan"
+    )
 
 
 class Transaction(Base):
@@ -52,7 +63,7 @@ class Transaction(Base):
     description = Column(String(500), nullable=False)
     amount = Column(Numeric(10, 2), nullable=False)
     transaction_type = Column(String(50), nullable=False)
-    account_id = Column(String, ForeignKey('accounts.id', ondelete='CASCADE'), nullable=False)
+    account_id = Column(String, ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False)
     from_account_id = Column(String, nullable=True)
     to_account_id = Column(String, nullable=True)
     category = Column(String(100))
@@ -61,14 +72,14 @@ class Transaction(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_reconciled = Column(Boolean, default=False)
-    
+
     # Relationships
     account = relationship("Account", back_populates="transactions")
-    
+
     def __init__(self, **kwargs):
         # Handle backward compatibility for 'reference' -> 'reference_number'
-        if 'reference' in kwargs:
-            kwargs['reference_number'] = kwargs.pop('reference')
+        if "reference" in kwargs:
+            kwargs["reference_number"] = kwargs.pop("reference")
         super().__init__(**kwargs)
 
 

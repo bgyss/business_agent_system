@@ -123,9 +123,7 @@ class TestBusinessSimulator:
 
         with patch("simulation.business_simulator.get_retail_profile") as mock_profile, patch(
             "simulation.business_simulator.get_retail_inventory_profile"
-        ) as mock_inv_profile, patch(
-            "simulation.business_simulator.FinancialDataGenerator"
-        ), patch(
+        ) as mock_inv_profile, patch("simulation.business_simulator.FinancialDataGenerator"), patch(
             "simulation.business_simulator.InventorySimulator"
         ):
 

@@ -963,9 +963,7 @@ class TestAccountingAgent:
         ):
             # The exception should be caught by the process_data method
             with pytest.raises(Exception, match="API timeout"):
-                await accounting_agent._analyze_transaction(
-                    mock_session_instance, transaction_data
-                )
+                await accounting_agent._analyze_transaction(mock_session_instance, transaction_data)
 
     @pytest.mark.asyncio
     async def test_daily_analysis_claude_exception(self, accounting_agent, mock_db_session):

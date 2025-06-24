@@ -45,7 +45,7 @@ class Item(Base):
     expiry_days = Column(Integer)  # Days until expiry (for perishables)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
     # Relationships
     supplier = relationship("Supplier", back_populates="items")
     stock_movements = relationship("StockMovement", back_populates="item")
@@ -64,23 +64,23 @@ class StockMovement(Base):
     movement_date = Column(DateTime, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow)  # For compatibility
     created_at = Column(DateTime, default=datetime.utcnow)
-    
+
     # Relationships
     item = relationship("Item", back_populates="stock_movements")
-    
+
     def __init__(self, **kwargs):
         # Handle backward compatibility for 'reference' -> 'reference_number'
-        if 'reference' in kwargs:
-            kwargs['reference_number'] = kwargs.pop('reference')
-        
+        if "reference" in kwargs:
+            kwargs["reference_number"] = kwargs.pop("reference")
+
         # Handle backward compatibility for 'timestamp' -> 'movement_date'
-        if 'timestamp' in kwargs and 'movement_date' not in kwargs:
-            kwargs['movement_date'] = kwargs['timestamp']
-        
+        if "timestamp" in kwargs and "movement_date" not in kwargs:
+            kwargs["movement_date"] = kwargs["timestamp"]
+
         # Set default movement_date if not provided
-        if 'movement_date' not in kwargs:
-            kwargs['movement_date'] = datetime.utcnow()
-            
+        if "movement_date" not in kwargs:
+            kwargs["movement_date"] = datetime.utcnow()
+
         super().__init__(**kwargs)
 
 
@@ -100,7 +100,7 @@ class Supplier(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
     # Relationships
     items = relationship("Item", back_populates="supplier")
 

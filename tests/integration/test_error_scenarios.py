@@ -496,9 +496,7 @@ class TestRecoveryMechanisms:
 
         # Record initial state
         initial_status = system.get_system_status()
-        {
-            name: len(agent.decisions_log) for name, agent in system.agents.items()
-        }
+        {name: len(agent.decisions_log) for name, agent in system.agents.items()}
 
         # Cause some errors
         error_events = [

@@ -167,9 +167,7 @@ class TestStressScenarios:
                             session.add(item)
 
                         else:  # Query items
-                            (
-                                session.query(Item).filter(Item.category == "stress_test").count()
-                            )
+                            (session.query(Item).filter(Item.category == "stress_test").count())
 
                         # Commit every 10 operations
                         if i % 10 == 0:

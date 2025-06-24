@@ -1046,9 +1046,7 @@ Focus on data-driven decisions that optimize total inventory cost and business p
 
             excellent_suppliers = [s for s in supplier_analyses if s.overall_score > 0.8]
             poor_performers = [s for s in supplier_analyses if s.overall_score < 0.6]
-            sorted(
-                supplier_analyses, key=lambda x: x.cost_competitiveness, reverse=True
-            )[:3]
+            sorted(supplier_analyses, key=lambda x: x.cost_competitiveness, reverse=True)[:3]
 
             context = {
                 "total_suppliers_analyzed": len(supplier_analyses),
