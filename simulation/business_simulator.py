@@ -8,8 +8,9 @@ from sqlalchemy.orm import sessionmaker
 
 from models.employee import Base as EmployeeBase
 from models.employee import Employee
-from models.financial import Account, AccountsPayable, AccountsReceivable, Transaction
+from models.financial import Account, AccountsPayable, AccountsReceivable
 from models.financial import Base as FinancialBase
+from models.financial import Transaction
 from models.inventory import Base as InventoryBase
 from models.inventory import Item, StockMovement, Supplier
 from simulation.financial_generator import (
