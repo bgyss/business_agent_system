@@ -100,6 +100,8 @@
             pkgs.pyright
             pkgs.ruff
             pkgs.act  # For local GitHub Actions testing
+            pkgs.playwright-driver.browsers  # Playwright browsers
+            pkgs.python311Packages.playwright  # Playwright Python package
           ];
 
           shellHook = ''

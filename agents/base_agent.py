@@ -14,8 +14,9 @@ from pydantic import BaseModel
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.agent_decisions import AgentDecision
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class AgentMessage(BaseModel):
@@ -66,7 +67,7 @@ class BaseAgent(ABC):
 
         try:
             response = self.client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-sonnet-4-20250514",
                 max_tokens=max_tokens,
                 messages=[{"role": "user", "content": full_prompt}],
             )

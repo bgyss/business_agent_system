@@ -119,7 +119,7 @@ def test_config(temp_db):
             "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         },
         "anthropic": {
-            "model": "claude-3-5-sonnet-20241022",
+            "model": "claude-sonnet-4-20250514",
             "max_tokens": 1000,
             "temperature": 0.1,
         },

@@ -26,9 +26,8 @@ from agents.hr_agent import HRAgent
 from agents.inventory_agent import InventoryAgent
 from models.employee import Base as EmployeeBase
 from models.employee import Employee
-from models.financial import Account
+from models.financial import Account, Transaction, TransactionType
 from models.financial import Base as FinancialBase
-from models.financial import Transaction, TransactionType
 from models.inventory import Base as InventoryBase
 from models.inventory import Item
 from simulation.business_simulator import BusinessSimulator

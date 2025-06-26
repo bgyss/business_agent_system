@@ -107,7 +107,7 @@ class TestBaseAgent:
 
         # Verify the call arguments
         call_args = mock_anthropic.return_value.messages.create.call_args
-        assert call_args[1]["model"] == "claude-3-5-sonnet-20241022"
+        assert call_args[1]["model"] == "claude-sonnet-4-20250514"
         assert call_args[1]["max_tokens"] == 1000
         assert len(call_args[1]["messages"]) == 1
         assert call_args[1]["messages"][0]["role"] == "user"
